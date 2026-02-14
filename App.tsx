@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Layout } from './components/Layout';
 import { AdminDashboard } from './components/AdminDashboard';
 import { TrainingManager } from './components/TrainingManager';
@@ -12,6 +12,10 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
   const [selectedTrainingId, setSelectedTrainingId] = useState<string>('');
   const [isInitializing, setIsInitializing] = useState(true);
+
+  // Estado para el enrutamiento público
+  const [isPublicView, setIsPublicView] = useState(false);
+  const [publicTrainingId, setPublicTrainingId] = useState<string | null>(null);
 
   const [trainings, setTrainings] = useState<Training[]>([
     {
@@ -42,7 +46,18 @@ const App: React.FC = () => {
     }
   ]);
 
+  // Lógica de detección de ruta al cargar
   useEffect(() => {
+    const path = window.location.pathname;
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+
+    // Detectar /registro o /registro/ (con trailing slash)
+    if ((path === '/registro' || path === '/registro/') && id) {
+      setIsPublicView(true);
+      setPublicTrainingId(id);
+    }
+
     const savedSession = localStorage.getItem('event_mvp_session');
     if (savedSession) setCurrentUser(JSON.parse(savedSession));
     setIsInitializing(false);
@@ -116,6 +131,32 @@ const App: React.FC = () => {
     document.body.removeChild(link);
   };
 
+  // Renderizado para vista pública de registro
+  if (isPublicView && publicTrainingId) {
+    const targetTraining = trainings.find(t => t.id === publicTrainingId);
+    
+    if (!targetTraining) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+          <div className="text-center">
+            <i className="fas fa-exclamation-triangle text-amber-500 text-5xl mb-4"></i>
+            <h1 className="text-2xl font-bold text-slate-900">Capacitación no encontrada</h1>
+            <p className="text-slate-500 mt-2">El enlace es inválido o el evento ya no está disponible.</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="min-h-screen bg-slate-50 py-10">
+        <PublicRegistration 
+          training={targetTraining} 
+          onSubmit={handleRegister} 
+        />
+      </div>
+    );
+  }
+
   if (isInitializing) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><i className="fas fa-circle-notch fa-spin text-indigo-600 text-3xl"></i></div>;
   if (!currentUser) return <Auth onLogin={setCurrentUser} />;
 
@@ -146,10 +187,16 @@ const App: React.FC = () => {
           />
         )}
         {activeTab === 'public' && trainings.length > 0 && (
-          <PublicRegistration 
-            training={trainings[0]} 
-            onSubmit={handleRegister} 
-          />
+          <div className="p-8 bg-indigo-50 rounded-3xl border border-indigo-100">
+            <div className="flex items-center gap-3 mb-4 text-indigo-600">
+              <i className="fas fa-info-circle"></i>
+              <p className="font-bold text-sm uppercase tracking-wider">Vista Previa del Formulario</p>
+            </div>
+            <PublicRegistration 
+              training={trainings[0]} 
+              onSubmit={handleRegister} 
+            />
+          </div>
         )}
       </div>
     </Layout>

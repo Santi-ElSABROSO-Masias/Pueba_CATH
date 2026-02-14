@@ -3,33 +3,42 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Configuración para obtener la ruta del directorio actual en módulos ES
+// Configuración para módulos ES
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-
-// Cloud Run define el puerto dinámicamente mediante la variable de entorno PORT
 const port = process.env.PORT || 8080;
 
-// 1. MIDDLEWARE: Servir archivos estáticos (js, css, imágenes) directamente desde la raíz
-// Esto permite que el navegador encuentre index.tsx, App.tsx, etc.
-app.use(express.static(__dirname));
+// Configuración segura de headers para archivos TypeScript/React
+// Esto evita el uso de 'express.static.mime.define' que puede causar errores en ciertas versiones
+const setHeaders = (res, filePath) => {
+  if (filePath.endsWith('.tsx') || filePath.endsWith('.ts')) {
+    res.setHeader('Content-Type', 'application/javascript');
+  }
+};
 
-// 2. ROUTING WILDCARD: Manejo de SPA
-// Captura cualquier ruta (ej. /registro, /dashboard) que no haya sido servida como archivo estático.
-// Es crucial que esta ruta vaya DESPUÉS de express.static.
+// 1. Servir archivos estáticos con la configuración de headers corregida
+app.use(express.static(__dirname, { setHeaders }));
+
+// 2. Manejo de rutas SPA (Single Page Application)
+// Esta lógica captura CUALQUIER ruta que no haya sido encontrada por express.static
 app.get('*', (req, res) => {
-  // Siempre enviamos el index.html para que React Router tome el control en el cliente
+  // Evitar devolver index.html para archivos de recursos faltantes (imágenes, scripts, estilos)
+  // Si la ruta tiene una extensión (ej. .png, .js) y NO es .html, devolvemos 404 real
+  if (req.path.includes('.') && !req.path.endsWith('.html')) {
+    return res.status(404).send('Not Found');
+  }
+
+  // Para todo lo demás (rutas de navegación como /registro, /admin, etc.), devolvemos index.html
   res.sendFile(path.join(__dirname, 'index.html'), (err) => {
     if (err) {
-      res.status(500).send(err);
+      console.error('Error enviando index.html:', err);
+      res.status(500).send('Server Error');
     }
   });
 });
 
-// 3. START: Escuchar en 0.0.0.0 es mandatorio para Google Cloud Run
 app.listen(port, '0.0.0.0', () => {
   console.log(`[Server] EventManager activo en puerto: ${port}`);
-  console.log(`[Server] Ruta base del proyecto: ${__dirname}`);
 });
