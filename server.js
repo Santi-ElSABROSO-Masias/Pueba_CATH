@@ -1,28 +1,44 @@
+
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Configuración para módulos ES (necesario para usar 'import' en Node)
+// Configuración para módulos ES
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-// Cloud Run inyecta su propio puerto aquí; si estás local, usará el 8080
 const port = process.env.PORT || 8080;
 
-// Vite empaqueta tu proyecto terminado en una carpeta llamada 'dist'
-const distPath = path.join(__dirname, 'dist');
+// Configuración segura de headers para archivos TypeScript/React
+// Esto evita el uso de 'express.static.mime.define' que puede causar errores en ciertas versiones
+const setHeaders = (res, filePath) => {
+  if (filePath.endsWith('.tsx') || filePath.endsWith('.ts')) {
+    res.setHeader('Content-Type', 'application/javascript');
+  }
+};
 
-// 1. Servir los archivos estáticos ya construidos y optimizados desde 'dist'
-app.use(express.static(distPath));
+// 1. Servir archivos estáticos con la configuración de headers corregida
+app.use(express.static(__dirname, { setHeaders }));
 
 // 2. Manejo de rutas SPA (Single Page Application)
-// Cualquier ruta de React que el usuario escriba devolverá el index.html optimizado
+// Esta lógica captura CUALQUIER ruta que no haya sido encontrada por express.static
 app.get('*', (req, res) => {
-  res.sendFile(path.join(distPath, 'index.html'));
+  // Evitar devolver index.html para archivos de recursos faltantes (imágenes, scripts, estilos)
+  // Si la ruta tiene una extensión (ej. .png, .js) y NO es .html, devolvemos 404 real
+  if (req.path.includes('.') && !req.path.endsWith('.html')) {
+    return res.status(404).send('Not Found');
+  }
+
+  // Para todo lo demás (rutas de navegación como /registro, /admin, etc.), devolvemos index.html
+  res.sendFile(path.join(__dirname, 'index.html'), (err) => {
+    if (err) {
+      console.error('Error enviando index.html:', err);
+      res.status(500).send('Server Error');
+    }
+  });
 });
 
-// 0.0.0.0 es obligatorio para que Google Cloud Run pueda exponer la app a internet
 app.listen(port, '0.0.0.0', () => {
-  console.log(`[Server] EventManager activo en puerto: ${port} (Sirviendo carpeta /dist)`);
+  console.log(`[Server] EventManager activo en puerto: ${port}`);
 });

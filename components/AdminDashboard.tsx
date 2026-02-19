@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react';
 import { EventUser, UserStatus, Training } from '../types';
+import { ExcelUploader } from './ExcelUploader';
+import { generateOfficialDocument } from '../utils/consolidationService';
 
 interface AdminDashboardProps {
   users: EventUser[];
@@ -9,31 +11,73 @@ interface AdminDashboardProps {
   onUpdateStatus: (userId: string, status: UserStatus, meetingLink?: string) => void;
   onToggleAttendance: (userId: string) => void;
   onExport: (trainingId: string) => void;
+  onBulkRegister?: (users: Partial<EventUser>[], trainingId: string) => void;
+  onConsolidate?: (trainingId: string) => void; // Nuevo prop
 }
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ users, trainings, selectedTrainingId, onUpdateStatus, onToggleAttendance, onExport }) => {
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ 
+  users, trainings, selectedTrainingId, onUpdateStatus, onToggleAttendance, onExport, onBulkRegister, onConsolidate 
+}) => {
   const [filterStatus, setFilterStatus] = useState<UserStatus | 'ALL'>('ALL');
   const [currentTrainingId, setCurrentTrainingId] = useState(selectedTrainingId || (trainings[0]?.id || ''));
   const [meetingLinks, setMeetingLinks] = useState<Record<string, string>>({});
+  const [showUploader, setShowUploader] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const activeTraining = trainings.find(t => t.id === currentTrainingId);
   const filteredUsers = users.filter(u => 
     u.trainingId === currentTrainingId && 
     (filterStatus === 'ALL' || u.status === filterStatus)
   );
+  
+  const trainingUsers = users.filter(u => u.trainingId === currentTrainingId);
 
   const stats = {
-    total: users.filter(u => u.trainingId === currentTrainingId).length,
-    approved: users.filter(u => u.trainingId === currentTrainingId && (u.status === UserStatus.APPROVED || u.status === UserStatus.LINK_SENT)).length,
-    attended: users.filter(u => u.trainingId === currentTrainingId && u.attended).length
+    total: trainingUsers.length,
+    approved: trainingUsers.filter(u => (u.status === UserStatus.APPROVED || u.status === UserStatus.LINK_SENT)).length,
+    attended: trainingUsers.filter(u => u.attended).length
   };
 
   const handleLinkChange = (id: string, val: string) => {
     setMeetingLinks(prev => ({ ...prev, [id]: val }));
   };
 
+  const handleBulkImport = (newUsers: Partial<EventUser>[]) => {
+    if (onBulkRegister && activeTraining) {
+        onBulkRegister(newUsers, activeTraining.id);
+        setShowUploader(false);
+    }
+  };
+
+  const handleConsolidation = async () => {
+    if (!activeTraining || !onConsolidate) return;
+    setIsGenerating(true);
+    try {
+        await generateOfficialDocument(activeTraining, trainingUsers);
+        onConsolidate(activeTraining.id);
+        alert("Documento oficial generado y capacitación consolidada exitosamente.");
+    } catch (error) {
+        console.error(error);
+        alert("Error al generar el documento.");
+    } finally {
+        setIsGenerating(false);
+    }
+  };
+
+  const isDeadlinePassed = activeTraining ? new Date(activeTraining.date) < new Date() : false;
+
   return (
     <div className="space-y-8 animate-fadeIn">
+      {/* Modal de Carga Masiva */}
+      {showUploader && activeTraining && (
+        <ExcelUploader 
+            training={activeTraining}
+            existingUsers={trainingUsers}
+            onImport={handleBulkImport}
+            onClose={() => setShowUploader(false)}
+        />
+      )}
+
       {/* Selector de Capacitación */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div className="w-full md:w-auto">
@@ -46,14 +90,61 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ users, trainings
             {trainings.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
           </select>
         </div>
-        <button
-          onClick={() => onExport(currentTrainingId)}
-          className="w-full md:w-auto bg-emerald-600 text-white px-6 py-3 rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 font-bold"
-        >
-          <i className="fas fa-file-excel"></i>
-          Exportar Lista Oficial
-        </button>
+        <div className="flex w-full md:w-auto gap-2">
+            <button
+            onClick={() => setShowUploader(true)}
+            disabled={activeTraining?.isConsolidated}
+            className={`flex-1 md:flex-none px-6 py-3 rounded-xl flex items-center justify-center gap-2 font-bold transition-all shadow-lg ${activeTraining?.isConsolidated ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-200'}`}
+            title={activeTraining?.isConsolidated ? "Capacitación consolidada, no se permiten más cargas" : "Importar Excel"}
+            >
+            <i className="fas fa-file-upload"></i>
+            Importar
+            </button>
+            <button
+            onClick={() => onExport(currentTrainingId)}
+            className="flex-1 md:flex-none bg-emerald-600 text-white px-6 py-3 rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2 font-bold"
+            >
+            <i className="fas fa-file-csv"></i>
+            CSV
+            </button>
+        </div>
       </div>
+
+      {/* Panel de Consolidación (Solo visible si es pertinente) */}
+      {activeTraining && (
+        <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
+            <div>
+                <h3 className="text-lg font-black flex items-center gap-2">
+                    <i className="fas fa-file-signature text-amber-400"></i>
+                    Gestión Documentaria Oficial
+                </h3>
+                <p className="text-slate-400 text-sm mt-1 max-w-xl">
+                    {activeTraining.isConsolidated 
+                        ? `Esta capacitación fue consolidada el ${new Date(activeTraining.consolidatedAt!).toLocaleDateString()}. El registro de participantes está cerrado.`
+                        : "Genera el Registro Oficial de Asistencia (Excel con fórmulas) una vez finalizada la inscripción. Esto bloqueará nuevos registros."
+                    }
+                </p>
+            </div>
+            
+            {activeTraining.isConsolidated ? (
+                <button 
+                    onClick={handleConsolidation} // Permitir re-descarga
+                    className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-xl font-bold transition-all border border-white/10 flex items-center gap-2"
+                >
+                    <i className="fas fa-download"></i> Descargar Copia
+                </button>
+            ) : (
+                <button 
+                    onClick={handleConsolidation}
+                    disabled={isGenerating}
+                    className="bg-amber-500 hover:bg-amber-600 text-amber-950 px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-amber-900/20 flex items-center gap-2"
+                >
+                    {isGenerating ? <i className="fas fa-circle-notch fa-spin"></i> : <i className="fas fa-lock"></i>}
+                    Consolidar y Generar Excel
+                </button>
+            )}
+        </div>
+      )}
 
       {/* Métricas */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -111,8 +202,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ users, trainings
                       <div className="font-bold text-slate-900 text-sm uppercase">{user.name}</div>
                       <div className="text-[10px] text-slate-400 flex items-center gap-2">
                         <span className="font-mono bg-slate-100 px-1 rounded">DNI: {user.dni}</span>
-                        <span className="truncate max-w-[120px]">{user.email}</span>
+                        {user.brevete && <span className="font-mono bg-amber-50 text-amber-700 px-1 rounded border border-amber-100" title="Brevete"><i className="fas fa-car text-[9px]"></i> {user.brevete}</span>}
                       </div>
+                      <div className="text-[10px] text-slate-400 truncate max-w-[150px]">{user.email}</div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-xs font-bold text-slate-700">{user.organization}</div>
@@ -132,7 +224,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ users, trainings
                         <div className="relative">
                           <input
                             type="text"
-                            className="text-[10px] border border-slate-200 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-50"
+                            disabled={activeTraining?.isConsolidated}
+                            className="text-[10px] border border-slate-200 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-50 disabled:opacity-50"
                             placeholder="Link Teams/Zoom..."
                             value={meetingLinks[user.id] || ''}
                             onChange={(e) => handleLinkChange(user.id, e.target.value)}
@@ -148,10 +241,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ users, trainings
                     <td className="px-6 py-4 text-center">
                       <button
                         onClick={() => onToggleAttendance(user.id)}
-                        disabled={user.status !== UserStatus.LINK_SENT}
+                        disabled={user.status !== UserStatus.LINK_SENT || activeTraining?.isConsolidated}
                         className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all mx-auto ${
                           user.attended ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 text-slate-300'
-                        } ${user.status !== UserStatus.LINK_SENT && 'opacity-20 cursor-not-allowed'}`}
+                        } ${(user.status !== UserStatus.LINK_SENT || activeTraining?.isConsolidated) && 'opacity-20 cursor-not-allowed'}`}
                       >
                         <i className="fas fa-check text-[10px]"></i>
                       </button>
@@ -161,7 +254,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ users, trainings
                         {user.status === UserStatus.REGISTERED && (
                           <button
                             onClick={() => onUpdateStatus(user.id, UserStatus.APPROVED, meetingLinks[user.id])}
-                            disabled={!meetingLinks[user.id]}
+                            disabled={!meetingLinks[user.id] || activeTraining?.isConsolidated}
                             className="bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-slate-800 disabled:opacity-20 shadow-sm transition-all"
                           >
                             Aprobar
@@ -170,7 +263,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ users, trainings
                         {user.status === UserStatus.APPROVED && (
                           <button
                             onClick={() => onUpdateStatus(user.id, UserStatus.LINK_SENT)}
-                            className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-indigo-700 shadow-sm transition-all"
+                            disabled={activeTraining?.isConsolidated}
+                            className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-indigo-700 disabled:opacity-50 shadow-sm transition-all"
                           >
                             Enviar Link
                           </button>

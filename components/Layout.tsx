@@ -4,13 +4,15 @@ import { SystemUser } from '../types';
 
 interface LayoutProps {
   children: React.ReactNode;
-  activeTab: 'trainings' | 'dashboard' | 'public';
-  onTabChange: (tab: 'trainings' | 'dashboard' | 'public') => void;
+  activeTab: 'trainings' | 'dashboard' | 'public' | 'calendar' | 'notifications' | 'users';
+  onTabChange: (tab: 'trainings' | 'dashboard' | 'public' | 'calendar' | 'notifications' | 'users') => void;
   user: SystemUser | null;
   onLogout: () => void;
 }
 
 export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, user, onLogout }) => {
+  const isSuperAdmin = user?.role === 'superadmin';
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 text-slate-900">
       {/* Sidebar Operativo */}
@@ -28,8 +30,17 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
               onClick={() => onTabChange('trainings')}
               className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all ${activeTab === 'trainings' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
             >
-              <i className="fas fa-folder-plus"></i>
+              <i className="fas fa-folder-plus w-5"></i>
               <span className="font-semibold text-sm">Capacitaciones</span>
+            </button>
+          </li>
+          <li>
+            <button
+              onClick={() => onTabChange('calendar')}
+              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all ${activeTab === 'calendar' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+            >
+              <i className="far fa-calendar-alt w-5"></i>
+              <span className="font-semibold text-sm">Calendario</span>
             </button>
           </li>
           <li>
@@ -37,10 +48,34 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
               onClick={() => onTabChange('dashboard')}
               className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
             >
-              <i className="fas fa-users-cog"></i>
+              <i className="fas fa-users-cog w-5"></i>
               <span className="font-semibold text-sm">Gestionar Inscritos</span>
             </button>
           </li>
+          <li>
+            <button
+              onClick={() => onTabChange('notifications')}
+              className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all ${activeTab === 'notifications' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+            >
+              <i className="fas fa-bell w-5"></i>
+              <span className="font-semibold text-sm">Notificaciones</span>
+              <span className="ml-auto bg-amber-500 text-amber-900 text-[10px] font-bold px-1.5 py-0.5 rounded-md">AUTO</span>
+            </button>
+          </li>
+
+          {/* Menú exclusivo para SuperAdmin */}
+          {isSuperAdmin && (
+            <li className="pt-4 mt-4 border-t border-slate-800">
+              <p className="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Administración</p>
+              <button
+                onClick={() => onTabChange('users')}
+                className={`w-full text-left px-4 py-3 rounded-lg flex items-center gap-3 transition-all ${activeTab === 'users' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+              >
+                <i className="fas fa-users-shield w-5"></i>
+                <span className="font-semibold text-sm">Gestionar Usuarios</span>
+              </button>
+            </li>
+          )}
         </ul>
 
         <div className="mt-auto pt-6 border-t border-slate-800 space-y-4">
@@ -51,7 +86,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
               </div>
               <div className="overflow-hidden">
                 <p className="text-xs font-bold truncate">{user.name}</p>
-                <p className="text-[10px] text-slate-500 truncate">{user.email}</p>
+                <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                    <span className={`w-1.5 h-1.5 rounded-full ${user.role === 'superadmin' ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
+                    <p className="truncate capitalize">{user.role}</p>
+                </div>
               </div>
             </div>
           )}

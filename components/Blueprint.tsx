@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { PROJECT_PHASES, DB_SCHEMA } from '../constants';
+import { PROJECT_PHASES, DB_SCHEMA, N8N_WORKFLOW_DOCS } from '../constants';
 
 export const Blueprint: React.FC = () => {
   return (
@@ -25,9 +25,9 @@ export const Blueprint: React.FC = () => {
               { icon: 'fa-user-plus', label: 'Registro', sub: 'Usuario' },
               { icon: 'fa-database', label: 'Guardado', sub: 'Supabase' },
               { icon: 'fa-user-check', label: 'Aprobación', sub: 'Admin' },
-              { icon: 'fa-paper-plane', label: 'Envío Link', sub: 'n8n' },
-              { icon: 'fa-check-circle', label: 'Asistencia', sub: 'Moderador' },
-              { icon: 'fa-file-excel', label: 'Excel', sub: 'Sistema' }
+              { icon: 'fa-lock', label: 'Cierre', sub: 'Sistema' },
+              { icon: 'fa-file-signature', label: 'Consolidación', sub: 'ExcelJS' },
+              { icon: 'fa-paper-plane', label: 'Envío Final', sub: 'n8n' }
             ].map((step, i) => (
               <React.Fragment key={i}>
                 <div className="flex flex-col items-center text-center flex-1">
@@ -49,7 +49,7 @@ export const Blueprint: React.FC = () => {
         <div className="bg-slate-900 text-slate-300 p-8 rounded-2xl shadow-xl">
           <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
             <i className="fas fa-robot text-indigo-400"></i>
-            Workflow n8n (Logic)
+            Workflow n8n (Core)
           </h3>
           <div className="space-y-4 font-mono text-sm">
             <div className="p-3 bg-slate-800 rounded border-l-4 border-indigo-500">
@@ -65,32 +65,44 @@ export const Blueprint: React.FC = () => {
               <p>Envía plantilla con link dinámico y cambia estado a 'LINK ENVIADO'.</p>
             </div>
           </div>
+
+          <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2 mt-8">
+            <i className="fas fa-bell text-amber-400"></i>
+            Workflow Notificaciones (Auto)
+          </h3>
+          <div className="space-y-2 font-mono text-xs bg-black/30 p-4 rounded-xl">
+              <p className="text-amber-400 font-bold">{N8N_WORKFLOW_DOCS.trigger}</p>
+              <ul className="list-disc pl-4 space-y-1 text-slate-400">
+                  {N8N_WORKFLOW_DOCS.nodes.map((node, i) => (
+                      <li key={i}>{node.name} <span className="text-[10px] opacity-50">({node.action})</span></li>
+                  ))}
+              </ul>
+          </div>
+
         </div>
 
         <div className="space-y-6">
           <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <i className="fas fa-table text-indigo-500"></i>
-            Columnas Excel Final
+            <i className="fas fa-database text-indigo-500"></i>
+            Modelo de Datos (Supabase)
           </h3>
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="px-4 py-2 text-left text-slate-500">Columna</th>
-                  <th className="px-4 py-2 text-left text-slate-500">Fuente de Datos</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                <tr><td className="px-4 py-2 font-bold">Nombre</td><td className="px-4 py-2 text-slate-500">full_name</td></tr>
-                <tr><td className="px-4 py-2 font-bold">Correo</td><td className="px-4 py-2 text-slate-500">email</td></tr>
-                <tr><td className="px-4 py-2 font-bold">Estado Aprobación</td><td className="px-4 py-2 text-slate-500">status</td></tr>
-                <tr><td className="px-4 py-2 font-bold">Asistencia</td><td className="px-4 py-2 text-slate-500">attended (SÍ/NO)</td></tr>
-              </tbody>
-            </table>
+           <div className="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm p-4 font-mono text-xs text-slate-600 whitespace-pre-wrap">
+                {DB_SCHEMA}
+           </div>
+
+          <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2 mt-8">
+            <i className="fas fa-table text-indigo-500"></i>
+            Reporte de Consolidación
+          </h3>
+          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm p-4">
+            <p className="text-sm text-slate-600 mb-2">Se genera usando <strong>ExcelJS</strong> para garantizar:</p>
+            <ul className="list-disc pl-5 text-sm text-slate-500 space-y-1">
+                <li>Preservación de fórmulas (PROMEDIO, ESTADO).</li>
+                <li>Estilos corporativos (Bordes, Colores, Logos).</li>
+                <li>Bloqueo de edición posterior.</li>
+                <li>Trazabilidad de envío automático.</li>
+            </ul>
           </div>
-          <p className="text-xs text-slate-400 italic">
-            * El sistema alimenta exactamente este formato para evitar limpieza manual de datos posterior.
-          </p>
         </div>
       </section>
 

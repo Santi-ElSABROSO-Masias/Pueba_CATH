@@ -50,4 +50,29 @@ Table registrations {
   attended: boolean [default: false]
   created_at: timestamp
 }
+
+Table notifications {
+  id: uuid [pk]
+  training_id: uuid [ref: > trainings.id]
+  type: enum('reminder_7d', 'deadline_warning', 'registration_closed', 'consolidation_ready')
+  recipient_email: text
+  scheduled_at: timestamp
+  sent_at: timestamp
+  status: enum('pending', 'sent', 'failed')
+  error_message: text
+  created_at: timestamp
+}
 `;
+
+export const N8N_WORKFLOW_DOCS = {
+  title: "Automated Notification Dispatcher",
+  trigger: "Cron: Every Hour",
+  nodes: [
+    { name: "Get Pending Notifications", action: "Supabase: SELECT * FROM notifications WHERE status='pending' AND scheduled_at <= NOW()" },
+    { name: "Fetch Training Details", action: "Supabase: JOIN trainings ON notifications.training_id = trainings.id" },
+    { name: "Route by Type", action: "Switch: reminder_7d | deadline_warning | ..." },
+    { name: "Generate HTML", action: "Function: Populate Templates" },
+    { name: "Send Email", action: "Gmail / SendGrid Node" },
+    { name: "Update Status", action: "Supabase: UPDATE notifications SET status='sent', sent_at=NOW()" }
+  ]
+};

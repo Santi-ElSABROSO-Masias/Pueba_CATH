@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { SystemUser } from '../types';
+import { SystemUser, UserRole } from '../types';
 
 interface AuthProps {
   onLogin: (user: SystemUser) => void;
@@ -12,6 +12,10 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  
+  // Estado simulado para pruebas de rol
+  const [simulatedRole, setSimulatedRole] = useState<UserRole>('superadmin');
+  const [simulatedCompanyId, setSimulatedCompanyId] = useState<string>('c1'); // ID de ejemplo
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +27,9 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
         id: Math.random().toString(36).substr(2, 9),
         email,
         name: isLogin ? email.split('@')[0] : name,
-        role: 'ADMIN'
+        role: simulatedRole,
+        companyId: simulatedRole === 'superadmin' ? null : simulatedCompanyId,
+        isActive: true
       };
       
       localStorage.setItem('event_mvp_session', JSON.stringify(mockUser));
@@ -86,11 +92,24 @@ export const Auth: React.FC<AuthProps> = ({ onLogin }) => {
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
+            
+            {/* SELECTOR DE ROL SOLO PARA DEMO/MVP */}
+            <div className="pt-2 border-t border-slate-100 mt-2">
+                 <label className="block text-[10px] font-bold text-indigo-500 uppercase tracking-widest mb-1">Rol Simulado (Solo MVP)</label>
+                 <select 
+                    className="w-full px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                    value={simulatedRole}
+                    onChange={(e) => setSimulatedRole(e.target.value as any)}
+                 >
+                     <option value="superadmin">Super Admin (Ve todo)</option>
+                     <option value="user">Operador Empresa (Limitado)</option>
+                 </select>
+            </div>
 
             <button
               disabled={loading}
               type="submit"
-              className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl hover:bg-slate-800 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl hover:bg-slate-800 transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 mt-4"
             >
               {loading ? (
                 <i className="fas fa-circle-notch fa-spin"></i>
