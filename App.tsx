@@ -1,35 +1,183 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Layout } from './components/Layout';
 import { AdminDashboard } from './components/AdminDashboard';
 import { TrainingManager } from './components/TrainingManager';
+import { AvailableTrainings } from './components/AvailableTrainings';
 import { PublicRegistration } from './components/PublicRegistration';
 import { CalendarView } from './components/CalendarView';
 import { NotificationCenter } from './components/NotificationCenter';
 import { UserManagement } from './components/UserManagement'; // Nuevo Import
+import { PublicExam } from './components/PublicExam';
+import { EvaluacionesModule } from './components/EvaluacionesModule';
+import { IdentityValidationPage } from './components/IdentityValidationPage';
 import { Auth } from './components/Auth';
-import { EventUser, UserStatus, SystemUser, Training, Notification, Company } from './types';
+import { EventUser, UserStatus, SystemUser, Training, Notification, Company, TrainingStatus, Question, Exam, ExamResult } from './types';
 import { createNotificationsForTraining } from './utils/notificationLogic';
+import { isTrainingFinished, isSixHoursAfterEnd } from './utils/time';
 
-const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'trainings' | 'dashboard' | 'public' | 'calendar' | 'notifications' | 'users'>('trainings');
-  const [currentUser, setCurrentUser] = useState<SystemUser | null>(null);
+import { AuthProvider, useAuth } from './AuthContext';
+import { NavigationProvider } from './contexts/NavigationContext';
+
+const AppContent: React.FC = () => {
+  const { user: currentUser, login: setCurrentUser, logout: handleLogout } = useAuth();
+  const [activeTab, setActiveTab] = useState<'trainings' | 'dashboard' | 'public' | 'calendar' | 'notifications' | 'users' | 'evaluaciones' | 'public_exam'>('trainings');
   const [selectedTrainingId, setSelectedTrainingId] = useState<string>('');
+  const [exams, setExams] = useState<Exam[]>(() => {
+    const saved = localStorage.getItem('eventmanager_exams');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('eventmanager_exams', JSON.stringify(exams));
+  }, [exams]);
+  const [examResults, setExamResults] = useState<ExamResult[]>([]);
   const [isInitializing, setIsInitializing] = useState(true);
 
   // Estado para el enrutamiento público
   const [isPublicView, setIsPublicView] = useState(false);
+  const [isExamView, setIsExamView] = useState(false);
   const [publicTrainingId, setPublicTrainingId] = useState<string | null>(null);
+  const [publicExamId, setPublicExamId] = useState<string | null>(null);
+  const [isValidationView, setIsValidationView] = useState(false);
+
+
+
+  const sendEmail = async (to: string, subject: string, body: string) => {
+    console.log(`Simulating email to ${to}:\nSubject: ${subject}\nBody: ${body}`);
+    return Promise.resolve();
+  };
+
+  const sendWhatsApp = async (to: string, body: string) => {
+    console.log(`Simulating WhatsApp to ${to}:\n${body}`);
+    return Promise.resolve();
+  };
+
+  const sendExamLinkToUser = async (user: EventUser, exam: Exam) => {
+    const examLink = `${window.location.origin}/examen?id=${exam.id}`;
+    const training = trainingsRef.current.find((t: Training) => t.id === exam.trainingId);
+
+    await sendEmail(
+      user.email,
+      `Examen disponible: ${training?.title}`,
+      `Hola ${user.name}, ya puedes rendir tu examen: ${examLink}`
+    );
+
+    await sendWhatsApp(
+      user.phone,
+      `✅ Capacitación finalizada\n📝 ${training?.title}\n🔗 ${examLink}\n⏱️ ${exam.timeLimit} min`
+    );
+
+    setExams(prev => prev.map(e =>
+      e.id === exam.id
+        ? { ...e, sentTo: [...(e.sentTo || []), user.id], dispatchedAt: new Date().toISOString() }
+        : e
+    ));
+  };
+
+  const evaluateExamDispatch = () => {
+    const currentExams = examsRef.current;
+    const currentTrainings = trainingsRef.current;
+    const currentUsers = usersRef.current;
+
+    currentExams.forEach((exam: Exam) => {
+      const training = currentTrainings.find((t: Training) => t.id === exam.trainingId);
+      if (!training) return;
+
+      if (isTrainingFinished(training) && !exam.isPublished) {
+        setExams(prev => prev.map(e =>
+          e.id === exam.id ? { ...e, pendingDispatch: true } : e
+        ));
+      }
+
+      if (!exam.isPublished) return;
+
+      const eligibleUsers = currentUsers.filter((u: EventUser) =>
+        u.trainingId === exam.trainingId &&
+        u.status === UserStatus.LINK_SENT
+      );
+
+      const pendingUsers = eligibleUsers.filter((u: EventUser) =>
+        !(exam.sentTo || []).includes(u.id)
+      );
+
+      if (pendingUsers.length === 0) return;
+
+      if (isSixHoursAfterEnd(training)) {
+        pendingUsers.forEach((user: EventUser) => sendExamLinkToUser(user, exam));
+      }
+    });
+  };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      evaluateExamDispatch();
+    }, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleUpdateExam = (updatedExam: Exam) => {
+    setExams(prev => prev.map(e => 
+      e.id === updatedExam.id ? updatedExam : e
+    ));
+  };
+
+  const handleSubmitResult = (examId: string, result: Omit<ExamResult, 'id' | 'examId' | 'completedAt'>) => {
+    setExams(prev => prev.map(e => 
+      e.id === examId 
+        ? { ...e, results: [...e.results, { ...result, id: `res_${Date.now()}`, examId, completedAt: new Date().toISOString() }] } 
+        : e
+    ));
+  };
+
+  const [currentExamId, setCurrentExamId] = useState<string | null>(null); // Needed for public exam link simulation
+
+  const handleCreateExam = (trainingId: string) => {
+    const training = trainings.find(t => t.id === trainingId);
+    if (!training) return;
+
+    const newExam: Exam = {
+      id: 'ex' + Math.random().toString(36).substr(2, 5),
+      trainingId,
+      trainingTitle: training.title,
+      createdAt: new Date().toISOString(),
+      status: 'draft',
+      questions: [],
+      timeLimit: 30,
+      minPassingScore: 70,
+      results: [],
+      accessType: 'public',
+      requiresPassword: false,
+      participantFields: {
+        name: true,
+        dni: true,
+        email: false,
+        organization: false,
+      },
+      isPublished: false,
+    };
+    setExams(prev => [...prev, newExam]);
+  };
+
+  const currentExam = useMemo(() => 
+    (activeTab === 'public_exam' && currentExamId) 
+      ? exams.find(e => e.id === currentExamId) 
+      : null, 
+    [activeTab, currentExamId, exams]
+  );
+
+
 
   // --- DATOS MOCK PARA MVP DE ROLES ---
   const [companies, setCompanies] = useState<Company[]>([
-      { id: 'c1', name: 'TechFlow S.A.' },
-      { id: 'c2', name: 'Minera Los Andes' }
+      { id: 'c1', name: 'TechFlow S.A.', quotaMax: 100, quotaUsed: 10 },
+      { id: 'c2', name: 'Minera Los Andes', quotaMax: 50, quotaUsed: 5 }
   ]);
 
   const [systemUsers, setSystemUsers] = useState<SystemUser[]>([
-      { id: 'su1', name: 'Admin Global', email: 'admin@system.com', role: 'superadmin', companyId: null, isActive: true },
-      { id: 'su2', name: 'Operador TechFlow', email: 'ops@techflow.com', role: 'user', companyId: 'c1', isActive: true }
+      { id: 'su1', name: 'Admin Global', email: 'admin@system.com', role: 'super_super_admin', companyId: null, isActive: true },
+      { id: 'su2', name: 'Operador TechFlow', email: 'ops@techflow.com', role: 'admin_contratista', companyId: 'c1', isActive: true },
+      { id: 'su3', name: 'Validador Nivel 2', email: 'validador@system.com', role: 'super_admin', companyId: null, isActive: true }
   ]);
   // -------------------------------------
 
@@ -54,6 +202,7 @@ const App: React.FC = () => {
         title: 'Inducción Básica de Seguridad',
         description: 'Capacitación integral de seguridad obligatoria para ingreso a planta. Abarca normativa interna y EPP.',
         date: mondayDate,
+        registration_deadline: new Date(new Date(mondayDate).getTime() - 24 * 60 * 60 * 1000).toISOString(), // 1 día antes
         maxCapacity: 60,
         isPublished: true,
         customQuestions: ['¿Posee examen médico vigente?'],
@@ -62,13 +211,15 @@ const App: React.FC = () => {
         duration: '4 días',
         schedule: '8:00 am - 6:00 pm',
         group: 'Grupo 1',
-        companyId: null // Global
+        companyId: null, // Global
+        status: TrainingStatus.ACTIVE
       },
       {
         id: 't2',
         title: 'Manejo Defensivo - RITRA - Fatiga y Somnolencia',
         description: 'Curso mandatorio para conductores internos y externos. Enfoque en prevención de accidentes vehiculares.',
         date: fridayDate,
+        registration_deadline: new Date(new Date(fridayDate).getTime() - 24 * 60 * 60 * 1000).toISOString(),
         maxCapacity: 60,
         isPublished: true,
         customQuestions: ['Licencia de conducir', 'Categoría'],
@@ -84,6 +235,7 @@ const App: React.FC = () => {
         title: 'Trabajos de Alto Riesgo en Espacios Confinados',
         description: 'Protocolos de entrada, monitoreo de atmósfera y rescate en espacios confinados.',
         date: fridayDate,
+        registration_deadline: new Date(new Date(fridayDate).getTime() - 24 * 60 * 60 * 1000).toISOString(),
         maxCapacity: 60,
         isPublished: true,
         customQuestions: [],
@@ -99,6 +251,7 @@ const App: React.FC = () => {
         title: 'Trabajos de Alto Riesgo en Altura',
         description: 'Uso correcto de arnés, líneas de vida y prevención de caídas a distinto nivel.',
         date: saturdayDate,
+        registration_deadline: new Date(new Date(saturdayDate).getTime() - 24 * 60 * 60 * 1000).toISOString(),
         maxCapacity: 60,
         isPublished: true,
         customQuestions: ['¿Sufre de vértigo?'],
@@ -114,6 +267,7 @@ const App: React.FC = () => {
         title: 'Trabajos de Alto Riesgo en Caliente',
         description: 'Prevención de incendios en trabajos de soldadura, corte y esmerilado.',
         date: saturdayDate,
+        registration_deadline: new Date(new Date(saturdayDate).getTime() - 24 * 60 * 60 * 1000).toISOString(),
         maxCapacity: 60,
         isPublished: true,
         customQuestions: [],
@@ -129,6 +283,7 @@ const App: React.FC = () => {
         title: 'Trabajos de Aislamiento y Bloqueo de Energías',
         description: 'Procedimiento LOTOTO para intervención segura de maquinaria y equipos energizados.',
         date: sundayDate,
+        registration_deadline: new Date(new Date(sundayDate).getTime() - 24 * 60 * 60 * 1000).toISOString(),
         maxCapacity: 60,
         isPublished: true,
         customQuestions: [],
@@ -144,6 +299,7 @@ const App: React.FC = () => {
         title: 'Trabajos de Alto Riesgo en Izajes',
         description: 'Estrobado, señalización y seguridad en operaciones con grúas y cargas suspendidas.',
         date: sundayDate,
+        registration_deadline: new Date(new Date(sundayDate).getTime() - 24 * 60 * 60 * 1000).toISOString(),
         maxCapacity: 60,
         isPublished: true,
         customQuestions: [],
@@ -163,6 +319,7 @@ const App: React.FC = () => {
       trainingId: 't1',
       name: 'Andrés López',
       email: 'andres@product.com',
+      phone: '987654321',
       dni: '12345678',
       organization: 'TechFlow S.A.',
       area: 'Sistemas',
@@ -170,30 +327,43 @@ const App: React.FC = () => {
       status: UserStatus.LINK_SENT,
       meetingLink: 'https://teams.live.com/123456789',
       attended: true,
-      registeredAt: new Date().toISOString()
+      registeredAt: new Date().toISOString(),
+      identity_validated: false,
+      validation_link: '',
+      validation_completed: false
     }
   ]);
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
+  const examsRef = useRef(exams);
+  const usersRef = useRef(users);
+  const trainingsRef = useRef(trainings);
+
+  useEffect(() => { examsRef.current = exams; }, [exams]);
+  useEffect(() => { usersRef.current = users; }, [users]);
+  useEffect(() => { trainingsRef.current = trainings; }, [trainings]);
+
   // Lógica de Filtrado por Rol
   const filteredTrainings = useMemo(() => {
       if (!currentUser) return [];
-      if (currentUser.role === 'superadmin') return trainings;
+      if (currentUser.role === 'super_super_admin' || currentUser.role === 'super_admin') return trainings;
       // Usuarios ven cursos globales (null) o de su empresa
       return trainings.filter(t => !t.companyId || t.companyId === currentUser.companyId);
   }, [trainings, currentUser]);
 
   const filteredUsers = useMemo(() => {
-      // Nota: Idealmente users tendría companyId, pero por ahora filtramos por el training
-      // Si el usuario es admin ve todos, si es user ve solo los inscritos en trainings visibles
-      // Ojo: En un MVP real, deberíamos filtrar los inscritos que pertenezcan a la empresa del usuario
-      // si quisiéramos ser estrictos, pero aquí simplificamos basándonos en el training visible.
       if (!currentUser) return [];
-      if (currentUser.role === 'superadmin') return users;
+      if (currentUser.role === 'super_super_admin' || currentUser.role === 'super_admin') return users;
+      
       const visibleTrainingIds = filteredTrainings.map(t => t.id);
-      return users.filter(u => visibleTrainingIds.includes(u.trainingId));
-  }, [users, filteredTrainings, currentUser]);
+      const userCompany = companies.find(c => c.id === currentUser.companyId);
+      
+      return users.filter(u => 
+        visibleTrainingIds.includes(u.trainingId) && 
+        (!userCompany || u.organization === userCompany.name)
+      );
+  }, [users, filteredTrainings, currentUser, companies]);
 
 
   useEffect(() => {
@@ -211,10 +381,15 @@ const App: React.FC = () => {
     if ((path === '/registro' || path === '/registro/') && id) {
       setIsPublicView(true);
       setPublicTrainingId(id);
+    } else if (path.startsWith('/validar-identidad')) {
+      setIsValidationView(true);
+    } else if (path.startsWith('/examen') && id) {
+      setIsExamView(true);
+      setPublicExamId(id);
     }
 
     const savedSession = localStorage.getItem('event_mvp_session');
-    if (savedSession) setCurrentUser(JSON.parse(savedSession));
+    // if (savedSession) setCurrentUser(JSON.parse(savedSession)); // Ahora manejado por AuthContext
     setIsInitializing(false);
   }, []);
 
@@ -235,7 +410,7 @@ const App: React.FC = () => {
 
   const handleCreateTraining = (t: Omit<Training, 'id'>) => {
     const newId = 't' + Math.random().toString(36).substr(2, 5);
-    const newTraining = { ...t, id: newId, companyId: currentUser?.role === 'superadmin' ? null : currentUser?.companyId };
+    const newTraining = { ...t, id: newId, companyId: currentUser?.role === 'super_super_admin' ? null : currentUser?.companyId };
     setTrainings(prev => [newTraining, ...prev]);
 
     const newNotifs = createNotificationsForTraining(newTraining);
@@ -257,6 +432,7 @@ const App: React.FC = () => {
       trainingId: data.trainingId,
       name: data.name,
       email: data.email,
+      phone: data.phone || '',
       dni: data.dni,
       organization: data.organization,
       area: data.area,
@@ -264,7 +440,10 @@ const App: React.FC = () => {
       status: UserStatus.REGISTERED,
       attended: false,
       registeredAt: new Date().toISOString(),
-      customAnswers: data.custom
+      customAnswers: data.custom,
+      identity_validated: false,
+      validation_link: '',
+      validation_completed: false
     };
     setUsers(prev => [newUser, ...prev]);
   };
@@ -275,6 +454,7 @@ const App: React.FC = () => {
         trainingId: trainingId,
         name: u.name || '',
         email: u.email || '',
+        phone: u.phone || '',
         dni: u.dni || '',
         organization: u.organization || '',
         area: u.area || '',
@@ -283,9 +463,51 @@ const App: React.FC = () => {
         status: UserStatus.REGISTERED,
         attended: false,
         registeredAt: new Date().toISOString(),
-        customAnswers: {}
+        customAnswers: {},
+        identity_validated: false,
+        validation_link: '',
+        validation_completed: false
     }));
     setUsers(prev => [...newUsers, ...prev]);
+  };
+
+  const handleManualRegister = (userData: Partial<EventUser>, trainingId: string, newCompany?: string) => {
+    let finalOrganization = userData.organization || '';
+    
+    if (newCompany) {
+      const newCompanyId = 'c' + Math.random().toString(36).substr(2, 5);
+      const newCompanyObj: Company = {
+        id: newCompanyId,
+        name: newCompany,
+        quotaMax: 0,
+        quotaUsed: 0
+      };
+      setCompanies(prev => [...prev, newCompanyObj]);
+      finalOrganization = newCompany;
+    }
+
+    const newUser: EventUser = {
+      id: 'u' + Math.random().toString(36).substr(2, 7),
+      trainingId: trainingId,
+      name: userData.name || '',
+      email: userData.email || '',
+      phone: userData.phone || '',
+      dni: userData.dni || '',
+      organization: finalOrganization,
+      area: userData.area || '',
+      role: userData.role || '',
+      brevete: userData.brevete,
+      dniPhoto: userData.dniPhoto,
+      status: UserStatus.REGISTERED,
+      attended: false,
+      registeredAt: new Date().toISOString(),
+      customAnswers: {},
+      identity_validated: false,
+      validation_link: '',
+      validation_completed: false
+    };
+    setUsers(prev => [newUser, ...prev]);
+    alert('Trabajador registrado exitosamente');
   };
 
   const handleUpdateStatus = (userId: string, status: UserStatus, meetingLink?: string) => {
@@ -306,13 +528,14 @@ const App: React.FC = () => {
 
   const handleExport = (trainingId: string) => {
     const training = trainings.find(t => t.id === trainingId);
-    const headers = ['Nombres y Apellidos', 'DNI', 'Email', 'Empresa', 'Área', 'Cargo', 'Brevete', 'Estado', 'Asistencia'];
+    const headers = ['Nombres y Apellidos', 'DNI', 'Email', 'Teléfono', 'Empresa', 'Área', 'Cargo', 'Brevete', 'Estado', 'Asistencia'];
     const trainingUsers = users.filter(u => u.trainingId === trainingId);
     
     const rows = trainingUsers.map(u => [
       u.name, 
       u.dni, 
       u.email, 
+      u.phone,
       u.organization, 
       u.area, 
       u.role, 
@@ -333,6 +556,17 @@ const App: React.FC = () => {
     document.body.removeChild(link);
   };
 
+  if (isValidationView) {
+    return <IdentityValidationPage />;
+  }
+
+  if (isExamView && publicExamId) {
+    const exam = exams.find(e => e.id === publicExamId);
+    if (!exam) return <div>Examen no encontrado</div>;
+    if (!exam.isPublished) return <div>Examen no disponible</div>;
+    return <PublicExam examId={exam.id} onSubmitResult={handleSubmitResult} />;
+  }
+
   if (isPublicView && publicTrainingId) {
     const targetTraining = trainings.find(t => t.id === publicTrainingId);
     if (!targetTraining) return <div className="p-10 text-center">No encontrado</div>; // Simplified error
@@ -346,24 +580,39 @@ const App: React.FC = () => {
   }
 
   if (isInitializing) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><i className="fas fa-circle-notch fa-spin text-indigo-600 text-3xl"></i></div>;
-  if (!currentUser) return <Auth onLogin={setCurrentUser} />;
+  if (!currentUser) return <Auth />;
 
   return (
     <Layout 
       activeTab={activeTab} 
       onTabChange={setActiveTab} 
       user={currentUser} 
-      onLogout={() => { localStorage.removeItem('event_mvp_session'); setCurrentUser(null); }}
+      onLogout={handleLogout}
     >
       <div className="animate-fadeIn">
         {activeTab === 'trainings' && (
-          <TrainingManager 
-            trainings={filteredTrainings} 
-            onCreateTraining={handleCreateTraining}
-            onUpdateTraining={handleUpdateTraining}
-            onSelectTraining={handleSelectTraining}
-            userRole={currentUser.role}
-          />
+          currentUser.role === 'admin_contratista' ? (
+              <AvailableTrainings 
+                trainings={filteredTrainings}
+                onSelectTraining={handleSelectTraining}
+              />
+          ) : (
+              <TrainingManager 
+                trainings={filteredTrainings} 
+                onCreateTraining={handleCreateTraining}
+                onUpdateTraining={handleUpdateTraining}
+                onSelectTraining={handleSelectTraining}
+                userRole={currentUser.role}
+                onScheduleGenerated={(schedule) => {
+                    setTrainings(prev => {
+                        const scheduleTrainingIds = schedule.trainings.map((t: Training) => t.id);
+                        const otherTrainings = prev.filter(t => !scheduleTrainingIds.includes(t.id));
+                        return [...otherTrainings, ...schedule.trainings];
+                    });
+                }}
+                users={users}
+              />
+          )
         )}
         {activeTab === 'calendar' && (
           <CalendarView
@@ -382,15 +631,21 @@ const App: React.FC = () => {
             onToggleAttendance={handleToggleAttendance}
             onExport={handleExport}
             onBulkRegister={handleBulkRegister}
+            onManualRegister={handleManualRegister}
             onConsolidate={handleConsolidate}
+            companyName={companies.find(c => c.id === currentUser.companyId)?.name}
+            companies={companies}
+            currentUserCompanyId={currentUser.companyId}
+            exams={exams}
+            examResults={examResults}
           />
         )}
         {activeTab === 'notifications' && (
           <NotificationCenter notifications={notifications} />
         )}
         
-        {/* Nueva Pestaña solo accesible si es superadmin (Layout ya protege el botón, pero aquí protegemos render) */}
-        {activeTab === 'users' && currentUser.role === 'superadmin' && (
+        {/* Nueva Pestaña solo accesible si es super_super_admin */}
+        {activeTab === 'users' && currentUser.role === 'super_super_admin' && (
             <UserManagement 
                 users={systemUsers}
                 companies={companies}
@@ -398,6 +653,24 @@ const App: React.FC = () => {
                 onUpdateUser={handleUpdateUser}
                 onToggleStatus={handleToggleUserStatus}
             />
+        )}
+
+        {activeTab === 'evaluaciones' && currentUser.role !== 'admin_contratista' && (
+          <EvaluacionesModule 
+            trainings={filteredTrainings}
+            exams={exams}
+            onCreateExam={handleCreateExam}
+            onUpdateExam={handleUpdateExam}
+            currentUserRole={currentUser.role}
+            users={filteredUsers}
+          />
+        )}
+
+        {activeTab === 'public_exam' && currentExam && (
+          <PublicExam 
+            examId={currentExam.id}
+            onSubmitResult={handleSubmitResult}
+          />
         )}
 
         {/* Mantenemos la vista pública para demo */}
@@ -408,6 +681,16 @@ const App: React.FC = () => {
         )}
       </div>
     </Layout>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <AuthProvider>
+      <NavigationProvider>
+        <AppContent />
+      </NavigationProvider>
+    </AuthProvider>
   );
 };
 

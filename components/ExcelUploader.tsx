@@ -24,6 +24,7 @@ const HEADER_MAPPINGS: Record<string, string[]> = {
   name: ['nombres y apellidos', 'nombre completo', 'apellidos y nombres', 'nombre', 'nombres', 'participante'],
   dni: ['dni', 'documento', 'nro dni', 'n dni', 'numero dni', 'id', 'identificacion'],
   email: ['email', 'correo', 'correo electronico', 'e-mail'],
+  phone: ['telefono', 'celular', 'phone', 'movil', 'nro telefono', 'numero'],
   organization: ['empresa', 'compania', 'razon social', 'organizacion', 'cliente'],
   area: ['area', 'departamento', 'gerencia', 'unidad', 'seccion'],
   role: ['cargo', 'puesto', 'posicion', 'rol', 'funcion'],
@@ -114,7 +115,7 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({ training, existing
             headerIndices[key] = headers.indexOf(map[key]);
         });
 
-        rows.forEach((row) => {
+        rows.forEach((row, index) => {
             // Ignorar filas vacías
             if (row.length === 0) return;
 
@@ -139,10 +140,40 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({ training, existing
                 return; 
             }
 
+            // Validar Email
+            const emailRaw = row[headerIndices['email']];
+            if (!emailRaw) {
+                 throw new Error(`Fila ${index + 2}: El correo electrónico es obligatorio.`);
+            }
+            
+            const email = String(emailRaw).trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                 throw new Error(`Fila ${index + 2}: Email inválido (${email})`);
+            }
+
+            // Validar Teléfono
+            const phoneRaw = row[headerIndices['phone']];
+            if (!phoneRaw) {
+                 throw new Error(`Fila ${index + 2}: El teléfono es obligatorio.`);
+            }
+            const phone = String(phoneRaw).trim();
+            if (phone.length < 9) {
+                 throw new Error(`Fila ${index + 2}: El teléfono debe tener al menos 9 dígitos.`);
+            }
+            // Validación específica celular peruano (9 dígitos)
+            const cleanPhone = phone.replace(/[\s\-\+\(\)]/g, '');
+            const peruMobileRegex = /^9\d{8}$/;
+            if (cleanPhone.length === 9 && !peruMobileRegex.test(cleanPhone)) {
+                // Warning o Error? Asumimos Error para consistencia con formulario individual
+                 throw new Error(`Fila ${index + 2}: Celular peruano debe comenzar con 9 (${phone})`);
+            }
+
             mappedRows.push({
                 name: row[headerIndices['name']],
                 dni: dni,
-                email: row[headerIndices['email']],
+                email: email,
+                phone: phone,
                 organization: row[headerIndices['organization']],
                 area: row[headerIndices['area']],
                 role: row[headerIndices['role']],
@@ -289,6 +320,8 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({ training, existing
                                         <tr>
                                             <th className="p-3">DNI</th>
                                             <th className="p-3">Nombre</th>
+                                            <th className="p-3">Email</th>
+                                            <th className="p-3">Teléfono</th>
                                             <th className="p-3">Empresa</th>
                                             <th className="p-3">Cargo</th>
                                             <th className="p-3">Brevete</th>
@@ -299,6 +332,8 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({ training, existing
                                             <tr key={i} className="hover:bg-slate-50">
                                                 <td className="p-3 font-mono text-slate-600">{row.dni}</td>
                                                 <td className="p-3 font-bold text-slate-800">{row.name}</td>
+                                                <td className="p-3 text-slate-600 text-xs">{row.email}</td>
+                                                <td className="p-3 text-slate-600 text-xs">{row.phone}</td>
                                                 <td className="p-3 text-slate-600">{row.organization}</td>
                                                 <td className="p-3 text-slate-600">{row.role}</td>
                                                 <td className="p-3 text-slate-500 italic">{row.brevete || '-'}</td>

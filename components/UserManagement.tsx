@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { SystemUser, Company, UserRole } from '../types';
+import { SystemUser, Company, UserRole, ROLE_LABELS } from '../types';
 
 interface UserManagementProps {
   users: SystemUser[];
@@ -18,12 +18,12 @@ export const UserManagement: React.FC<UserManagementProps> = ({ users, companies
     name: '',
     email: '',
     password: '',
-    role: 'user' as UserRole,
+    role: 'admin_contratista' as UserRole,
     companyId: ''
   });
 
   const resetForm = () => {
-    setFormData({ name: '', email: '', password: '', role: 'user', companyId: '' });
+    setFormData({ name: '', email: '', password: '', role: 'admin_contratista', companyId: '' });
     setEditingUser(null);
     setIsModalOpen(false);
   };
@@ -40,7 +40,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ users, companies
       });
     } else {
       setEditingUser(null);
-      setFormData({ name: '', email: '', password: '', role: 'user', companyId: '' });
+      setFormData({ name: '', email: '', password: '', role: 'admin_contratista', companyId: '' });
     }
     setIsModalOpen(true);
   };
@@ -49,8 +49,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ users, companies
     e.preventDefault();
     
     // Validaciones básicas
-    if (formData.role === 'user' && !formData.companyId) {
-      alert("Debes asignar una empresa a los usuarios no administradores.");
+    if (formData.role === 'admin_contratista' && !formData.companyId) {
+      alert("Debes asignar una empresa a los administradores de contratista.");
       return;
     }
 
@@ -58,7 +58,7 @@ export const UserManagement: React.FC<UserManagementProps> = ({ users, companies
       name: formData.name,
       email: formData.email,
       role: formData.role,
-      companyId: formData.role === 'superadmin' ? null : formData.companyId,
+      companyId: formData.role === 'admin_contratista' ? formData.companyId : null,
       isActive: true
     };
 
@@ -77,14 +77,14 @@ export const UserManagement: React.FC<UserManagementProps> = ({ users, companies
   return (
     <div className="space-y-8 animate-fadeIn">
       {/* Header */}
-      <div className="flex justify-between items-end border-b border-slate-200 pb-6">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-3xl border border-catalina-grey/20 shadow-sm">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">Gestión de Usuarios</h2>
-          <p className="text-slate-500 text-sm mt-1">Administra el acceso al sistema de operadores y administradores.</p>
+          <h2 className="text-2xl font-black text-catalina-forest-green tracking-tight">Gestión de Usuarios</h2>
+          <p className="text-catalina-grey/80 text-sm mt-1">Administra el acceso al sistema de operadores y administradores.</p>
         </div>
         <button
           onClick={() => openModal()}
-          className="bg-slate-900 text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-slate-800 hover:shadow-lg transition-all"
+                    className="bg-catalina-green text-white px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-catalina-forest-green shadow-lg shadow-catalina-green/20 transition-all"
         >
           <i className="fas fa-user-plus text-xs"></i>
           Nuevo Usuario
@@ -96,47 +96,47 @@ export const UserManagement: React.FC<UserManagementProps> = ({ users, companies
         {users.map(u => {
            const company = companies.find(c => c.id === u.companyId);
            return (
-             <div key={u.id} className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-md transition-all group">
+                          <div key={u.id} className="bg-white rounded-2xl border border-catalina-grey/20 p-6 hover:shadow-xl hover:-translate-y-1 transition-all group">
                <div className="flex justify-between items-start mb-4">
-                 <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-sm">
+                                  <div className="w-10 h-10 rounded-full bg-catalina-green/10 flex items-center justify-center text-catalina-green font-bold text-sm">
                     {u.name.charAt(0).toUpperCase()}
                  </div>
                  <div className="flex gap-2">
-                     <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide border ${u.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+                                          <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wide border ${u.isActive ? 'bg-catalina-green/10 text-catalina-green border-catalina-green/20' : 'bg-catalina-grey/10 text-catalina-grey border-catalina-grey/20'}`}>
                          {u.isActive ? 'Activo' : 'Inactivo'}
                      </span>
                  </div>
                </div>
                
-               <h3 className="text-slate-900 font-semibold mb-1">{u.name}</h3>
-               <p className="text-sm text-slate-500 mb-4">{u.email}</p>
+               <h3 className="text-catalina-forest-green font-semibold mb-1">{u.name}</h3>
+               <p className="text-sm text-catalina-grey/70 mb-4">{u.email}</p>
 
-               <div className="border-t border-slate-50 pt-4 space-y-2">
-                 <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-400">Rol:</span>
-                    <span className={`font-medium ${u.role === 'superadmin' ? 'text-amber-600' : 'text-slate-700'} capitalize`}>
-                        {u.role === 'superadmin' ? 'Super Admin' : 'Operador'}
+                              <div className="border-t border-catalina-grey/10 pt-4 space-y-2">
+                 <div className="flex justify-between items-center text-sm">
+                    <span className="text-catalina-grey/60">Rol:</span>
+                                        <span className={`font-medium ${u.role === 'super_super_admin' ? 'text-catalina-highlight-orange' : u.role === 'super_admin' ? 'text-catalina-forest-green' : 'text-catalina-green'} capitalize`}>
+                        {ROLE_LABELS[u.role]}
                     </span>
                  </div>
-                 <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-400">Empresa:</span>
-                    <span className="font-medium text-slate-700 truncate max-w-[150px]">
-                        {u.role === 'superadmin' ? 'Global (Todas)' : company?.name || 'Sin Asignar'}
+                 <div className="flex justify-between items-center text-sm">
+                    <span className="text-catalina-grey/60">Empresa:</span>
+                    <span className="font-medium text-catalina-forest-green truncate max-w-[150px]">
+                        {u.role === 'admin_contratista' ? company?.name || 'Sin Asignar' : 'Global (Todas)'}
                     </span>
                  </div>
                </div>
 
                <div className="mt-6 flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                   <button 
+                                      <button 
                      onClick={() => openModal(u)}
-                     className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                     className="p-2 text-catalina-grey/60 hover:text-catalina-green hover:bg-catalina-green/10 rounded-lg transition-colors"
                      title="Editar"
                    >
                        <i className="fas fa-pencil-alt text-xs"></i>
                    </button>
-                   <button 
+                                      <button 
                      onClick={() => onToggleStatus(u.id)}
-                     className={`p-2 rounded-lg transition-colors ${u.isActive ? 'text-slate-400 hover:text-red-500 hover:bg-red-50' : 'text-slate-400 hover:text-emerald-500 hover:bg-emerald-50'}`}
+                     className={`p-2 rounded-lg transition-colors ${u.isActive ? 'text-catalina-grey/60 hover:text-catalina-highlight-orange hover:bg-catalina-highlight-orange/10' : 'text-catalina-grey/60 hover:text-catalina-green hover:bg-catalina-green/10'}`}
                      title={u.isActive ? "Desactivar" : "Activar"}
                    >
                        <i className={`fas ${u.isActive ? 'fa-ban' : 'fa-check-circle'} text-xs`}></i>
@@ -149,40 +149,40 @@ export const UserManagement: React.FC<UserManagementProps> = ({ users, companies
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div className="fixed inset-0 bg-catalina-forest-green/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl p-8 animate-fadeIn">
-                <h3 className="text-lg font-semibold text-slate-900 mb-6">
+                <h3 className="text-lg font-bold text-catalina-forest-green mb-6">
                     {editingUser ? 'Editar Usuario' : 'Crear Nuevo Usuario'}
                 </h3>
                 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Nombre Completo</label>
-                        <input 
+                        <label className="block text-xs font-bold text-catalina-grey/80 uppercase tracking-wider mb-1">Nombre Completo</label>
+                                                <input 
                             required
-                            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                            className="w-full px-4 py-2.5 rounded-lg border border-catalina-grey/40 text-sm outline-none focus:ring-1 focus:ring-catalina-green focus:border-catalina-green transition-all"
                             value={formData.name}
                             onChange={e => setFormData({...formData, name: e.target.value})}
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Email</label>
-                        <input 
+                        <label className="block text-xs font-bold text-catalina-grey/80 uppercase tracking-wider mb-1">Email</label>
+                                                <input 
                             required
                             type="email"
-                            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                            className="w-full px-4 py-2.5 rounded-lg border border-catalina-grey/40 text-sm outline-none focus:ring-1 focus:ring-catalina-green focus:border-catalina-green transition-all"
                             value={formData.email}
                             onChange={e => setFormData({...formData, email: e.target.value})}
                         />
                     </div>
                     <div>
-                        <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">
+                        <label className="block text-xs font-bold text-catalina-grey/80 uppercase tracking-wider mb-1">
                             {editingUser ? 'Nueva Contraseña (Opcional)' : 'Contraseña'}
                         </label>
-                        <input 
+                                                <input 
                             type="password"
                             required={!editingUser}
-                            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                            className="w-full px-4 py-2.5 rounded-lg border border-catalina-grey/40 text-sm outline-none focus:ring-1 focus:ring-catalina-green focus:border-catalina-green transition-all"
                             value={formData.password}
                             onChange={e => setFormData({...formData, password: e.target.value})}
                         />
@@ -190,21 +190,22 @@ export const UserManagement: React.FC<UserManagementProps> = ({ users, companies
                     
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Rol</label>
-                            <select 
-                                className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm outline-none"
+                            <label className="block text-xs font-bold text-catalina-grey/80 uppercase tracking-wider mb-1">Rol</label>
+                                                        <select 
+                                className="w-full px-4 py-2.5 rounded-lg border border-catalina-grey/40 text-sm outline-none bg-white focus:ring-1 focus:ring-catalina-green focus:border-catalina-green transition-all"
                                 value={formData.role}
                                 onChange={e => setFormData({...formData, role: e.target.value as UserRole})}
                             >
-                                <option value="user">Operador</option>
-                                <option value="superadmin">Super Admin</option>
+                                <option value="admin_contratista">{ROLE_LABELS.admin_contratista}</option>
+                                <option value="super_admin">{ROLE_LABELS.super_admin}</option>
+                                <option value="super_super_admin">{ROLE_LABELS.super_super_admin}</option>
                             </select>
                         </div>
-                        {formData.role === 'user' && (
+                        {formData.role === 'admin_contratista' && (
                             <div>
-                                <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Empresa</label>
-                                <select 
-                                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm outline-none"
+                                <label className="block text-xs font-bold text-catalina-grey/80 uppercase tracking-wider mb-1">Empresa</label>
+                                                                <select 
+                                    className="w-full px-4 py-2.5 rounded-lg border border-catalina-grey/40 text-sm outline-none bg-white focus:ring-1 focus:ring-catalina-green focus:border-catalina-green transition-all"
                                     value={formData.companyId}
                                     onChange={e => setFormData({...formData, companyId: e.target.value})}
                                 >
@@ -218,8 +219,8 @@ export const UserManagement: React.FC<UserManagementProps> = ({ users, companies
                     </div>
 
                     <div className="flex justify-end gap-3 pt-6">
-                        <button type="button" onClick={resetForm} className="px-4 py-2 text-sm text-slate-500 font-medium hover:bg-slate-50 rounded-lg">Cancelar</button>
-                        <button type="submit" className="px-4 py-2 text-sm bg-slate-900 text-white font-medium rounded-lg hover:bg-slate-800 shadow-lg">Guardar</button>
+                                                <button type="button" onClick={resetForm} className="px-4 py-2 text-sm text-catalina-grey/80 font-bold hover:bg-catalina-grey/10 rounded-lg">Cancelar</button>
+                                                <button type="submit" className="px-4 py-2 text-sm bg-catalina-green text-white font-bold rounded-lg hover:bg-catalina-forest-green shadow-lg shadow-catalina-green/20">Guardar</button>
                     </div>
                 </form>
             </div>

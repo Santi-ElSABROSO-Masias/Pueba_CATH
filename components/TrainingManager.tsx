@@ -1,13 +1,18 @@
 
 import React, { useState } from 'react';
-import { Training, UserRole } from '../types';
+import { Training, UserRole, MonthlySchedule, EventUser } from '../types';
+import { MonthlyScheduleManager } from './MonthlyScheduleManager';
+import { DuplicateTrainingModal } from './DuplicateTrainingModal';
+import { ParticipantsLinksModal } from './ParticipantsLinksModal';
 
 interface TrainingManagerProps {
   trainings: Training[];
+  users?: EventUser[]; // Para contar inscritos
   onCreateTraining: (training: Omit<Training, 'id'>) => void;
   onUpdateTraining: (training: Training) => void;
   onSelectTraining: (trainingId: string) => void;
   userRole: UserRole; // Nuevo prop para control de acceso
+  onScheduleGenerated?: (schedule: MonthlySchedule) => void; // Prop para recargar trainings
 }
 
 const COLORS = [
@@ -21,58 +26,68 @@ const COLORS = [
   '#6366F1', // Indigo
 ];
 
-export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, onCreateTraining, onUpdateTraining, onSelectTraining, userRole }) => {
+export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, users, onCreateTraining, onUpdateTraining, onSelectTraining, userRole, onScheduleGenerated }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [sharingId, setSharingId] = useState<string | null>(null);
+  const [participantsForModal, setParticipantsForModal] = useState<EventUser[]>([]);
+  const [showScheduleManager, setShowScheduleManager] = useState(false);
+  const [duplicatingTraining, setDuplicatingTraining] = useState<Training | null>(null);
   
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     date: '',
+    registration_deadline: '', // Nuevo campo
     maxCapacity: 60,
     isPublished: true,
     customQuestions: [] as string[],
     color: COLORS[0],
     duration: '',
     schedule: '',
-    group: 'Grupo 1'
+    group: 'Grupo 1',
+    meetingLink: ''
   });
   const [tempQuestion, setTempQuestion] = useState('');
 
-  const isSuperAdmin = userRole === 'superadmin';
+  const isSuperSuperAdmin = userRole === 'super_super_admin';
+  const isAdminContratista = userRole === 'admin_contratista';
 
   const resetForm = () => {
     setFormData({ 
       title: '', 
       description: '', 
       date: '', 
+      registration_deadline: '',
       maxCapacity: 60, 
       isPublished: true, 
       customQuestions: [],
       color: COLORS[0],
       duration: '',
       schedule: '',
-      group: 'Grupo 1'
+      group: 'Grupo 1',
+      meetingLink: ''
     });
     setEditingId(null);
   };
 
   const handleEdit = (training: Training) => {
-    // Si no es superadmin, no permitir edición (aunque idealmente el botón no se mostraría)
-    if (!isSuperAdmin) return;
+    // Solo super_super_admin puede editar
+    if (!isSuperSuperAdmin) return;
     
     setFormData({
       title: training.title,
       description: training.description,
       date: training.date,
+      registration_deadline: training.registration_deadline || '',
       maxCapacity: training.maxCapacity,
       isPublished: training.isPublished,
       customQuestions: [...training.customQuestions],
       color: training.color || COLORS[0],
       duration: training.duration || '',
       schedule: training.schedule || '',
-      group: training.group || 'Grupo 1'
+      group: training.group || 'Grupo 1',
+      meetingLink: training.meetingLink || ''
     });
     setEditingId(training.id);
   };
@@ -85,10 +100,27 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, onC
   };
 
   const handleSave = () => {
+    // Validaciones de fecha
+    if (formData.registration_deadline) {
+        if (new Date(formData.registration_deadline) >= new Date(formData.date)) {
+            alert("La fecha límite debe ser anterior a la fecha del curso");
+            return;
+        }
+        if (new Date(formData.registration_deadline) < new Date()) {
+             // Permitimos editar deadlines pasados? Quizás para corregir.
+             // Pero al crear nuevo, debería ser futuro.
+             // Por simplicidad del MVP, solo warning o permitimos.
+             // alert("La fecha límite no puede ser en el pasado");
+        }
+    } else {
+        alert("La fecha límite de inscripción es obligatoria");
+        return;
+    }
+
     if (editingId === 'new') {
-      onCreateTraining(formData);
+      onCreateTraining(formData as any);
     } else if (editingId) {
-      onUpdateTraining({ ...formData, id: editingId });
+      onUpdateTraining({ ...formData, id: editingId } as any);
     }
     resetForm();
   };
@@ -119,25 +151,76 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, onC
     setSharingId(null);
   };
 
+  const handleDuplicate = (originalTraining: Training, newDate: string, newTime: string, newCapacity: number) => {
+    const newGroupNumber = trainings.filter(t => t.title === originalTraining.title).length + 1;
+    const newGroup = `Grupo ${newGroupNumber}`;
+
+    const duplicatedTraining = {
+      ...originalTraining,
+      id: '', // El backend debería generar un nuevo ID
+      date: newDate,
+      schedule: newTime,
+      maxCapacity: newCapacity,
+      group: newGroup,
+      isPublished: false, // El duplicado empieza como borrador
+      registration_deadline: '' // Forzar a que se establezca uno nuevo
+    };
+
+    onCreateTraining(duplicatedTraining as Omit<Training, 'id'>);
+    setDuplicatingTraining(null);
+  };
+
   return (
     <div className="space-y-8 animate-fadeIn">
+      {/* Modal de Duplicación */}
+      {participantsForModal.length > 0 && (
+        <ParticipantsLinksModal 
+          participants={participantsForModal}
+          onClose={() => setParticipantsForModal([])}
+        />
+      )}
+
+      {duplicatingTraining && (
+        <DuplicateTrainingModal
+          training={duplicatingTraining}
+          onClose={() => setDuplicatingTraining(null)}
+          onDuplicate={handleDuplicate}
+          existingTrainings={trainings}
+        />
+      )}
       {/* Header Sección */}
       <div className="flex justify-between items-end border-b border-slate-200 pb-6">
         <div>
           <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">Capacitaciones</h2>
-          <p className="text-slate-500 text-sm mt-1">Gestiona el catálogo de cursos y sus configuraciones.</p>
+          {!isAdminContratista && (
+            <p className="text-slate-500 text-sm mt-1">Gestiona el catálogo de cursos y sus configuraciones.</p>
+          )}
         </div>
-        {/* Solo SuperAdmin puede crear */}
-        {!editingId && isSuperAdmin && (
-          <button
-            onClick={() => setEditingId('new')}
-            className="bg-slate-900 text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-slate-800 hover:shadow-lg transition-all"
-          >
-            <i className="fas fa-plus text-xs"></i>
-            Nueva Capacitación
-          </button>
+        {/* Solo SuperSuperAdmin puede crear */}
+        {!editingId && isSuperSuperAdmin && (
+          <div className="flex gap-2">
+              <button
+                onClick={() => setShowScheduleManager(!showScheduleManager)}
+                className={`px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all ${showScheduleManager ? 'bg-indigo-100 text-indigo-700' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+              >
+                <i className="fas fa-calendar-alt text-xs"></i>
+                {showScheduleManager ? 'Ocultar Cronograma' : 'Gestionar Cronograma'}
+              </button>
+              <button
+                onClick={() => setEditingId('new')}
+                className="bg-slate-900 text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-slate-800 hover:shadow-lg transition-all"
+              >
+                <i className="fas fa-plus text-xs"></i>
+                Nueva Capacitación
+              </button>
+          </div>
         )}
       </div>
+
+      {/* Schedule Manager (Solo Super Super Admin) */}
+      {isSuperSuperAdmin && showScheduleManager && (
+          <MonthlyScheduleManager onScheduleGenerated={onScheduleGenerated} users={users} />
+      )}
 
       {editingId ? (
         <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm animate-fadeIn">
@@ -222,6 +305,31 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, onC
                   />
                 </div>
                 <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Fecha Límite Inscripción</label>
+                  <input
+                    type="datetime-local"
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm outline-none"
+                    value={formData.registration_deadline}
+                    onChange={e => setFormData({...formData, registration_deadline: e.target.value})}
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">Cierre automático de registros</p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Link de Microsoft Teams</label>
+                <input
+                  type="url"
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
+                  placeholder="https://teams.microsoft.com/..."
+                  value={formData.meetingLink || ''}
+                  onChange={e => setFormData({...formData, meetingLink: e.target.value})}
+                />
+                <small className="text-[10px] text-slate-400 mt-1">El admin crea la reunión manualmente y pega el link aquí</small>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Aforo Máximo</label>
                   <input
                     type="number"
@@ -230,9 +338,6 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, onC
                     onChange={e => setFormData({...formData, maxCapacity: parseInt(e.target.value) || 0})}
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Duración</label>
                   <input
@@ -382,38 +487,74 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, onC
                 <div className="mt-auto pt-2 flex items-center justify-between">
                   <div className="flex items-center gap-1">
                      {/* Share Button con Popover simple */}
-                     <div className="relative">
-                        <button 
-                            onClick={() => setSharingId(sharingId === t.id ? null : t.id)}
-                            className="w-8 h-8 rounded-full hover:bg-slate-50 text-slate-400 hover:text-slate-600 flex items-center justify-center transition-colors"
-                            title="Compartir"
-                        >
-                            <i className="fas fa-share-alt text-xs"></i>
-                        </button>
-                        
-                        {sharingId === t.id && (
-                            <div className="absolute bottom-full left-0 mb-2 w-40 bg-white rounded-xl shadow-xl border border-slate-100 p-1 z-20 animate-fadeIn">
-                                <button onClick={() => copyToClipboard(t.id)} className="w-full text-left px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 rounded-lg">
-                                    <i className="fas fa-link mr-2"></i> Copiar Link
-                                </button>
-                                <button onClick={() => shareViaWhatsApp(t)} className="w-full text-left px-3 py-2 text-xs text-slate-600 hover:bg-slate-50 rounded-lg">
-                                    <i className="fab fa-whatsapp mr-2"></i> WhatsApp
-                                </button>
-                            </div>
-                        )}
-                        {/* Backdrop invisible para cerrar */}
-                        {sharingId === t.id && <div className="fixed inset-0 z-10" onClick={() => setSharingId(null)}></div>}
-                     </div>
+                     {!isAdminContratista && (
+                       <div className="relative">
+                          <button 
+                              onClick={() => setSharingId(sharingId === t.id ? null : t.id)}
+                              className="w-8 h-8 rounded-full hover:bg-slate-50 text-slate-400 hover:text-slate-600 flex items-center justify-center transition-colors"
+                              title="Compartir"
+                          >
+                              <i className="fas fa-share-alt text-xs"></i>
+                          </button>
+                          
+                          {sharingId === t.id && (
+                              <div className="absolute bottom-full left-0 mb-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 p-2 z-20 animate-fadeIn space-y-1">
+                                  <div className="px-3 py-2">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">OPCIONES DE DIFUSIÓN</p>
+                                  </div>
+                                  <button onClick={() => copyToClipboard(t.id)} className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg flex items-center gap-3">
+                                      <i className="fas fa-link text-slate-400 w-4"></i>
+                                      <span>Link de registro público</span>
+                                  </button>
+                                  <div className="border-t border-slate-100 my-1"></div>
+                                  <button onClick={() => {
+                                        const trainingParticipants = users?.filter(u => u.trainingId === t.id) || [];
+                                        setParticipantsForModal(trainingParticipants);
+                                        setSharingId(null);
+                                      }} className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg flex items-center gap-3">
+                                      <i className="fas fa-users text-slate-400 w-4"></i>
+                                      <span>Links de validación ({t.registeredCount || 0})</span>
+                                  </button>
+                              </div>
+                          )}
+                          {/* Backdrop invisible para cerrar */}
+                          {sharingId === t.id && <div className="fixed inset-0 z-10" onClick={() => setSharingId(null)}></div>}
+                       </div>
+                     )}
 
-                     {/* Botón Configurar (Solo Admin) */}
-                     {isSuperAdmin && (
-                        <button 
-                            onClick={() => handleEdit(t)}
-                            className="w-8 h-8 rounded-full hover:bg-slate-50 text-slate-400 hover:text-slate-600 flex items-center justify-center transition-colors"
-                            title="Configurar"
-                        >
-                            <i className="fas fa-cog text-xs"></i>
-                        </button>
+                     {/* Controles SuperSuperAdmin */}
+                     {isSuperSuperAdmin && (
+                        <>
+                          {/* Toggle Activo/Inactivo */}
+                          <div className="flex items-center gap-1.5 text-xs text-slate-500" title={t.isPublished ? 'Desactivar capacitación' : 'Activar capacitación'}>
+                            <button
+                              id={`toggle-${t.id}`}
+                              onClick={() => onUpdateTraining({ ...t, isPublished: !t.isPublished })}
+                              className={`relative inline-flex items-center h-5 w-9 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500 ${t.isPublished ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                            >
+                              <span className={`inline-block w-3 h-3 transform bg-white rounded-full transition-transform ${t.isPublished ? 'translate-x-5' : 'translate-x-1'}`} />
+                            </button>
+                          </div>
+
+                          {/* Botón Duplicar */}
+                          <button
+                            onClick={() => setDuplicatingTraining(t)}
+                            className="w-auto h-8 px-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors gap-1.5"
+                            title="Duplicar"
+                          >
+                            <i className="far fa-copy text-xs"></i>
+                            <span className="text-[10px] font-bold">Duplicar</span>
+                          </button>
+
+                          {/* Botón Configurar (Existente) */}
+                          <button 
+                              onClick={() => handleEdit(t)}
+                              className="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors"
+                              title="Configurar"
+                          >
+                              <i className="fas fa-cog text-xs"></i>
+                          </button>
+                        </>
                      )}
                   </div>
 

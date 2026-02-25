@@ -1,6 +1,8 @@
 
 import React, { useState, useMemo } from 'react';
-import { Training, EventUser, SystemUser } from '../types';
+import { Training, EventUser, SystemUser, TrainingStatus } from '../types';
+import { useAuth } from '../AuthContext';
+import { useAutoCloseOnNavigate } from '../hooks/useAutoCloseOnNavigate';
 
 interface CalendarViewProps {
   trainings: Training[];
@@ -9,12 +11,15 @@ interface CalendarViewProps {
   onSelectTraining: (id: string) => void;
 }
 
-type TrainingStatus = 'ACTIVE' | 'FULL' | 'CLOSED' | 'UPCOMING';
+
 
 export const CalendarView: React.FC<CalendarViewProps> = ({ trainings, users, currentUser, onSelectTraining }) => {
+  const { can } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedStatus, setSelectedStatus] = useState<TrainingStatus | 'ALL'>('ALL');
   const [modalTraining, setModalTraining] = useState<{ training: Training; status: TrainingStatus; enrolled: number } | null>(null);
+
+  useAutoCloseOnNavigate('calendar-modal', !!modalTraining, () => setModalTraining(null));
 
   // --- Helpers de Fecha ---
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
@@ -30,11 +35,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ trainings, users, cu
     // Asumimos que t.date es string YYYY-MM-DD. Añadimos T00:00:00 para evitar problemas de zona horaria local
     const tDate = new Date(t.date + 'T00:00:00');
 
-    if (tDate < today) return 'CLOSED';
-    if (enrolledCount >= t.maxCapacity) return 'FULL';
+    if (tDate < today) return TrainingStatus.CLOSED;
+    if (enrolledCount >= t.maxCapacity) return TrainingStatus.FULL;
     
     // Opcional: Lógica para "UPCOMING" si faltan más de 30 días, por ahora usaremos ACTIVE
-    return 'ACTIVE';
+    return TrainingStatus.ACTIVE;
   };
 
   const getStatusLabel = (status: TrainingStatus) => {
@@ -56,9 +61,9 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ trainings, users, cu
       return {
         ...t,
         enrolled,
-        status: getTrainingStatus(t, enrolled)
+        calendarStatus: getTrainingStatus(t, enrolled)
       };
-    }).filter(t => selectedStatus === 'ALL' || t.status === selectedStatus);
+    }).filter(t => selectedStatus === 'ALL' || t.calendarStatus === selectedStatus);
   }, [trainings, users, month, year, selectedStatus]);
 
   // --- Render Helpers ---
@@ -143,7 +148,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ trainings, users, cu
                   {dayTrainings.map(t => (
                     <div 
                       key={t.id}
-                      onClick={() => setModalTraining({ training: t, status: t.status, enrolled: t.enrolled })}
+                      onClick={() => setModalTraining({ training: t, status: t.calendarStatus, enrolled: t.enrolled })}
                       className="text-[10px] p-1.5 rounded-md border cursor-pointer transition-all hover:scale-[1.02] shadow-sm truncate font-medium"
                       style={{ 
                           backgroundColor: `${t.color}15` || '#f1f5f9', // 15 es la opacidad hex
@@ -187,7 +192,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ trainings, users, cu
                         {dayTrainings.map(t => (
                             <div 
                               key={t.id} 
-                              onClick={() => setModalTraining({ training: t, status: t.status, enrolled: t.enrolled })} 
+                              onClick={() => setModalTraining({ training: t, status: t.calendarStatus, enrolled: t.enrolled })} 
                               className="flex items-center gap-3 active:scale-95 transition-transform"
                             >
                                 <div 
@@ -260,20 +265,22 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ trainings, users, cu
                     <div className="grid grid-cols-2 gap-3">
                         <button 
                             onClick={() => setModalTraining(null)}
-                            className="px-4 py-3 rounded-xl font-bold text-slate-500 border border-slate-200 hover:bg-slate-50 transition-colors"
+                            className={`px-4 py-3 rounded-xl font-bold text-slate-500 border border-slate-200 hover:bg-slate-50 transition-colors ${!can('canManageCalendar') ? 'col-span-2' : ''}`}
                         >
                             Cerrar
                         </button>
-                        <button 
-                            onClick={() => {
-                                onSelectTraining(modalTraining.training.id);
-                                setModalTraining(null);
-                            }}
-                            className="bg-slate-900 text-white px-4 py-3 rounded-xl font-bold hover:bg-slate-800 shadow-lg shadow-slate-200 flex items-center justify-center gap-2 transition-all"
-                        >
-                            <i className="fas fa-external-link-alt text-xs"></i>
-                            Gestionar
-                        </button>
+                        {can('canManageCalendar') && (
+                          <button 
+                              onClick={() => {
+                                  onSelectTraining(modalTraining.training.id);
+                                  setModalTraining(null);
+                              }}
+                              className="bg-slate-900 text-white px-4 py-3 rounded-xl font-bold hover:bg-slate-800 shadow-lg shadow-slate-200 flex items-center justify-center gap-2 transition-all"
+                          >
+                              <i className="fas fa-external-link-alt text-xs"></i>
+                              Gestionar
+                          </button>
+                        )}
                     </div>
                 </div>
             </div>
