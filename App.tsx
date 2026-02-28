@@ -13,7 +13,7 @@ import { EvaluacionesModule } from './components/EvaluacionesModule';
 import { IdentityValidationPage } from './components/IdentityValidationPage';
 import { Auth } from './components/Auth';
 import { EventUser, UserStatus, SystemUser, Training, Notification, Company, TrainingStatus, Question, Exam, ExamResult } from './types';
-import { createNotificationsForTraining } from './utils/notificationLogic';
+import { createNotificationsForTraining, createCourseOpenedNotification, createRegistrationConfirmedNotification } from './utils/notificationLogic';
 import { isTrainingFinished, isSixHoursAfterEnd } from './utils/time';
 
 import { AuthProvider, useAuth } from './AuthContext';
@@ -117,15 +117,15 @@ const AppContent: React.FC = () => {
   }, []);
 
   const handleUpdateExam = (updatedExam: Exam) => {
-    setExams(prev => prev.map(e => 
+    setExams(prev => prev.map(e =>
       e.id === updatedExam.id ? updatedExam : e
     ));
   };
 
   const handleSubmitResult = (examId: string, result: Omit<ExamResult, 'id' | 'examId' | 'completedAt'>) => {
-    setExams(prev => prev.map(e => 
-      e.id === examId 
-        ? { ...e, results: [...e.results, { ...result, id: `res_${Date.now()}`, examId, completedAt: new Date().toISOString() }] } 
+    setExams(prev => prev.map(e =>
+      e.id === examId
+        ? { ...e, results: [...e.results, { ...result, id: `res_${Date.now()}`, examId, completedAt: new Date().toISOString() }] }
         : e
     ));
   };
@@ -159,10 +159,10 @@ const AppContent: React.FC = () => {
     setExams(prev => [...prev, newExam]);
   };
 
-  const currentExam = useMemo(() => 
-    (activeTab === 'public_exam' && currentExamId) 
-      ? exams.find(e => e.id === currentExamId) 
-      : null, 
+  const currentExam = useMemo(() =>
+    (activeTab === 'public_exam' && currentExamId)
+      ? exams.find(e => e.id === currentExamId)
+      : null,
     [activeTab, currentExamId, exams]
   );
 
@@ -170,14 +170,14 @@ const AppContent: React.FC = () => {
 
   // --- DATOS MOCK PARA MVP DE ROLES ---
   const [companies, setCompanies] = useState<Company[]>([
-      { id: 'c1', name: 'TechFlow S.A.', quotaMax: 100, quotaUsed: 10 },
-      { id: 'c2', name: 'Minera Los Andes', quotaMax: 50, quotaUsed: 5 }
+    { id: 'c1', name: 'TechFlow S.A.', quotaMax: 100, quotaUsed: 10 },
+    { id: 'c2', name: 'Minera Los Andes', quotaMax: 50, quotaUsed: 5 }
   ]);
 
   const [systemUsers, setSystemUsers] = useState<SystemUser[]>([
-      { id: 'su1', name: 'Admin Global', email: 'admin@system.com', role: 'super_super_admin', companyId: null, isActive: true },
-      { id: 'su2', name: 'Operador TechFlow', email: 'ops@techflow.com', role: 'admin_contratista', companyId: 'c1', isActive: true },
-      { id: 'su3', name: 'Validador Nivel 2', email: 'validador@system.com', role: 'super_admin', companyId: null, isActive: true }
+    { id: 'su1', name: 'Admin Global', email: 'admin@system.com', role: 'super_super_admin', companyId: null, isActive: true },
+    { id: 'su2', name: 'Operador TechFlow', email: 'ops@techflow.com', role: 'admin_contratista', companyId: 'c1', isActive: true },
+    { id: 'su3', name: 'Validador Nivel 2', email: 'validador@system.com', role: 'super_admin', companyId: null, isActive: true }
   ]);
   // -------------------------------------
 
@@ -192,6 +192,11 @@ const AppContent: React.FC = () => {
 
   const [trainings, setTrainings] = useState<Training[]>(() => {
     const mondayDate = getNextDate(1);
+    const thursdayDate = (() => {
+      const d = new Date(mondayDate + 'T00:00:00');
+      d.setDate(d.getDate() + 3);
+      return d.toISOString().split('T')[0];
+    })();
     const fridayDate = getNextDate(5);
     const saturdayDate = getNextDate(6);
     const sundayDate = getNextDate(0);
@@ -202,6 +207,8 @@ const AppContent: React.FC = () => {
         title: 'Inducción Básica de Seguridad',
         description: 'Capacitación integral de seguridad obligatoria para ingreso a planta. Abarca normativa interna y EPP.',
         date: mondayDate,
+        endDate: thursdayDate,
+        isFullDay: true,
         registration_deadline: new Date(new Date(mondayDate).getTime() - 24 * 60 * 60 * 1000).toISOString(), // 1 día antes
         maxCapacity: 60,
         isPublished: true,
@@ -346,30 +353,30 @@ const AppContent: React.FC = () => {
 
   // Lógica de Filtrado por Rol
   const filteredTrainings = useMemo(() => {
-      if (!currentUser) return [];
-      if (currentUser.role === 'super_super_admin' || currentUser.role === 'super_admin') return trainings;
-      // Usuarios ven cursos globales (null) o de su empresa
-      return trainings.filter(t => !t.companyId || t.companyId === currentUser.companyId);
+    if (!currentUser) return [];
+    if (currentUser.role === 'super_super_admin' || currentUser.role === 'super_admin') return trainings;
+    // Usuarios ven cursos globales (null) o de su empresa
+    return trainings.filter(t => !t.companyId || t.companyId === currentUser.companyId);
   }, [trainings, currentUser]);
 
   const filteredUsers = useMemo(() => {
-      if (!currentUser) return [];
-      if (currentUser.role === 'super_super_admin' || currentUser.role === 'super_admin') return users;
-      
-      const visibleTrainingIds = filteredTrainings.map(t => t.id);
-      const userCompany = companies.find(c => c.id === currentUser.companyId);
-      
-      return users.filter(u => 
-        visibleTrainingIds.includes(u.trainingId) && 
-        (!userCompany || u.organization === userCompany.name)
-      );
+    if (!currentUser) return [];
+    if (currentUser.role === 'super_super_admin' || currentUser.role === 'super_admin') return users;
+
+    const visibleTrainingIds = filteredTrainings.map(t => t.id);
+    const userCompany = companies.find(c => c.id === currentUser.companyId);
+
+    return users.filter(u =>
+      visibleTrainingIds.includes(u.trainingId) &&
+      (!userCompany || u.organization === userCompany.name)
+    );
   }, [users, filteredTrainings, currentUser, companies]);
 
 
   useEffect(() => {
     if (trainings.length > 0 && notifications.length === 0) {
-        const t1 = trainings[0];
-        setNotifications(createNotificationsForTraining(t1));
+      const t1 = trainings[0];
+      setNotifications(createNotificationsForTraining(t1));
     }
   }, []);
 
@@ -395,16 +402,16 @@ const AppContent: React.FC = () => {
 
   // --- Handlers de Usuario Sistema ---
   const handleAddUser = (user: Omit<SystemUser, 'id'>) => {
-      const newUser = { ...user, id: Math.random().toString(36).substr(2, 5) };
-      setSystemUsers(prev => [...prev, newUser]);
+    const newUser = { ...user, id: Math.random().toString(36).substr(2, 5) };
+    setSystemUsers(prev => [...prev, newUser]);
   };
 
   const handleUpdateUser = (user: SystemUser) => {
-      setSystemUsers(prev => prev.map(u => u.id === user.id ? user : u));
+    setSystemUsers(prev => prev.map(u => u.id === user.id ? user : u));
   };
 
   const handleToggleUserStatus = (id: string) => {
-      setSystemUsers(prev => prev.map(u => u.id === id ? { ...u, isActive: !u.isActive } : u));
+    setSystemUsers(prev => prev.map(u => u.id === id ? { ...u, isActive: !u.isActive } : u));
   };
   // ----------------------------------
 
@@ -414,7 +421,8 @@ const AppContent: React.FC = () => {
     setTrainings(prev => [newTraining, ...prev]);
 
     const newNotifs = createNotificationsForTraining(newTraining);
-    setNotifications(prev => [...prev, ...newNotifs]);
+    const courseOpenedNotif = createCourseOpenedNotification(newTraining);
+    setNotifications(prev => [...prev, ...newNotifs, courseOpenedNotif]);
   };
 
   const handleUpdateTraining = (updatedTraining: Training) => {
@@ -450,30 +458,30 @@ const AppContent: React.FC = () => {
 
   const handleBulkRegister = (newUsersData: Partial<EventUser>[], trainingId: string) => {
     const newUsers: EventUser[] = newUsersData.map(u => ({
-        id: 'u' + Math.random().toString(36).substr(2, 7),
-        trainingId: trainingId,
-        name: u.name || '',
-        email: u.email || '',
-        phone: u.phone || '',
-        dni: u.dni || '',
-        organization: u.organization || '',
-        area: u.area || '',
-        role: u.role || '',
-        brevete: u.brevete,
-        status: UserStatus.REGISTERED,
-        attended: false,
-        registeredAt: new Date().toISOString(),
-        customAnswers: {},
-        identity_validated: false,
-        validation_link: '',
-        validation_completed: false
+      id: 'u' + Math.random().toString(36).substr(2, 7),
+      trainingId: trainingId,
+      name: u.name || '',
+      email: u.email || '',
+      phone: u.phone || '',
+      dni: u.dni || '',
+      organization: u.organization || '',
+      area: u.area || '',
+      role: u.role || '',
+      brevete: u.brevete,
+      status: UserStatus.REGISTERED,
+      attended: false,
+      registeredAt: new Date().toISOString(),
+      customAnswers: {},
+      identity_validated: false,
+      validation_link: '',
+      validation_completed: false
     }));
     setUsers(prev => [...newUsers, ...prev]);
   };
 
   const handleManualRegister = (userData: Partial<EventUser>, trainingId: string, newCompany?: string) => {
     let finalOrganization = userData.organization || '';
-    
+
     if (newCompany) {
       const newCompanyId = 'c' + Math.random().toString(36).substr(2, 5);
       const newCompanyObj: Company = {
@@ -507,6 +515,12 @@ const AppContent: React.FC = () => {
       validation_completed: false
     };
     setUsers(prev => [newUser, ...prev]);
+    // Notificación de registro confirmado
+    const training = trainings.find(t => t.id === trainingId);
+    if (training) {
+      const regNotif = createRegistrationConfirmedNotification(training, userData.name || '', userData.email || '');
+      setNotifications(prev => [...prev, regNotif]);
+    }
     alert('Trabajador registrado exitosamente');
   };
 
@@ -519,9 +533,9 @@ const AppContent: React.FC = () => {
   };
 
   const handleConsolidate = (trainingId: string) => {
-    setTrainings(prev => prev.map(t => 
-        t.id === trainingId 
-        ? { ...t, isConsolidated: true, consolidatedAt: new Date().toISOString() } 
+    setTrainings(prev => prev.map(t =>
+      t.id === trainingId
+        ? { ...t, isConsolidated: true, consolidatedAt: new Date().toISOString() }
         : t
     ));
   };
@@ -530,24 +544,24 @@ const AppContent: React.FC = () => {
     const training = trainings.find(t => t.id === trainingId);
     const headers = ['Nombres y Apellidos', 'DNI', 'Email', 'Teléfono', 'Empresa', 'Área', 'Cargo', 'Brevete', 'Estado', 'Asistencia'];
     const trainingUsers = users.filter(u => u.trainingId === trainingId);
-    
+
     const rows = trainingUsers.map(u => [
-      u.name, 
-      u.dni, 
-      u.email, 
+      u.name,
+      u.dni,
+      u.email,
       u.phone,
-      u.organization, 
-      u.area, 
-      u.role, 
+      u.organization,
+      u.area,
+      u.role,
       u.brevete || '',
-      u.status, 
+      u.status,
       u.attended ? 'SÍ' : 'NO'
     ]);
 
-    const csvContent = "data:text/csv;charset=utf-8,\uFEFF" 
-      + headers.join(",") + "\n" 
+    const csvContent = "data:text/csv;charset=utf-8,\uFEFF"
+      + headers.join(",") + "\n"
       + rows.map(e => e.join(",")).join("\n");
-    
+
     const link = document.createElement("a");
     link.setAttribute("href", encodeURI(csvContent));
     link.setAttribute("download", `asistencia_${training?.title.replace(/\s+/g, '_')}.csv`);
@@ -583,35 +597,35 @@ const AppContent: React.FC = () => {
   if (!currentUser) return <Auth />;
 
   return (
-    <Layout 
-      activeTab={activeTab} 
-      onTabChange={setActiveTab} 
-      user={currentUser} 
+    <Layout
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+      user={currentUser}
       onLogout={handleLogout}
     >
       <div className="animate-fadeIn">
         {activeTab === 'trainings' && (
           currentUser.role === 'admin_contratista' ? (
-              <AvailableTrainings 
-                trainings={filteredTrainings}
-                onSelectTraining={handleSelectTraining}
-              />
+            <AvailableTrainings
+              trainings={filteredTrainings}
+              onSelectTraining={handleSelectTraining}
+            />
           ) : (
-              <TrainingManager 
-                trainings={filteredTrainings} 
-                onCreateTraining={handleCreateTraining}
-                onUpdateTraining={handleUpdateTraining}
-                onSelectTraining={handleSelectTraining}
-                userRole={currentUser.role}
-                onScheduleGenerated={(schedule) => {
-                    setTrainings(prev => {
-                        const scheduleTrainingIds = schedule.trainings.map((t: Training) => t.id);
-                        const otherTrainings = prev.filter(t => !scheduleTrainingIds.includes(t.id));
-                        return [...otherTrainings, ...schedule.trainings];
-                    });
-                }}
-                users={users}
-              />
+            <TrainingManager
+              trainings={filteredTrainings}
+              onCreateTraining={handleCreateTraining}
+              onUpdateTraining={handleUpdateTraining}
+              onSelectTraining={handleSelectTraining}
+              userRole={currentUser.role}
+              onScheduleGenerated={(schedule) => {
+                setTrainings(prev => {
+                  const scheduleTrainingIds = schedule.trainings.map((t: Training) => t.id);
+                  const otherTrainings = prev.filter(t => !scheduleTrainingIds.includes(t.id));
+                  return [...otherTrainings, ...schedule.trainings];
+                });
+              }}
+              users={users}
+            />
           )
         )}
         {activeTab === 'calendar' && (
@@ -643,20 +657,20 @@ const AppContent: React.FC = () => {
         {activeTab === 'notifications' && (
           <NotificationCenter notifications={notifications} />
         )}
-        
+
         {/* Nueva Pestaña solo accesible si es super_super_admin */}
         {activeTab === 'users' && currentUser.role === 'super_super_admin' && (
-            <UserManagement 
-                users={systemUsers}
-                companies={companies}
-                onAddUser={handleAddUser}
-                onUpdateUser={handleUpdateUser}
-                onToggleStatus={handleToggleUserStatus}
-            />
+          <UserManagement
+            users={systemUsers}
+            companies={companies}
+            onAddUser={handleAddUser}
+            onUpdateUser={handleUpdateUser}
+            onToggleStatus={handleToggleUserStatus}
+          />
         )}
 
         {activeTab === 'evaluaciones' && currentUser.role !== 'admin_contratista' && (
-          <EvaluacionesModule 
+          <EvaluacionesModule
             trainings={filteredTrainings}
             exams={exams}
             onCreateExam={handleCreateExam}
@@ -667,7 +681,7 @@ const AppContent: React.FC = () => {
         )}
 
         {activeTab === 'public_exam' && currentExam && (
-          <PublicExam 
+          <PublicExam
             examId={currentExam.id}
             onSubmitResult={handleSubmitResult}
           />

@@ -15,7 +15,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   super_super_admin: 'Super Super Admin (Nivel 1)'
 };
 
-export type Permission = 
+export type Permission =
   | 'canRegisterWorkers'
   | 'canValidate'
   | 'canApproveFinal'
@@ -49,7 +49,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canManageCalendar: false,       // ❌ NO gestiona calendario
     viewScope: 'own_company'        // Solo ve su empresa
   },
-  
+
   super_admin: {
     canRegisterWorkers: false,      // ❌ NO registra
     canValidate: true,              // ✅ Única función: validar
@@ -61,7 +61,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canManageCalendar: false,       // ❌ NO gestiona calendario
     viewScope: 'all_companies'      // Ve todas para validar
   },
-  
+
   super_super_admin: {
     canRegisterWorkers: false,      // ❌ NO registra directamente
     canValidate: false,             // ❌ NO valida (eso es nivel 2)
@@ -128,6 +128,8 @@ export interface Training {
   title: string;
   description: string;
   date: string;
+  endDate?: string;       // Para cursos multi-día (Ej: Inducción 4 días)
+  isFullDay?: boolean;    // true = jornada completa (AM+PM), false/undefined = medio día
   maxCapacity: number;
   isPublished: boolean;
   customQuestions: string[];
@@ -193,7 +195,7 @@ export interface SystemUser {
 
 // --- NOTIFICACIONES ---
 
-export type NotificationType = 'reminder_7d' | 'deadline_warning' | 'registration_closed' | 'consolidation_ready';
+export type NotificationType = 'reminder_7d' | 'deadline_warning' | 'registration_closed' | 'consolidation_ready' | 'course_opened' | 'registration_confirmed';
 export type NotificationStatus = 'pending' | 'sent' | 'failed';
 
 export interface Notification {
@@ -254,4 +256,28 @@ export interface ExamResult {
   score: number;
   passed: boolean;
   completedAt: string;
+}
+
+// === SISTEMA DE ELEGIBILIDAD OCUPACIONAL ===
+
+export interface OccupationalFamily {
+  id: string;
+  name: string;
+  description: string;
+  isActive: boolean;
+}
+
+export interface OccupationalRole {
+  id: string;
+  name: string;
+  familyId: string;
+  isActive: boolean;
+}
+
+export type EligibilityStatus = 'required' | 'eligible' | 'blocked';
+
+export interface EligibilityRule {
+  familyId: string;
+  templateId: string;  // Vincula con TrainingTemplate.id
+  status: EligibilityStatus;
 }
