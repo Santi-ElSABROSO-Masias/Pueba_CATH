@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { SystemUser, ROLE_LABELS } from '../types';
 import { useAuth } from '../AuthContext';
 
@@ -14,6 +14,10 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, user, onLogout }) => {
   const { can, isAdminContratista, isSuperAdmin, isSuperSuperAdmin } = useAuth();
 
+  // Estado para expandir/colapsar el módulo Capacitaciones
+  const isCapacitacionesActive = activeTab === 'calendar' || activeTab === 'trainings' || activeTab === 'dashboard' || activeTab === 'evaluaciones';
+  const [capacitacionesOpen, setCapacitacionesOpen] = useState(isCapacitacionesActive);
+
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 text-slate-900">
       {/* Sidebar Operativo */}
@@ -26,103 +30,149 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
         </div>
 
         <ul className="flex-grow overflow-y-auto px-3 space-y-1 pb-4">
-          {/* MENÚ ADMIN_CONTRATISTA */}
-          {isAdminContratista() && (
-            <>
-              <li>
-                <button
-                  onClick={() => onTabChange('dashboard')}
-                  className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
-                >
-                  <i className="fas fa-users-cog w-5 shrink-0"></i>
-                  <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Mis Trabajadores</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onTabChange('trainings')}
-                  className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'trainings' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
-                >
-                  <i className="fas fa-chart-pie w-5 shrink-0"></i>
-                  <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Gestión de Cupos</span>
-                </button>
-              </li>
-            </>
-          )}
 
-          {(isSuperSuperAdmin() || isSuperAdmin()) && (
-            <li>
+          {/* ═══════════════════════════════════════════ */}
+          {/* MÓDULO 1: CAPACITACIONES                   */}
+          {/* ═══════════════════════════════════════════ */}
+          <li>
+            <button
+              onClick={() => setCapacitacionesOpen(!capacitacionesOpen)}
+              className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${isCapacitacionesActive ? 'bg-indigo-600/20 text-indigo-300' : 'text-slate-400 hover:bg-slate-800'}`}
+            >
+              <i className="fas fa-graduation-cap w-5 shrink-0"></i>
+              <span className="font-bold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Capacitaciones</span>
+              <i className={`fas fa-chevron-down text-[10px] transition-transform duration-200 ${capacitacionesOpen ? 'rotate-180' : ''}`}></i>
+            </button>
+
+            {/* Sub-items de Capacitaciones */}
+            {capacitacionesOpen && (
+              <ul className="mt-1 ml-4 pl-3 border-l border-slate-700/50 space-y-1">
+
+                {/* 1.1 Calendario (Común a todos) */}
+                <li>
+                  <button
+                    onClick={() => onTabChange('calendar')}
+                    className={`w-full text-left px-3 py-2.5 min-h-[40px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'calendar' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+                  >
+                    <i className="far fa-calendar-alt w-4 shrink-0 text-xs"></i>
+                    <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Calendario</span>
+                  </button>
+                </li>
+
+                {/* 1.2 Cursos — Varía por rol */}
+                {isAdminContratista() && (
+                  <>
+                    <li>
+                      <button
+                        onClick={() => onTabChange('dashboard')}
+                        className={`w-full text-left px-3 py-2.5 min-h-[40px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+                      >
+                        <i className="fas fa-users-cog w-4 shrink-0 text-xs"></i>
+                        <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Mis Trabajadores</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => onTabChange('trainings')}
+                        className={`w-full text-left px-3 py-2.5 min-h-[40px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'trainings' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+                      >
+                        <i className="fas fa-chart-pie w-4 shrink-0 text-xs"></i>
+                        <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Gestión de Cupos</span>
+                      </button>
+                    </li>
+                  </>
+                )}
+
+                {isSuperAdmin() && (
+                  <>
+                    <li>
+                      <button
+                        onClick={() => onTabChange('dashboard')}
+                        className={`w-full text-left px-3 py-2.5 min-h-[40px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+                      >
+                        <i className="fas fa-user-check w-4 shrink-0 text-xs"></i>
+                        <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Validar Trabajadores</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => onTabChange('trainings')}
+                        className={`w-full text-left px-3 py-2.5 min-h-[40px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'trainings' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+                      >
+                        <i className="fas fa-users w-4 shrink-0 text-xs"></i>
+                        <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Todos los Inscritos</span>
+                      </button>
+                    </li>
+                  </>
+                )}
+
+                {isSuperSuperAdmin() && (
+                  <>
+                    <li>
+                      <button
+                        onClick={() => onTabChange('dashboard')}
+                        className={`w-full text-left px-3 py-2.5 min-h-[40px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+                      >
+                        <i className="fas fa-tachometer-alt w-4 shrink-0 text-xs"></i>
+                        <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Dashboard</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button
+                        onClick={() => onTabChange('trainings')}
+                        className={`w-full text-left px-3 py-2.5 min-h-[40px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'trainings' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+                      >
+                        <i className="fas fa-book-open w-4 shrink-0 text-xs"></i>
+                        <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Cursos</span>
+                      </button>
+                    </li>
+                  </>
+                )}
+
+                {/* 1.3 Evaluaciones (Super Admin y Super Super Admin) */}
+                {(isSuperSuperAdmin() || isSuperAdmin()) && (
+                  <li>
+                    <button
+                      onClick={() => onTabChange('evaluaciones')}
+                      className={`w-full text-left px-3 py-2.5 min-h-[40px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'evaluaciones' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+                    >
+                      <i className="fas fa-clipboard-list w-4 shrink-0 text-xs"></i>
+                      <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Evaluaciones</span>
+                    </button>
+                  </li>
+                )}
+
+              </ul>
+            )}
+          </li>
+
+          {/* ═══════════════════════════════════════════ */}
+          {/* MÓDULO 2: AUTORIZACIONES (Solo SuperSuper) */}
+          {/* ═══════════════════════════════════════════ */}
+          {isSuperSuperAdmin() && (
+            <li className="pt-3 mt-3 border-t border-slate-700/50">
+              <p className="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Autorizaciones</p>
               <button
-                onClick={() => onTabChange('evaluaciones')}
-                className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'evaluaciones' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+                onClick={() => onTabChange('users')}
+                className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'users' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
               >
-                <i className="fas fa-clipboard-list w-5 shrink-0"></i>
-                <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Evaluaciones</span>
+                <i className="fas fa-users-shield w-5 shrink-0"></i>
+                <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Gestionar Usuarios</span>
+              </button>
+              <button
+                onClick={() => onTabChange('users')}
+                className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all text-slate-400 hover:bg-slate-800`}
+              >
+                <i className="fas fa-building w-5 shrink-0"></i>
+                <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Empresas</span>
               </button>
             </li>
           )}
 
-          {/* MENÚ SUPER_ADMIN (Aprobador Nivel 2) */}
-          {isSuperAdmin() && (
-            <>
-              <li>
-                <button
-                  onClick={() => onTabChange('dashboard')}
-                  className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
-                >
-                  <i className="fas fa-user-check w-5 shrink-0"></i>
-                  <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Validar Trabajadores</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onTabChange('trainings')}
-                  className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'trainings' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
-                >
-                  <i className="fas fa-users w-5 shrink-0"></i>
-                  <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Todos los Inscritos</span>
-                </button>
-              </li>
-            </>
-          )}
-
-          {/* MENÚ SUPER_SUPER_ADMIN (Aprobador Nivel 1) */}
-          {isSuperSuperAdmin() && (
-            <>
-              <li>
-                <button
-                  onClick={() => onTabChange('dashboard')}
-                  className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'dashboard' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
-                >
-                  <i className="fas fa-tachometer-alt w-5 shrink-0"></i>
-                  <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Dashboard</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onTabChange('trainings')}
-                  className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'trainings' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
-                >
-                  <i className="fas fa-graduation-cap w-5 shrink-0"></i>
-                  <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Capacitaciones</span>
-                </button>
-              </li>
-
-            </>
-          )}
-
-          {/* Calendario y Notificaciones (Comunes con restricciones internas) */}
-          <li>
-            <button
-              onClick={() => onTabChange('calendar')}
-              className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'calendar' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
-            >
-              <i className="far fa-calendar-alt w-5 shrink-0"></i>
-              <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Calendario</span>
-            </button>
-          </li>
-
-          <li>
+          {/* ═══════════════════════════════════════════ */}
+          {/* MÓDULO 3: NOTIFICACIONES                   */}
+          {/* ═══════════════════════════════════════════ */}
+          <li className={`${isSuperSuperAdmin() ? '' : 'pt-3 mt-3 border-t border-slate-700/50'}`}>
             <button
               onClick={() => onTabChange('notifications')}
               className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'notifications' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
@@ -133,27 +183,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
             </button>
           </li>
 
-          {/* Gestión de Usuarios y Empresas (Solo SuperSuperAdmin) */}
-          {isSuperSuperAdmin() && (
-            <li className="pt-4 mt-4 border-t border-slate-700/50">
-              <p className="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Administración</p>
-              <button
-                onClick={() => onTabChange('users')}
-                className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'users' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
-              >
-                <i className="fas fa-users-shield w-5 shrink-0"></i>
-                <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Gestionar Usuarios</span>
-              </button>
-              <button
-                onClick={() => onTabChange('users')}
-                className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'users' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
-              >
-                <i className="fas fa-building w-5 shrink-0"></i>
-                <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Empresas</span>
-              </button>
-
-            </li>
-          )}
         </ul>
 
         <div className="mt-auto border-t border-slate-800 bg-slate-900 z-10">
@@ -168,7 +197,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
               <p className="text-xs text-white/70 whitespace-normal mt-1 pl-1">{ROLE_LABELS[user.role]}</p>
             </div>
           )}
-          
+
           <div className="px-3 pb-4">
             <button
               onClick={onLogout}

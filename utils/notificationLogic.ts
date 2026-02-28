@@ -3,7 +3,7 @@ import { Training, Notification, NotificationType } from '../types';
 
 export const getEmailTemplate = (type: NotificationType, training: Training, supervisorName: string = 'Supervisor'): string => {
   const commonStyles = "font-family: sans-serif; color: #334155;";
-  
+
   switch (type) {
     case 'reminder_7d':
       return `
@@ -18,7 +18,7 @@ export const getEmailTemplate = (type: NotificationType, training: Training, sup
           <p>Por favor asegura que tu equipo se registre a tiempo.</p>
         </div>
       `;
-    
+
     case 'deadline_warning':
       return `
         <div style="${commonStyles}">
@@ -46,7 +46,34 @@ export const getEmailTemplate = (type: NotificationType, training: Training, sup
           <p>Adjunto encontrarás el Excel final con la asistencia verificada.</p>
         </div>
       `;
-      
+
+    case 'course_opened':
+      return `
+        <div style="${commonStyles}">
+          <h3>📢 Nuevo Curso Disponible: ${training.title}</h3>
+          <p>Hola ${supervisorName},</p>
+          <p>Se ha abierto la inscripción para la capacitación <strong>${training.title}</strong>.</p>
+          <ul>
+            <li>Fecha: <strong>${training.date}</strong></li>
+            <li>Aforo máximo: ${training.maxCapacity} participantes</li>
+          </ul>
+          <p>Registra a tus trabajadores antes de que se agoten los cupos.</p>
+        </div>
+      `;
+
+    case 'registration_confirmed':
+      return `
+        <div style="${commonStyles}">
+          <h3>📝 Registro Confirmado</h3>
+          <p>El trabajador ha sido inscrito exitosamente en la capacitación <strong>${training.title}</strong>.</p>
+          <ul>
+            <li>Fecha del curso: <strong>${training.date}</strong></li>
+            <li>Horario: ${training.schedule || 'Por confirmar'}</li>
+          </ul>
+          <p>Se enviará el link de acceso una vez aprobado por el supervisor.</p>
+        </div>
+      `;
+
     default:
       return "";
   }
@@ -54,8 +81,8 @@ export const getEmailTemplate = (type: NotificationType, training: Training, sup
 
 export const calculateNotificationDates = (training: Training) => {
   // Asumimos training.date es YYYY-MM-DD
-  const startDate = new Date(training.date + 'T09:00:00'); 
-  
+  const startDate = new Date(training.date + 'T09:00:00');
+
   // Deadline suele ser 2 días antes del evento
   const deadlineDate = new Date(startDate);
   deadlineDate.setDate(startDate.getDate() - 2);
@@ -113,4 +140,40 @@ export const createNotificationsForTraining = (training: Training): Notification
       contentPreview: 'Reporte Final Consolidado'
     }
   ];
+};
+
+// Crear notificación individual de apertura de curso
+export const createCourseOpenedNotification = (training: Training): Notification => {
+  return {
+    id: Math.random().toString(36).substr(2, 9),
+    trainingId: training.id,
+    trainingTitle: training.title,
+    type: 'course_opened',
+    recipientEmail: 'todos-supervisores@empresa.com',
+    scheduledAt: new Date().toISOString(),
+    status: 'sent',
+    contentPreview: `Curso "${training.title}" ahora disponible`,
+    sentAt: new Date().toISOString(),
+    errorMessage: undefined
+  };
+};
+
+// Crear notificación de registro confirmado
+export const createRegistrationConfirmedNotification = (
+  training: Training,
+  workerName: string,
+  workerEmail: string
+): Notification => {
+  return {
+    id: Math.random().toString(36).substr(2, 9),
+    trainingId: training.id,
+    trainingTitle: training.title,
+    type: 'registration_confirmed',
+    recipientEmail: workerEmail,
+    scheduledAt: new Date().toISOString(),
+    status: 'sent',
+    contentPreview: `${workerName} inscrito en "${training.title}"`,
+    sentAt: new Date().toISOString(),
+    errorMessage: undefined
+  };
 };
