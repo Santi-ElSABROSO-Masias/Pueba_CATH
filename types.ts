@@ -281,3 +281,6 @@ export interface EligibilityRule {
   templateId: string;  // Vincula con TrainingTemplate.id
   status: EligibilityStatus;
 }
+
+// ── Módulo Inducción Temporal (agregado) ─────────────────
+export * from './src/modules/induccion-temporal/types/induccion.types';

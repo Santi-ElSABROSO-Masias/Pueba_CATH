@@ -5,8 +5,8 @@ import { useAuth } from '../AuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;
-  activeTab: 'trainings' | 'dashboard' | 'public' | 'calendar' | 'notifications' | 'users' | 'evaluaciones' | 'public_exam';
-  onTabChange: (tab: 'trainings' | 'dashboard' | 'public' | 'calendar' | 'notifications' | 'users' | 'evaluaciones' | 'public_exam') => void;
+  activeTab: 'trainings' | 'dashboard' | 'public' | 'calendar' | 'notifications' | 'users' | 'evaluaciones' | 'public_exam' | 'induccion_temporal';
+  onTabChange: (tab: 'trainings' | 'dashboard' | 'public' | 'calendar' | 'notifications' | 'users' | 'evaluaciones' | 'public_exam' | 'induccion_temporal') => void;
   user: SystemUser | null;
   onLogout: () => void;
 }
@@ -17,6 +17,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
   // Estado para expandir/colapsar el módulo Capacitaciones
   const isCapacitacionesActive = activeTab === 'calendar' || activeTab === 'trainings' || activeTab === 'dashboard' || activeTab === 'evaluaciones';
   const [capacitacionesOpen, setCapacitacionesOpen] = useState(isCapacitacionesActive);
+
+  // Estado para expandir/colapsar el módulo Usuarios
+  const isUsuariosActive = activeTab === 'users';
+  const [usuariosOpen, setUsuariosOpen] = useState(isUsuariosActive);
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 text-slate-900">
@@ -146,33 +150,51 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
             )}
           </li>
 
-          {/* ═══════════════════════════════════════════ */}
-          {/* MÓDULO 2: AUTORIZACIONES (Solo SuperSuper) */}
-          {/* ═══════════════════════════════════════════ */}
           {isSuperSuperAdmin() && (
             <li className="pt-3 mt-3 border-t border-slate-700/50">
-              <p className="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Autorizaciones</p>
+
               <button
-                onClick={() => onTabChange('users')}
-                className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'users' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+                onClick={() => setUsuariosOpen(!usuariosOpen)}
+                className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${isUsuariosActive ? 'bg-indigo-600/20 text-indigo-300' : 'text-slate-400 hover:bg-slate-800'}`}
               >
-                <i className="fas fa-users-shield w-5 shrink-0"></i>
-                <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Gestionar Usuarios</span>
+                <i className="fas fa-users w-5 shrink-0 text-center"></i>
+                <span className="font-bold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Gestionar Usuarios</span>
+                <i className={`fas fa-chevron-down text-[10px] transition-transform duration-200 ${usuariosOpen ? 'rotate-180' : ''}`}></i>
               </button>
+
+              {usuariosOpen && (
+                <ul className="mt-1 ml-4 pl-3 border-l border-slate-700/50 space-y-1">
+                  <li>
+                    <button
+                      onClick={() => onTabChange('users')}
+                      className={`w-full text-left px-3 py-2.5 min-h-[40px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'users' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+                    >
+                      <i className="fas fa-user-tie w-4 shrink-0 text-xs"></i>
+                      <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Usuarios</span>
+                    </button>
+                  </li>
+                </ul>
+              )}
+            </li>
+          )}
+
+          {/* MÓDULO 3: INDUCCIÓN TEMPORAL (Solo SuperSuper) (Movido Arriba de Notificaciones) */}
+          {isSuperSuperAdmin() && (
+            <li className="pt-3 mt-3 border-t border-slate-700/50">
               <button
-                onClick={() => onTabChange('users')}
-                className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all text-slate-400 hover:bg-slate-800`}
+                onClick={() => onTabChange('induccion_temporal')}
+                className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'induccion_temporal' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
               >
-                <i className="fas fa-building w-5 shrink-0"></i>
-                <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Empresas</span>
+                <i className="fas fa-shield-alt w-5 shrink-0"></i>
+                <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Inducción Temporal</span>
               </button>
             </li>
           )}
 
           {/* ═══════════════════════════════════════════ */}
-          {/* MÓDULO 3: NOTIFICACIONES                   */}
+          {/* MÓDULO 4: NOTIFICACIONES (Movido Abajo)    */}
           {/* ═══════════════════════════════════════════ */}
-          <li className={`${isSuperSuperAdmin() ? '' : 'pt-3 mt-3 border-t border-slate-700/50'}`}>
+          <li className="pt-3 mt-3 border-t border-slate-700/50">
             <button
               onClick={() => onTabChange('notifications')}
               className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'notifications' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}

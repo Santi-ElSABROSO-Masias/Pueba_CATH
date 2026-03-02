@@ -12,6 +12,7 @@ import { PublicExam } from './components/PublicExam';
 import { EvaluacionesModule } from './components/EvaluacionesModule';
 import { IdentityValidationPage } from './components/IdentityValidationPage';
 import { Auth } from './components/Auth';
+import { InduccionDashboard } from './src/modules/induccion-temporal/components/InduccionDashboard';
 import { EventUser, UserStatus, SystemUser, Training, Notification, Company, TrainingStatus, Question, Exam, ExamResult } from './types';
 import { createNotificationsForTraining, createCourseOpenedNotification, createRegistrationConfirmedNotification } from './utils/notificationLogic';
 import { isTrainingFinished, isSixHoursAfterEnd } from './utils/time';
@@ -21,7 +22,7 @@ import { NavigationProvider } from './contexts/NavigationContext';
 
 const AppContent: React.FC = () => {
   const { user: currentUser, login: setCurrentUser, logout: handleLogout } = useAuth();
-  const [activeTab, setActiveTab] = useState<'trainings' | 'dashboard' | 'public' | 'calendar' | 'notifications' | 'users' | 'evaluaciones' | 'public_exam'>('trainings');
+  const [activeTab, setActiveTab] = useState<'trainings' | 'dashboard' | 'public' | 'calendar' | 'notifications' | 'users' | 'evaluaciones' | 'public_exam' | 'induccion_temporal'>('trainings');
   const [selectedTrainingId, setSelectedTrainingId] = useState<string>('');
   const [exams, setExams] = useState<Exam[]>(() => {
     const saved = localStorage.getItem('eventmanager_exams');
@@ -685,6 +686,10 @@ const AppContent: React.FC = () => {
             examId={currentExam.id}
             onSubmitResult={handleSubmitResult}
           />
+        )}
+
+        {activeTab === 'induccion_temporal' && currentUser.role === 'super_super_admin' && (
+          <InduccionDashboard />
         )}
 
         {/* Mantenemos la vista pública para demo */}

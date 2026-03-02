@@ -1,4 +1,4 @@
-
+import 'dotenv/config'; // <-- Inyectamos dotenv tan pronto como sea posible
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -8,9 +8,16 @@ import { createServer as createViteServer } from 'vite';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+import induccionRouter from './src/routes/induccionRoutes.js';
+
 async function startServer() {
   const app = express();
   const port = 3000;
+
+  app.use(express.json());
+
+  // Montar rutas de Inducción
+  app.use('/api/induccion', induccionRouter);
 
   // API routes go here (if any)
   app.get('/api/health', (req, res) => {
@@ -27,7 +34,7 @@ async function startServer() {
   } else {
     // Production: serve static files
     app.use(express.static(__dirname));
-    
+
     app.get('*', (req, res) => {
       if (req.path.includes('.') && !req.path.endsWith('.html')) {
         return res.status(404).send('Not Found');
