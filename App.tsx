@@ -13,6 +13,9 @@ import { EvaluacionesModule } from './components/EvaluacionesModule';
 import { IdentityValidationPage } from './components/IdentityValidationPage';
 import { Auth } from './components/Auth';
 import { InduccionDashboard } from './src/modules/induccion-temporal/components/InduccionDashboard';
+import { LicenciasManejo } from './src/modules/autorizaciones/components/LicenciasManejo';
+import { AcreditacionVehicular } from './src/modules/autorizaciones/components/AcreditacionVehicular';
+import { TrabajosAltoRiesgo } from './src/modules/autorizaciones/components/TrabajosAltoRiesgo';
 import { EventUser, UserStatus, SystemUser, Training, Notification, Company, TrainingStatus, Question, Exam, ExamResult } from './types';
 import { createNotificationsForTraining, createCourseOpenedNotification, createRegistrationConfirmedNotification } from './utils/notificationLogic';
 import { isTrainingFinished, isSixHoursAfterEnd } from './utils/time';
@@ -22,7 +25,7 @@ import { NavigationProvider } from './contexts/NavigationContext';
 
 const AppContent: React.FC = () => {
   const { user: currentUser, login: setCurrentUser, logout: handleLogout } = useAuth();
-  const [activeTab, setActiveTab] = useState<'trainings' | 'dashboard' | 'public' | 'calendar' | 'notifications' | 'users' | 'evaluaciones' | 'public_exam' | 'induccion_temporal'>('trainings');
+  const [activeTab, setActiveTab] = useState<'trainings' | 'dashboard' | 'public' | 'calendar' | 'notifications' | 'users' | 'evaluaciones' | 'public_exam' | 'induccion_temporal' | 'licencias_manejo' | 'acreditacion_vehicular' | 'alto_riesgo'>('trainings');
   const [selectedTrainingId, setSelectedTrainingId] = useState<string>('');
   const [exams, setExams] = useState<Exam[]>(() => {
     const saved = localStorage.getItem('eventmanager_exams');
@@ -690,6 +693,21 @@ const AppContent: React.FC = () => {
 
         {activeTab === 'induccion_temporal' && currentUser.role === 'super_super_admin' && (
           <InduccionDashboard />
+        )}
+
+        {/* ════════════════════════════════════════════════ */}
+        {/* MÓDULO AUTORIZACIONES (Protegido o global según rol) */}
+        {/* ════════════════════════════════════════════════ */}
+        {activeTab === 'licencias_manejo' && (
+          <LicenciasManejo />
+        )}
+
+        {activeTab === 'acreditacion_vehicular' && (
+          <AcreditacionVehicular />
+        )}
+
+        {activeTab === 'alto_riesgo' && (
+          <TrabajosAltoRiesgo />
         )}
 
         {/* Mantenemos la vista pública para demo */}

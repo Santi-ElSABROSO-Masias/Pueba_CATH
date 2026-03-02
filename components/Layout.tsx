@@ -5,8 +5,8 @@ import { useAuth } from '../AuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;
-  activeTab: 'trainings' | 'dashboard' | 'public' | 'calendar' | 'notifications' | 'users' | 'evaluaciones' | 'public_exam' | 'induccion_temporal';
-  onTabChange: (tab: 'trainings' | 'dashboard' | 'public' | 'calendar' | 'notifications' | 'users' | 'evaluaciones' | 'public_exam' | 'induccion_temporal') => void;
+  activeTab: 'trainings' | 'dashboard' | 'public' | 'calendar' | 'notifications' | 'users' | 'evaluaciones' | 'public_exam' | 'induccion_temporal' | 'licencias_manejo' | 'acreditacion_vehicular' | 'alto_riesgo';
+  onTabChange: (tab: 'trainings' | 'dashboard' | 'public' | 'calendar' | 'notifications' | 'users' | 'evaluaciones' | 'public_exam' | 'induccion_temporal' | 'licencias_manejo' | 'acreditacion_vehicular' | 'alto_riesgo') => void;
   user: SystemUser | null;
   onLogout: () => void;
 }
@@ -21,6 +21,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
   // Estado para expandir/colapsar el módulo Usuarios
   const isUsuariosActive = activeTab === 'users';
   const [usuariosOpen, setUsuariosOpen] = useState(isUsuariosActive);
+
+  // Estado para expandir/colapsar el módulo Autorizaciones
+  const isAutorizacionesActive = activeTab === 'licencias_manejo' || activeTab === 'acreditacion_vehicular' || activeTab === 'alto_riesgo';
+  const [autorizacionesOpen, setAutorizacionesOpen] = useState(isAutorizacionesActive);
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 text-slate-900">
@@ -177,6 +181,52 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
               )}
             </li>
           )}
+
+          {/* ═══════════════════════════════════════════ */}
+          {/* MÓDULO 3: AUTORIZACIONES Y LICENCIAS       */}
+          {/* ═══════════════════════════════════════════ */}
+          <li className="pt-3 mt-3 border-t border-slate-700/50">
+            <button
+              onClick={() => setAutorizacionesOpen(!autorizacionesOpen)}
+              className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${isAutorizacionesActive ? 'bg-indigo-600/20 text-indigo-300' : 'text-slate-400 hover:bg-slate-800'}`}
+            >
+              <i className="fas fa-id-card-alt w-5 shrink-0 text-center"></i>
+              <span className="font-bold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Autorizaciones</span>
+              <i className={`fas fa-chevron-down text-[10px] transition-transform duration-200 ${autorizacionesOpen ? 'rotate-180' : ''}`}></i>
+            </button>
+
+            {autorizacionesOpen && (
+              <ul className="mt-1 ml-4 pl-3 border-l border-slate-700/50 space-y-1">
+                <li>
+                  <button
+                    onClick={() => onTabChange('licencias_manejo')}
+                    className={`w-full text-left px-3 py-2.5 min-h-[40px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'licencias_manejo' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+                  >
+                    <i className="fas fa-id-badge w-4 shrink-0 text-xs text-center"></i>
+                    <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Licencias de Manejo</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => onTabChange('acreditacion_vehicular')}
+                    className={`w-full text-left px-3 py-2.5 min-h-[40px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'acreditacion_vehicular' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+                  >
+                    <i className="fas fa-truck-pickup w-4 shrink-0 text-xs text-center"></i>
+                    <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Acreditación Vehicular</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => onTabChange('alto_riesgo')}
+                    className={`w-full text-left px-3 py-2.5 min-h-[40px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'alto_riesgo' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+                  >
+                    <i className="fas fa-exclamation-triangle w-4 shrink-0 text-xs text-center"></i>
+                    <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Trabajos de Riesgo</span>
+                  </button>
+                </li>
+              </ul>
+            )}
+          </li>
 
           {/* MÓDULO 3: INDUCCIÓN TEMPORAL (Solo SuperSuper) (Movido Arriba de Notificaciones) */}
           {isSuperSuperAdmin() && (
