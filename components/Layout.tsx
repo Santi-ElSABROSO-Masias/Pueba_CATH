@@ -17,7 +17,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
   const isCapacitacionesActive = activeTab === 'calendar' || activeTab === 'trainings' || activeTab === 'dashboard' || activeTab === 'evaluaciones';
   const [capacitacionesOpen, setCapacitacionesOpen] = useState(isCapacitacionesActive);
 
-<<<<<<< HEAD
   // Estado para expandir/colapsar el módulo Usuarios
   const isUsuariosActive = activeTab === 'users';
   const [usuariosOpen, setUsuariosOpen] = useState(isUsuariosActive);
@@ -25,7 +24,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
   // Estado para expandir/colapsar el módulo Autorizaciones
   const isAutorizacionesActive = activeTab === 'licencias_manejo' || activeTab === 'acreditacion_vehicular' || activeTab === 'alto_riesgo';
   const [autorizacionesOpen, setAutorizacionesOpen] = useState(isAutorizacionesActive);
-=======
+
   // Helper: Nav item classes
   const navItemClass = (isActive: boolean) =>
     `w-full text-left px-3 py-2.5 min-h-[40px] rounded-lg flex items-center gap-3 transition-all ${isActive
@@ -38,7 +37,6 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
       ? 'bg-catalina-green/20 text-white'
       : 'text-white/70 hover:bg-white/10 hover:text-white'
     }`;
->>>>>>> ab054b6 (feat: avances de UXUI y mejoras de componentes)
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-slate-50 text-catalina-grey font-montserrat">
@@ -168,40 +166,27 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
             )}
           </li>
 
-<<<<<<< HEAD
           {isSuperSuperAdmin() && (
-            <li className="pt-3 mt-3 border-t border-slate-700/50">
+            <li className="pt-3 mt-3 border-t border-white/10">
 
               <button
                 onClick={() => setUsuariosOpen(!usuariosOpen)}
-                className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${isUsuariosActive ? 'bg-indigo-600/20 text-indigo-300' : 'text-slate-400 hover:bg-slate-800'}`}
+                className={parentNavClass(isUsuariosActive)}
               >
                 <i className="fas fa-users w-5 shrink-0 text-center"></i>
-                <span className="font-bold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Gestionar Usuarios</span>
+                <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Gestionar Usuarios</span>
                 <i className={`fas fa-chevron-down text-[10px] transition-transform duration-200 ${usuariosOpen ? 'rotate-180' : ''}`}></i>
-=======
-          {/* ═══ MÓDULO 2: AUTORIZACIONES (Solo SuperSuper) ═══ */}
-          {isSuperSuperAdmin() && (
-            <li className="pt-3 mt-3 border-t border-white/10">
-              <p className="px-4 text-[10px] font-semibold text-catalina-dusty-green uppercase tracking-widest mb-2">Autorizaciones</p>
-              <button
-                onClick={() => onTabChange('users')}
-                className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'users' ? 'bg-catalina-green text-white shadow-md shadow-catalina-green/20' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
-              >
-                <i className="fas fa-users-shield w-5 shrink-0"></i>
-                <span className="font-medium text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Gestionar Usuarios</span>
->>>>>>> ab054b6 (feat: avances de UXUI y mejoras de componentes)
               </button>
 
               {usuariosOpen && (
-                <ul className="mt-1 ml-4 pl-3 border-l border-slate-700/50 space-y-1">
+                <ul className="mt-1 ml-4 pl-3 border-l border-white/15 space-y-1">
                   <li>
                     <button
                       onClick={() => onTabChange('users')}
-                      className={`w-full text-left px-3 py-2.5 min-h-[40px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'users' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+                      className={navItemClass(activeTab === 'users')}
                     >
                       <i className="fas fa-user-tie w-4 shrink-0 text-xs"></i>
-                      <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Usuarios</span>
+                      <span className="font-medium text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Usuarios</span>
                     </button>
                   </li>
                 </ul>
@@ -212,79 +197,66 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
           {/* ═══════════════════════════════════════════ */}
           {/* MÓDULO 3: AUTORIZACIONES Y LICENCIAS       */}
           {/* ═══════════════════════════════════════════ */}
-          <li className="pt-3 mt-3 border-t border-slate-700/50">
+          <li className="pt-3 mt-3 border-t border-white/10">
             <button
               onClick={() => setAutorizacionesOpen(!autorizacionesOpen)}
-              className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${isAutorizacionesActive ? 'bg-indigo-600/20 text-indigo-300' : 'text-slate-400 hover:bg-slate-800'}`}
+              className={parentNavClass(isAutorizacionesActive)}
             >
               <i className="fas fa-id-card-alt w-5 shrink-0 text-center"></i>
-              <span className="font-bold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Autorizaciones</span>
+              <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Autorizaciones</span>
               <i className={`fas fa-chevron-down text-[10px] transition-transform duration-200 ${autorizacionesOpen ? 'rotate-180' : ''}`}></i>
             </button>
 
             {autorizacionesOpen && (
-              <ul className="mt-1 ml-4 pl-3 border-l border-slate-700/50 space-y-1">
+              <ul className="mt-1 ml-4 pl-3 border-l border-white/15 space-y-1">
                 <li>
                   <button
                     onClick={() => onTabChange('licencias_manejo')}
-                    className={`w-full text-left px-3 py-2.5 min-h-[40px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'licencias_manejo' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+                    className={navItemClass(activeTab === 'licencias_manejo')}
                   >
                     <i className="fas fa-id-badge w-4 shrink-0 text-xs text-center"></i>
-                    <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Licencias de Manejo</span>
+                    <span className="font-medium text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Licencias de Manejo</span>
                   </button>
                 </li>
                 <li>
                   <button
                     onClick={() => onTabChange('acreditacion_vehicular')}
-                    className={`w-full text-left px-3 py-2.5 min-h-[40px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'acreditacion_vehicular' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+                    className={navItemClass(activeTab === 'acreditacion_vehicular')}
                   >
                     <i className="fas fa-truck-pickup w-4 shrink-0 text-xs text-center"></i>
-                    <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Acreditación Vehicular</span>
+                    <span className="font-medium text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Acreditación Vehicular</span>
                   </button>
                 </li>
                 <li>
                   <button
                     onClick={() => onTabChange('alto_riesgo')}
-                    className={`w-full text-left px-3 py-2.5 min-h-[40px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'alto_riesgo' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+                    className={navItemClass(activeTab === 'alto_riesgo')}
                   >
                     <i className="fas fa-exclamation-triangle w-4 shrink-0 text-xs text-center"></i>
-                    <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Trabajos de Riesgo</span>
+                    <span className="font-medium text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Trabajos de Riesgo</span>
                   </button>
                 </li>
               </ul>
             )}
           </li>
 
-          {/* MÓDULO 3: INDUCCIÓN TEMPORAL (Solo SuperSuper) (Movido Arriba de Notificaciones) */}
+          {/* MÓDULO: INDUCCIÓN TEMPORAL (Solo SuperSuper) */}
           {isSuperSuperAdmin() && (
-            <li className="pt-3 mt-3 border-t border-slate-700/50">
+            <li className="pt-3 mt-3 border-t border-white/10">
               <button
-<<<<<<< HEAD
                 onClick={() => onTabChange('induccion_temporal')}
-                className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'induccion_temporal' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-800'}`}
+                className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'induccion_temporal' ? 'bg-catalina-green text-white shadow-md shadow-catalina-green/20' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
               >
                 <i className="fas fa-shield-alt w-5 shrink-0"></i>
-                <span className="font-semibold text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Inducción Temporal</span>
-=======
-                onClick={() => onTabChange('users')}
-                className="w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all text-white/70 hover:bg-white/10 hover:text-white"
-              >
-                <i className="fas fa-building w-5 shrink-0"></i>
-                <span className="font-medium text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Empresas</span>
->>>>>>> ab054b6 (feat: avances de UXUI y mejoras de componentes)
+                <span className="font-medium text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Inducción Temporal</span>
               </button>
             </li>
           )}
 
-<<<<<<< HEAD
           {/* ═══════════════════════════════════════════ */}
           {/* MÓDULO 4: NOTIFICACIONES (Movido Abajo)    */}
           {/* ═══════════════════════════════════════════ */}
-          <li className="pt-3 mt-3 border-t border-slate-700/50">
-=======
-          {/* ═══ MÓDULO 3: NOTIFICACIONES ═══ */}
-          <li className={`${isSuperSuperAdmin() ? '' : 'pt-3 mt-3 border-t border-white/10'}`}>
->>>>>>> ab054b6 (feat: avances de UXUI y mejoras de componentes)
+          <li className="pt-3 mt-3 border-t border-white/10">
             <button
               onClick={() => onTabChange('notifications')}
               className={`w-full text-left px-4 py-3 min-h-[44px] rounded-lg flex items-center gap-3 transition-all ${activeTab === 'notifications' ? 'bg-catalina-green text-white shadow-md shadow-catalina-green/20' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
