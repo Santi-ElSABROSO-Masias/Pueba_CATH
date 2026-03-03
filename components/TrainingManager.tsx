@@ -33,7 +33,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
   const [participantsForModal, setParticipantsForModal] = useState<EventUser[]>([]);
   const [showScheduleManager, setShowScheduleManager] = useState(false);
   const [duplicatingTraining, setDuplicatingTraining] = useState<Training | null>(null);
-  
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -54,13 +54,13 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
   const isAdminContratista = userRole === 'admin_contratista';
 
   const resetForm = () => {
-    setFormData({ 
-      title: '', 
-      description: '', 
-      date: '', 
+    setFormData({
+      title: '',
+      description: '',
+      date: '',
       registration_deadline: '',
-      maxCapacity: 60, 
-      isPublished: true, 
+      maxCapacity: 60,
+      isPublished: true,
       customQuestions: [],
       color: COLORS[0],
       duration: '',
@@ -74,7 +74,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
   const handleEdit = (training: Training) => {
     // Solo super_super_admin puede editar
     if (!isSuperSuperAdmin) return;
-    
+
     setFormData({
       title: training.title,
       description: training.description,
@@ -102,19 +102,19 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
   const handleSave = () => {
     // Validaciones de fecha
     if (formData.registration_deadline) {
-        if (new Date(formData.registration_deadline) >= new Date(formData.date)) {
-            alert("La fecha límite debe ser anterior a la fecha del curso");
-            return;
-        }
-        if (new Date(formData.registration_deadline) < new Date()) {
-             // Permitimos editar deadlines pasados? Quizás para corregir.
-             // Pero al crear nuevo, debería ser futuro.
-             // Por simplicidad del MVP, solo warning o permitimos.
-             // alert("La fecha límite no puede ser en el pasado");
-        }
-    } else {
-        alert("La fecha límite de inscripción es obligatoria");
+      if (new Date(formData.registration_deadline) >= new Date(formData.date)) {
+        alert("La fecha límite debe ser anterior a la fecha del curso");
         return;
+      }
+      if (new Date(formData.registration_deadline) < new Date()) {
+        // Permitimos editar deadlines pasados? Quizás para corregir.
+        // Pero al crear nuevo, debería ser futuro.
+        // Por simplicidad del MVP, solo warning o permitimos.
+        // alert("La fecha límite no puede ser en el pasado");
+      }
+    } else {
+      alert("La fecha límite de inscripción es obligatoria");
+      return;
     }
 
     if (editingId === 'new') {
@@ -174,7 +174,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
     <div className="space-y-8 animate-fadeIn">
       {/* Modal de Duplicación */}
       {participantsForModal.length > 0 && (
-        <ParticipantsLinksModal 
+        <ParticipantsLinksModal
           participants={participantsForModal}
           onClose={() => setParticipantsForModal([])}
         />
@@ -191,45 +191,45 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
       {/* Header Sección */}
       <div className="flex justify-between items-end border-b border-slate-200 pb-6">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">Capacitaciones</h2>
+          <h2 className="text-2xl font-semibold text-catalina-grey tracking-tight">Capacitaciones</h2>
           {!isAdminContratista && (
-            <p className="text-slate-500 text-sm mt-1">Gestiona el catálogo de cursos y sus configuraciones.</p>
+            <p className="text-catalina-grey/60 text-sm mt-1 font-normal">Gestiona el catálogo de cursos y sus configuraciones.</p>
           )}
         </div>
         {/* Solo SuperSuperAdmin puede crear */}
         {!editingId && isSuperSuperAdmin && (
           <div className="flex gap-2">
-              <button
-                onClick={() => setShowScheduleManager(!showScheduleManager)}
-                className={`px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all ${showScheduleManager ? 'bg-indigo-100 text-indigo-700' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'}`}
-              >
-                <i className="fas fa-calendar-alt text-xs"></i>
-                {showScheduleManager ? 'Ocultar Cronograma' : 'Gestionar Cronograma'}
-              </button>
-              <button
-                onClick={() => setEditingId('new')}
-                className="bg-slate-900 text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-slate-800 hover:shadow-lg transition-all"
-              >
-                <i className="fas fa-plus text-xs"></i>
-                Nueva Capacitación
-              </button>
+            <button
+              onClick={() => setShowScheduleManager(!showScheduleManager)}
+              className={`px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all ${showScheduleManager ? 'bg-catalina-green/10 text-catalina-forest-green' : 'bg-white border border-slate-200 text-catalina-grey hover:bg-slate-50'}`}
+            >
+              <i className="fas fa-calendar-alt text-xs"></i>
+              {showScheduleManager ? 'Ocultar Cronograma' : 'Gestionar Cronograma'}
+            </button>
+            <button
+              onClick={() => setEditingId('new')}
+              className="bg-catalina-forest-green text-white px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 hover:bg-catalina-green hover:shadow-lg transition-all"
+            >
+              <i className="fas fa-plus text-xs"></i>
+              Nueva Capacitación
+            </button>
           </div>
         )}
       </div>
 
       {/* Schedule Manager (Solo Super Super Admin) */}
       {isSuperSuperAdmin && showScheduleManager && (
-          <MonthlyScheduleManager onScheduleGenerated={onScheduleGenerated} users={users} />
+        <MonthlyScheduleManager onScheduleGenerated={onScheduleGenerated} users={users} />
       )}
 
       {editingId ? (
         <div className="bg-white border border-slate-200 rounded-2xl p-8 shadow-sm animate-fadeIn">
           {/* Formulario de Edición (Manteniendo funcionalidad pero limpiando estilos) */}
           <div className="mb-8 flex items-center gap-3 border-b border-slate-100 pb-4">
-            <div className="w-8 h-8 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-catalina-green/10 text-catalina-green rounded-full flex items-center justify-center">
               <i className={editingId === 'new' ? "fas fa-plus text-xs" : "fas fa-pencil-alt text-xs"}></i>
             </div>
-            <h3 className="text-lg font-semibold text-slate-800">
+            <h3 className="text-lg font-semibold text-catalina-grey">
               {editingId === 'new' ? 'Nueva Capacitación' : 'Editar Configuración'}
             </h3>
           </div>
@@ -243,7 +243,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
                   {COLORS.map(c => (
                     <button
                       key={c}
-                      onClick={() => setFormData({...formData, color: c})}
+                      onClick={() => setFormData({ ...formData, color: c })}
                       className={`w-6 h-6 rounded-full transition-all ${formData.color === c ? 'ring-2 ring-offset-2 ring-slate-400 scale-110' : 'hover:scale-110'}`}
                       style={{ backgroundColor: c }}
                     />
@@ -254,46 +254,46 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Título del Evento</label>
                 <input
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-catalina-green focus:ring-1 focus:ring-catalina-green/30 outline-none transition-all"
                   placeholder="Ej. Inducción Básica de Seguridad"
                   value={formData.title}
-                  onChange={e => setFormData({...formData, title: e.target.value})}
+                  onChange={e => setFormData({ ...formData, title: e.target.value })}
                 />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
-                 <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Nombre del Grupo</label>
-                    <input
-                      className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
-                      placeholder="Ej. Grupo 1"
-                      value={formData.group || ''}
-                      onChange={e => setFormData({...formData, group: e.target.value})}
-                    />
-                 </div>
-                 <div>
-                     <label className="block text-sm font-medium text-slate-700 mb-1">Estado</label>
-                     <select
-                        className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
-                        value={formData.isPublished ? 'true' : 'false'}
-                        onChange={e => setFormData({...formData, isPublished: e.target.value === 'true'})}
-                     >
-                         <option value="true">Publicado</option>
-                         <option value="false">Borrador</option>
-                     </select>
-                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Nombre del Grupo</label>
+                  <input
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-catalina-green focus:ring-1 focus:ring-catalina-green/30 outline-none transition-all"
+                    placeholder="Ej. Grupo 1"
+                    value={formData.group || ''}
+                    onChange={e => setFormData({ ...formData, group: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Estado</label>
+                  <select
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-catalina-green focus:ring-1 focus:ring-catalina-green/30 outline-none transition-all"
+                    value={formData.isPublished ? 'true' : 'false'}
+                    onChange={e => setFormData({ ...formData, isPublished: e.target.value === 'true' })}
+                  >
+                    <option value="true">Publicado</option>
+                    <option value="false">Borrador</option>
+                  </select>
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Descripción</label>
                 <textarea
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none h-24 resize-none"
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-catalina-green focus:ring-1 focus:ring-catalina-green/30 outline-none h-24 resize-none"
                   placeholder="Breve descripción del objetivo..."
                   value={formData.description}
-                  onChange={e => setFormData({...formData, description: e.target.value})}
+                  onChange={e => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Fecha Inicio</label>
@@ -301,7 +301,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
                     type="date"
                     className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm outline-none"
                     value={formData.date}
-                    onChange={e => setFormData({...formData, date: e.target.value})}
+                    onChange={e => setFormData({ ...formData, date: e.target.value })}
                   />
                 </div>
                 <div>
@@ -310,7 +310,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
                     type="datetime-local"
                     className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm outline-none"
                     value={formData.registration_deadline}
-                    onChange={e => setFormData({...formData, registration_deadline: e.target.value})}
+                    onChange={e => setFormData({ ...formData, registration_deadline: e.target.value })}
                   />
                   <p className="text-[10px] text-slate-400 mt-1">Cierre automático de registros</p>
                 </div>
@@ -320,10 +320,10 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
                 <label className="block text-sm font-medium text-slate-700 mb-1">Link de Microsoft Teams</label>
                 <input
                   type="url"
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-catalina-green focus:ring-1 focus:ring-catalina-green/30 outline-none transition-all"
                   placeholder="https://teams.microsoft.com/..."
                   value={formData.meetingLink || ''}
-                  onChange={e => setFormData({...formData, meetingLink: e.target.value})}
+                  onChange={e => setFormData({ ...formData, meetingLink: e.target.value })}
                 />
                 <small className="text-[10px] text-slate-400 mt-1">El admin crea la reunión manualmente y pega el link aquí</small>
               </div>
@@ -335,7 +335,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
                     type="number"
                     className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm outline-none"
                     value={formData.maxCapacity}
-                    onChange={e => setFormData({...formData, maxCapacity: parseInt(e.target.value) || 0})}
+                    onChange={e => setFormData({ ...formData, maxCapacity: parseInt(e.target.value) || 0 })}
                   />
                 </div>
                 <div>
@@ -345,7 +345,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
                     placeholder="Ej. 4 horas"
                     className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm outline-none"
                     value={formData.duration}
-                    onChange={e => setFormData({...formData, duration: e.target.value})}
+                    onChange={e => setFormData({ ...formData, duration: e.target.value })}
                   />
                 </div>
                 <div>
@@ -355,7 +355,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
                     placeholder="Ej. 8:00 am - 12:00 m"
                     className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm outline-none"
                     value={formData.schedule}
-                    onChange={e => setFormData({...formData, schedule: e.target.value})}
+                    onChange={e => setFormData({ ...formData, schedule: e.target.value })}
                   />
                 </div>
               </div>
@@ -365,7 +365,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
             <div className="space-y-4 bg-slate-50 p-6 rounded-xl border border-slate-100">
               <h3 className="text-sm font-semibold text-slate-900">Formulario de Registro</h3>
               <p className="text-xs text-slate-500 mb-4">Los campos básicos (Nombre, DNI, Email) son obligatorios por defecto.</p>
-              
+
               <div>
                 <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Campos Adicionales</label>
                 <div className="flex gap-2">
@@ -390,7 +390,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
                 {formData.customQuestions.map((q, i) => (
                   <div key={i} className="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-600">
                     <span>{q}</span>
-                    <button onClick={() => setFormData(prev => ({...prev, customQuestions: prev.customQuestions.filter((_, idx) => idx !== i)}))}>
+                    <button onClick={() => setFormData(prev => ({ ...prev, customQuestions: prev.customQuestions.filter((_, idx) => idx !== i) }))}>
                       <i className="fas fa-times text-slate-400 hover:text-red-500 text-xs"></i>
                     </button>
                   </div>
@@ -409,7 +409,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
             <button
               onClick={handleSave}
               disabled={!formData.title || !formData.date}
-              className="bg-indigo-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-sm"
+              className="bg-catalina-green text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-catalina-forest-green disabled:opacity-50 transition-all shadow-sm"
             >
               Guardar Cambios
             </button>
@@ -419,36 +419,35 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
         /* GRID DE TARJETAS REDISEÑADAS */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {trainings.map(t => (
-            <div 
-              key={t.id} 
+            <div
+              key={t.id}
               className="group relative bg-white rounded-2xl border border-slate-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 flex flex-col h-full overflow-hidden"
             >
               {/* Accent Line (Lateral izquierda suave) */}
-              <div 
-                className="absolute left-0 top-6 bottom-6 w-1 rounded-r-full opacity-80" 
+              <div
+                className="absolute left-0 top-6 bottom-6 w-1 rounded-r-full opacity-80"
                 style={{ backgroundColor: t.color }}
               ></div>
 
               <div className="p-6 pl-7 flex flex-col h-full">
-                
+
                 {/* Header: Grupo y Estado */}
                 <div className="flex justify-between items-start mb-3">
                   <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
                     {t.group || 'GENERAL'}
                   </span>
-                  
-                  <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full ${
-                    t.isPublished 
-                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
+
+                  <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full ${t.isPublished
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-100'
                       : 'bg-slate-100 text-slate-500 border border-slate-200'
-                  }`}>
+                    }`}>
                     {t.isPublished ? '● Activo' : '○ Borrador'}
                   </span>
                 </div>
 
                 {/* Título y Descripción */}
                 <div className="mb-6">
-                  <h3 className="text-slate-900 font-semibold text-lg leading-snug mb-2 group-hover:text-indigo-600 transition-colors cursor-pointer" onClick={() => onSelectTraining(t.id)}>
+                  <h3 className="text-catalina-grey font-semibold text-lg leading-snug mb-2 group-hover:text-catalina-green transition-colors cursor-pointer" onClick={() => onSelectTraining(t.id)}>
                     {t.title}
                   </h3>
                   <p className="text-slate-500 text-sm leading-relaxed line-clamp-2">
@@ -461,106 +460,106 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
 
                 {/* Metadata Grid */}
                 <div className="grid grid-cols-2 gap-y-3 gap-x-4 mb-6">
-                   <div className="flex items-center gap-2 text-[13px] text-slate-600">
-                      <i className="far fa-calendar text-slate-400 w-4"></i>
-                      <span>{t.date}</span>
-                   </div>
-                   <div className="flex items-center gap-2 text-[13px] text-slate-600">
-                      <i className="fas fa-users text-slate-400 w-4"></i>
-                      <span>{t.maxCapacity} cupos</span>
-                   </div>
-                   {t.duration && (
-                     <div className="flex items-center gap-2 text-[13px] text-slate-600">
-                        <i className="far fa-clock text-slate-400 w-4"></i>
-                        <span>{t.duration}</span>
-                     </div>
-                   )}
-                   {t.schedule && (
-                     <div className="flex items-center gap-2 text-[13px] text-slate-600">
-                        <i className="far fa-clock text-slate-400 w-4"></i>
-                        <span className="truncate">{t.schedule}</span>
-                     </div>
-                   )}
+                  <div className="flex items-center gap-2 text-[13px] text-slate-600">
+                    <i className="far fa-calendar text-slate-400 w-4"></i>
+                    <span>{t.date}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[13px] text-slate-600">
+                    <i className="fas fa-users text-slate-400 w-4"></i>
+                    <span>{t.maxCapacity} cupos</span>
+                  </div>
+                  {t.duration && (
+                    <div className="flex items-center gap-2 text-[13px] text-slate-600">
+                      <i className="far fa-clock text-slate-400 w-4"></i>
+                      <span>{t.duration}</span>
+                    </div>
+                  )}
+                  {t.schedule && (
+                    <div className="flex items-center gap-2 text-[13px] text-slate-600">
+                      <i className="far fa-clock text-slate-400 w-4"></i>
+                      <span className="truncate">{t.schedule}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Footer Actions */}
                 <div className="mt-auto pt-2 flex items-center justify-between">
                   <div className="flex items-center gap-1">
-                     {/* Share Button con Popover simple */}
-                     {!isAdminContratista && (
-                       <div className="relative">
-                          <button 
-                              onClick={() => setSharingId(sharingId === t.id ? null : t.id)}
-                              className="w-8 h-8 rounded-full hover:bg-slate-50 text-slate-400 hover:text-slate-600 flex items-center justify-center transition-colors"
-                              title="Compartir"
-                          >
-                              <i className="fas fa-share-alt text-xs"></i>
-                          </button>
-                          
-                          {sharingId === t.id && (
-                              <div className="absolute bottom-full left-0 mb-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 p-2 z-20 animate-fadeIn space-y-1">
-                                  <div className="px-3 py-2">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">OPCIONES DE DIFUSIÓN</p>
-                                  </div>
-                                  <button onClick={() => copyToClipboard(t.id)} className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg flex items-center gap-3">
-                                      <i className="fas fa-link text-slate-400 w-4"></i>
-                                      <span>Link de registro público</span>
-                                  </button>
-                                  <div className="border-t border-slate-100 my-1"></div>
-                                  <button onClick={() => {
-                                        const trainingParticipants = users?.filter(u => u.trainingId === t.id) || [];
-                                        setParticipantsForModal(trainingParticipants);
-                                        setSharingId(null);
-                                      }} className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg flex items-center gap-3">
-                                      <i className="fas fa-users text-slate-400 w-4"></i>
-                                      <span>Links de validación ({t.registeredCount || 0})</span>
-                                  </button>
-                              </div>
-                          )}
-                          {/* Backdrop invisible para cerrar */}
-                          {sharingId === t.id && <div className="fixed inset-0 z-10" onClick={() => setSharingId(null)}></div>}
-                       </div>
-                     )}
+                    {/* Share Button con Popover simple */}
+                    {!isAdminContratista && (
+                      <div className="relative">
+                        <button
+                          onClick={() => setSharingId(sharingId === t.id ? null : t.id)}
+                          className="w-8 h-8 rounded-full hover:bg-slate-50 text-slate-400 hover:text-slate-600 flex items-center justify-center transition-colors"
+                          title="Compartir"
+                        >
+                          <i className="fas fa-share-alt text-xs"></i>
+                        </button>
 
-                     {/* Controles SuperSuperAdmin */}
-                     {isSuperSuperAdmin && (
-                        <>
-                          {/* Toggle Activo/Inactivo */}
-                          <div className="flex items-center gap-1.5 text-xs text-slate-500" title={t.isPublished ? 'Desactivar capacitación' : 'Activar capacitación'}>
-                            <button
-                              id={`toggle-${t.id}`}
-                              onClick={() => onUpdateTraining({ ...t, isPublished: !t.isPublished })}
-                              className={`relative inline-flex items-center h-5 w-9 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500 ${t.isPublished ? 'bg-emerald-500' : 'bg-slate-300'}`}
-                            >
-                              <span className={`inline-block w-3 h-3 transform bg-white rounded-full transition-transform ${t.isPublished ? 'translate-x-5' : 'translate-x-1'}`} />
+                        {sharingId === t.id && (
+                          <div className="absolute bottom-full left-0 mb-2 w-64 bg-white rounded-xl shadow-xl border border-slate-100 p-2 z-20 animate-fadeIn space-y-1">
+                            <div className="px-3 py-2">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">OPCIONES DE DIFUSIÓN</p>
+                            </div>
+                            <button onClick={() => copyToClipboard(t.id)} className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg flex items-center gap-3">
+                              <i className="fas fa-link text-slate-400 w-4"></i>
+                              <span>Link de registro público</span>
+                            </button>
+                            <div className="border-t border-slate-100 my-1"></div>
+                            <button onClick={() => {
+                              const trainingParticipants = users?.filter(u => u.trainingId === t.id) || [];
+                              setParticipantsForModal(trainingParticipants);
+                              setSharingId(null);
+                            }} className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg flex items-center gap-3">
+                              <i className="fas fa-users text-slate-400 w-4"></i>
+                              <span>Links de validación ({t.registeredCount || 0})</span>
                             </button>
                           </div>
+                        )}
+                        {/* Backdrop invisible para cerrar */}
+                        {sharingId === t.id && <div className="fixed inset-0 z-10" onClick={() => setSharingId(null)}></div>}
+                      </div>
+                    )}
 
-                          {/* Botón Duplicar */}
+                    {/* Controles SuperSuperAdmin */}
+                    {isSuperSuperAdmin && (
+                      <>
+                        {/* Toggle Activo/Inactivo */}
+                        <div className="flex items-center gap-1.5 text-xs text-slate-500" title={t.isPublished ? 'Desactivar capacitación' : 'Activar capacitación'}>
                           <button
-                            onClick={() => setDuplicatingTraining(t)}
-                            className="w-auto h-8 px-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors gap-1.5"
-                            title="Duplicar"
+                            id={`toggle-${t.id}`}
+                            onClick={() => onUpdateTraining({ ...t, isPublished: !t.isPublished })}
+                            className={`relative inline-flex items-center h-5 w-9 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-catalina-green ${t.isPublished ? 'bg-catalina-green' : 'bg-slate-300'}`}
                           >
-                            <i className="far fa-copy text-xs"></i>
-                            <span className="text-[10px] font-bold">Duplicar</span>
+                            <span className={`inline-block w-3 h-3 transform bg-white rounded-full transition-transform ${t.isPublished ? 'translate-x-5' : 'translate-x-1'}`} />
                           </button>
+                        </div>
 
-                          {/* Botón Configurar (Existente) */}
-                          <button 
-                              onClick={() => handleEdit(t)}
-                              className="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors"
-                              title="Configurar"
-                          >
-                              <i className="fas fa-cog text-xs"></i>
-                          </button>
-                        </>
-                     )}
+                        {/* Botón Duplicar */}
+                        <button
+                          onClick={() => setDuplicatingTraining(t)}
+                          className="w-auto h-8 px-2 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors gap-1.5"
+                          title="Duplicar"
+                        >
+                          <i className="far fa-copy text-xs"></i>
+                          <span className="text-[10px] font-bold">Duplicar</span>
+                        </button>
+
+                        {/* Botón Configurar (Existente) */}
+                        <button
+                          onClick={() => handleEdit(t)}
+                          className="w-8 h-8 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-700 flex items-center justify-center transition-colors"
+                          title="Configurar"
+                        >
+                          <i className="fas fa-cog text-xs"></i>
+                        </button>
+                      </>
+                    )}
                   </div>
 
-                  <button 
+                  <button
                     onClick={() => onSelectTraining(t.id)}
-                    className="text-indigo-600 text-xs font-medium hover:text-indigo-800 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                    className="text-catalina-green text-xs font-medium hover:text-catalina-forest-green hover:bg-catalina-green/5 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
                   >
                     Participantes
                     <i className="fas fa-arrow-right text-[10px]"></i>

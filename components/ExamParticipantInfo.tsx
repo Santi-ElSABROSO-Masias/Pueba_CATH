@@ -32,7 +32,7 @@ export const ExamParticipantInfo: React.FC<ExamParticipantInfoProps> = ({ exam, 
               checked={fields[fieldKey as keyof typeof fields]} 
               onChange={() => handleFieldChange(fieldKey as keyof typeof fields)} 
               disabled={fieldKey === 'name' || fieldKey === 'dni'} 
-              className="h-4 w-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 disabled:opacity-50"
+              className="h-4 w-4 text-catalina-green border-slate-300 rounded focus:ring-catalina-green disabled:opacity-50"
             />
             <label htmlFor={fieldKey} className="ml-3 block text-sm text-slate-900 capitalize">
               {fieldKey.replace(/([A-Z])/g, ' $1')}
@@ -42,7 +42,7 @@ export const ExamParticipantInfo: React.FC<ExamParticipantInfoProps> = ({ exam, 
         ))}
       </div>
       <div className="mt-6">
-        <button onClick={handleSave} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700">Guardar</button>
+        <button onClick={handleSave} className="bg-catalina-green text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-catalina-forest-green">Guardar</button>
       </div>
     </div>
   );

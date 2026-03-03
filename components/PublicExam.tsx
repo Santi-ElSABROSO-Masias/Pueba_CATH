@@ -160,7 +160,7 @@ export const PublicExam: React.FC<PublicExamProps> = ({ examId, onSubmitResult }
                 <div className="p-8 md:p-12">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
                     <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 flex items-center gap-4">
-                      <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center">
+                      <div className="w-12 h-12 bg-catalina-green/10 text-catalina-green rounded-xl flex items-center justify-center">
                         <i className="fas fa-clock text-xl"></i>
                       </div>
                       <div>
@@ -264,8 +264,8 @@ export const PublicExam: React.FC<PublicExamProps> = ({ examId, onSubmitResult }
                 </div>
 
                 <div className="text-center mb-8">
-                  <div className="w-16 h-16 bg-indigo-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <i className="fas fa-user-edit text-2xl text-indigo-600"></i>
+                  <div className="w-16 h-16 bg-catalina-green/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i className="fas fa-user-edit text-2xl text-catalina-green"></i>
                   </div>
                   <h2 className="text-2xl font-black text-slate-900 mb-1">Datos del Participante</h2>
                   <p className="text-sm text-slate-500">Ingresa tus datos para iniciar la evaluación</p>

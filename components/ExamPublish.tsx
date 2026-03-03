@@ -81,7 +81,7 @@ export const ExamPublish: React.FC<ExamPublishProps> = ({ exam, onUpdateExam, tr
           <button 
             disabled={exam.questions.length === 0} 
             onClick={handlePublish}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:bg-slate-300"
+            className="bg-catalina-green text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-catalina-forest-green disabled:bg-slate-300"
           >
             Publicar Examen
           </button>

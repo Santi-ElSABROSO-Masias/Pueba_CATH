@@ -1,16 +1,77 @@
-
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Management MVP</title>
+    <meta name="description"
+        content="Plataforma de gestión y programación de capacitaciones — Catalina Huanca Sociedad Minera">
+    <title>Plataforma de Capacitaciones — Catalina Huanca</title>
+    <!-- Montserrat: Light 300, Regular 400, Medium 500, SemiBold 600, Bold 700 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'montserrat': ['Montserrat', 'sans-serif'],
+                    },
+                    colors: {
+                        'catalina-green': '#00A064',
+                        'catalina-dusty-green': '#78C67B',
+                        'catalina-forest-green': '#145A52',
+                        'catalina-grey': '#333333',
+                        'catalina-highlight-orange': '#FF9132',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(8px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(16px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                    },
+                    animation: {
+                        'fadeIn': 'fadeIn 0.4s ease-out',
+                        'slideUp': 'slideUp 0.5s ease-out',
+                    },
+                },
+            },
+        }
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* Global base styles */
+        body {
+            font-family: 'Montserrat', sans-serif;
+            color: #333333;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        ::placeholder {
+            font-weight: 400;
+            color: #9ca3af;
+        }
+
+        input,
+        select,
+        textarea {
+            font-family: 'Montserrat', sans-serif;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+    </style>
 </head>
-<body class="bg-slate-50 text-slate-900">
+
+<body class="bg-slate-50 text-catalina-grey font-montserrat">
     <div id="root"></div>
-    <!-- Importante: El '/' inicial asegura que el archivo se encuentre desde cualquier URL -->
     <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>

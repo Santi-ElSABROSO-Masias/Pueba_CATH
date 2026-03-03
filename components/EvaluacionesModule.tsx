@@ -57,7 +57,7 @@ export const EvaluacionesModule: React.FC<EvaluacionesModuleProps> = ({
           <div className="mb-6 flex items-center gap-2 text-sm">
             <button 
               onClick={() => setActiveSection('home')}
-              className="text-indigo-600 hover:text-indigo-700 font-medium"
+              className="text-catalina-green hover:text-catalina-forest-green font-medium"
             >
               ← Volver al panel principal
             </button>
@@ -95,14 +95,14 @@ export const EvaluacionesModule: React.FC<EvaluacionesModuleProps> = ({
     if (!selectedExam) {
       return (
         <div className="flex flex-col items-center justify-center py-16 px-6">
-          <div className="w-20 h-20 rounded-full bg-indigo-100 flex items-center justify-center mb-4">
+          <div className="w-20 h-20 rounded-full bg-catalina-green/10 flex items-center justify-center mb-4">
             <span className="text-4xl">📝</span>
           </div>
           <h3 className="text-xl font-bold text-slate-900 mb-2">No hay un examen creado para esta capacitación</h3>
           <p className="text-slate-500 text-center mb-6 max-w-md">Crea un nuevo examen para evaluar a los participantes de esta capacitación.</p>
           <button 
             onClick={() => selectedTrainingId && onCreateExam(selectedTrainingId)}
-            className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+            className="bg-catalina-green text-white px-6 py-3 rounded-lg font-medium hover:bg-catalina-forest-green transition-colors shadow-sm"
           >
             Crear Nuevo Examen
           </button>
@@ -115,8 +115,8 @@ export const EvaluacionesModule: React.FC<EvaluacionesModuleProps> = ({
         {/* Columna Crear */}
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+            <div className="w-12 h-12 rounded-xl bg-catalina-green/10 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-catalina-green" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
             </div>
             <div>
               <h3 className="font-bold text-lg text-slate-900">Crear</h3>
@@ -124,7 +124,7 @@ export const EvaluacionesModule: React.FC<EvaluacionesModuleProps> = ({
             </div>
           </div>
           <div className="space-y-3">
-            <button onClick={() => setActiveSection('preguntas')} className={`w-full text-left px-4 py-3 rounded-lg transition-all ${activeSection === 'preguntas' ? 'bg-indigo-50 border-2 border-indigo-500' : 'bg-slate-50 border border-slate-200 hover:bg-slate-100'}`}>
+            <button onClick={() => setActiveSection('preguntas')} className={`w-full text-left px-4 py-3 rounded-lg transition-all ${activeSection === 'preguntas' ? 'bg-catalina-green/5 border-2 border-catalina-green' : 'bg-slate-50 border border-slate-200 hover:bg-slate-100'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">❓</span>
@@ -136,7 +136,7 @@ export const EvaluacionesModule: React.FC<EvaluacionesModuleProps> = ({
                 {selectedExam.questions.length > 0 ? <span className="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg></span> : <span className="text-slate-300">○</span>}
               </div>
             </button>
-            <button onClick={() => setActiveSection('puntuacion')} className={`w-full text-left px-4 py-3 rounded-lg transition-all ${activeSection === 'puntuacion' ? 'bg-indigo-50 border-2 border-indigo-500' : 'bg-slate-50 border border-slate-200 hover:bg-slate-100'}`}>
+            <button onClick={() => setActiveSection('puntuacion')} className={`w-full text-left px-4 py-3 rounded-lg transition-all ${activeSection === 'puntuacion' ? 'bg-catalina-green/5 border-2 border-catalina-green' : 'bg-slate-50 border border-slate-200 hover:bg-slate-100'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">📊</span>
@@ -228,7 +228,7 @@ export const EvaluacionesModule: React.FC<EvaluacionesModuleProps> = ({
           id="training-select"
           value={selectedTrainingId || ''}
           onChange={e => setSelectedTrainingId(e.target.value)}
-          className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all shadow-sm"
+          className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-sm focus:border-catalina-green focus:ring-1 focus:ring-catalina-green outline-none transition-all shadow-sm"
         >
           <option value="" disabled>-- Elige una capacitación --</option>
           {trainings.map(t => (
@@ -245,10 +245,10 @@ export const EvaluacionesModule: React.FC<EvaluacionesModuleProps> = ({
               {selectedExam.status === 'published' && <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">Publicado</span>}
               {selectedExam.status === 'draft' && <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded-full">Borrador</span>}
             </div>
-            <span className="text-sm font-bold text-indigo-600">{getProgressPercentage()}%</span>
+            <span className="text-sm font-bold text-catalina-green">{getProgressPercentage()}%</span>
           </div>
           <div className="w-full bg-slate-200 rounded-full h-2">
-            <div className="bg-indigo-600 h-2 rounded-full transition-all duration-300" style={{ width: `${getProgressPercentage()}%` }} />
+            <div className="bg-catalina-green h-2 rounded-full transition-all duration-300" style={{ width: `${getProgressPercentage()}%` }} />
           </div>
           <div className="mt-2 flex items-center gap-4 text-xs text-slate-500">
             <span>{selectedExam.questions.length > 0 ? '✓' : '○'} Preguntas</span>

@@ -199,7 +199,7 @@ export function MonthlyScheduleManager({ onScheduleGenerated, users = [] }: Mont
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Mes</label>
             <select 
-                className="px-4 py-2 rounded-lg border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-indigo-500/20 font-medium text-slate-700"
+                className="px-4 py-2 rounded-lg border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-catalina-green/20 font-medium text-slate-700"
                 value={selectedMonth} 
                 onChange={(e) => setSelectedMonth(Number(e.target.value))}
             >
@@ -212,7 +212,7 @@ export function MonthlyScheduleManager({ onScheduleGenerated, users = [] }: Mont
             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Año</label>
             <input 
               type="number" 
-              className="px-4 py-2 rounded-lg border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-indigo-500/20 font-medium text-slate-700 w-24"
+              className="px-4 py-2 rounded-lg border border-slate-200 bg-white outline-none focus:ring-2 focus:ring-catalina-green/20 font-medium text-slate-700 w-24"
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
               min={2024}
@@ -224,7 +224,7 @@ export function MonthlyScheduleManager({ onScheduleGenerated, users = [] }: Mont
               <button 
                 onClick={handleGenerate}
                 disabled={loading}
-                className="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100 transition-all disabled:opacity-50"
+                className="bg-catalina-green text-white px-6 py-2 rounded-lg font-bold hover:bg-catalina-forest-green shadow-lg shadow-catalina-green/10 transition-all disabled:opacity-50"
               >
                 {loading ? 'Generando...' : 'Generar Cronograma Automático'}
               </button>
@@ -281,7 +281,7 @@ export function MonthlyScheduleManager({ onScheduleGenerated, users = [] }: Mont
                   {currentSchedule.status === 'draft' && (
                       <div className="flex gap-2 mt-auto pt-3 border-t border-slate-50">
                         <button 
-                            className="flex-1 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-indigo-600 text-xs font-bold py-1.5 rounded-lg transition-colors"
+                            className="flex-1 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-catalina-green text-xs font-bold py-1.5 rounded-lg transition-colors"
                             onClick={() => handleEditTraining(training)}
                         >
                             <i className="fas fa-pencil-alt mr-1"></i> Editar

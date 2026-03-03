@@ -162,7 +162,7 @@ export const ExamAnalytics: React.FC<ExamAnalyticsProps> = ({ exam, currentUserR
               <span className="mr-3 text-sm text-slate-600">Notificar al admin por cada resultado</span>
               <div className="relative">
                 <input type="checkbox" checked={notifyAdmin} onChange={() => setNotifyAdmin(!notifyAdmin)} className="sr-only" />
-                <div className={`block w-10 h-6 rounded-full ${notifyAdmin ? 'bg-indigo-600' : 'bg-slate-300'}`}></div>
+                <div className={`block w-10 h-6 rounded-full ${notifyAdmin ? 'bg-catalina-green' : 'bg-slate-300'}`}></div>
                 <div className={`dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform ${notifyAdmin ? 'transform translate-x-4' : ''}`}></div>
               </div>
             </label>

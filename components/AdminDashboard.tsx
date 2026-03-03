@@ -244,7 +244,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Filtrar por Capacitación</label>
           <div className="flex flex-col gap-2">
             <select 
-                className="w-full md:w-80 px-4 py-3 rounded-xl border border-slate-200 bg-white shadow-sm font-bold text-slate-800 outline-none focus:ring-2 focus:ring-indigo-500/20"
+                className="w-full md:w-80 px-4 py-3 rounded-xl border border-slate-200 bg-white shadow-sm font-bold text-slate-800 outline-none focus:ring-2 focus:ring-catalina-green/20"
                 value={currentTrainingId}
                 onChange={(e) => setCurrentTrainingId(e.target.value)}
             >
@@ -279,7 +279,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       setShowManualForm(true);
                   }}
                   disabled={activeTraining?.isConsolidated || (activeTraining && !isRegistrationOpen(activeTraining))}
-                  className={`flex-1 md:flex-none px-6 py-3 rounded-xl flex items-center justify-center gap-2 font-bold transition-all shadow-lg ${activeTraining?.isConsolidated || (activeTraining && !isRegistrationOpen(activeTraining)) ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'}`}
+                  className={`flex-1 md:flex-none px-6 py-3 rounded-xl flex items-center justify-center gap-2 font-bold transition-all shadow-lg ${activeTraining?.isConsolidated || (activeTraining && !isRegistrationOpen(activeTraining)) ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-catalina-green text-white hover:bg-catalina-forest-green shadow-catalina-green/10'}`}
                 >
                   <i className="fas fa-user-plus"></i>
                   Agregar Trabajador
@@ -341,7 +341,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {[
           { label: 'Inscritos Hoy', val: stats.total, color: 'border-blue-500', icon: 'fa-user-plus' },
           { label: 'Candidatos Aptos', val: stats.approved, color: 'border-emerald-500', icon: 'fa-id-card' },
-          { label: 'Asistencia Confirmada', val: stats.attended, color: 'border-indigo-500', icon: 'fa-clipboard-list' }
+          { label: 'Asistencia Confirmada', val: stats.attended, color: 'border-catalina-green', icon: 'fa-clipboard-list' }
         ].map((stat, i) => (
           <div key={i} className={`bg-white p-6 rounded-2xl border-l-4 ${stat.color} shadow-sm flex items-center justify-between`}>
             <div>
@@ -357,8 +357,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
           <div className="flex gap-4">
-            <button onClick={() => setActiveSubTab('assistance')} className={`font-bold text-sm ${activeSubTab === 'assistance' ? 'text-indigo-600' : 'text-slate-800'}`}>Registro de Asistencia</button>
-            <button onClick={() => setActiveSubTab('results')} className={`font-bold text-sm ${activeSubTab === 'results' ? 'text-indigo-600' : 'text-slate-800'}`}>Resultados de Evaluación</button>
+            <button onClick={() => setActiveSubTab('assistance')} className={`font-bold text-sm ${activeSubTab === 'assistance' ? 'text-catalina-green' : 'text-slate-800'}`}>Registro de Asistencia</button>
+            <button onClick={() => setActiveSubTab('results')} className={`font-bold text-sm ${activeSubTab === 'results' ? 'text-catalina-green' : 'text-slate-800'}`}>Resultados de Evaluación</button>
           </div>
           
           {activeSubTab === 'assistance' && (
@@ -388,7 +388,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <div className="flex items-center gap-2">
                       <input 
                         type="checkbox" 
-                        className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                        className="w-4 h-4 rounded border-slate-300 text-catalina-green focus:ring-catalina-green cursor-pointer"
                         checked={filteredUsers.length > 0 && filteredUsers.every(u => u.status === UserStatus.APPROVED || u.status === UserStatus.LINK_SENT)}
                         onChange={handleSelectAll}
                         title="Aprobar/Revertir todos los visibles"
@@ -431,7 +431,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                            {/* Checkbox de Aprobación */}
                            <input 
                              type="checkbox" 
-                             className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                             className="w-5 h-5 rounded border-slate-300 text-catalina-green focus:ring-catalina-green cursor-pointer"
                              checked={user.status === UserStatus.APPROVED || user.status === UserStatus.LINK_SENT}
                              onChange={() => handleStatusCheckbox(user.id, user.status)}
                              disabled={user.status === UserStatus.REJECTED} 
@@ -474,14 +474,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <input
                               type="text"
                               disabled={activeTraining?.isConsolidated}
-                              className="text-[10px] border border-slate-200 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-indigo-500 bg-slate-50 disabled:opacity-50"
+                              className="text-[10px] border border-slate-200 rounded-lg px-3 py-2 w-full outline-none focus:ring-1 focus:ring-catalina-green bg-slate-50 disabled:opacity-50"
                               placeholder="Link Teams/Zoom..."
                               value={meetingLinks[user.id] || ''}
                               onChange={(e) => handleLinkChange(user.id, e.target.value)}
                             />
                           </div>
                         ) : (
-                          <div className="flex items-center gap-1 text-[10px] text-indigo-500 font-mono italic">
+                          <div className="flex items-center gap-1 text-[10px] text-catalina-green font-mono italic">
                             <i className="fas fa-link text-[8px]"></i>
                             <span className="truncate max-w-[100px]">{user.meetingLink}</span>
                           </div>
@@ -491,7 +491,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <td className="px-6 py-4 text-center">
                       {/* Asistencia Solo Lectura para TODOS */}
                       <div className={`w-7 h-7 rounded-lg flex items-center justify-center mx-auto ${
-                          user.attended ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 text-slate-300'
+                          user.attended ? 'bg-catalina-green text-white shadow-md' : 'bg-slate-100 text-slate-300'
                         }`}>
                         <i className="fas fa-check text-[10px]"></i>
                       </div>
@@ -503,7 +503,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <button
                               onClick={() => onUpdateStatus(user.id, UserStatus.LINK_SENT)}
                               disabled={activeTraining?.isConsolidated}
-                              className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-indigo-700 disabled:opacity-50 shadow-sm transition-all"
+                              className="bg-catalina-green text-white px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-catalina-forest-green disabled:opacity-50 shadow-sm transition-all"
                             >
                               Enviar Link
                             </button>

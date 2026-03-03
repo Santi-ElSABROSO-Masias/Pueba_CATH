@@ -34,7 +34,7 @@ export const DuplicateTrainingModal: React.FC<DuplicateTrainingModalProps> = ({ 
               type="date"
               value={newDate}
               onChange={(e) => setNewDate(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-catalina-green focus:ring-1 focus:ring-catalina-green outline-none transition-all"
             />
           </div>
           <div>
@@ -43,7 +43,7 @@ export const DuplicateTrainingModal: React.FC<DuplicateTrainingModalProps> = ({ 
               type="time"
               value={newTime}
               onChange={(e) => setNewTime(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-catalina-green focus:ring-1 focus:ring-catalina-green outline-none transition-all"
             />
           </div>
           <div>
@@ -52,7 +52,7 @@ export const DuplicateTrainingModal: React.FC<DuplicateTrainingModalProps> = ({ 
               type="number"
               value={newCapacity}
               onChange={(e) => setNewCapacity(parseInt(e.target.value, 10) || 0)}
-              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none transition-all"
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm focus:border-catalina-green focus:ring-1 focus:ring-catalina-green outline-none transition-all"
             />
           </div>
         </div>
@@ -61,7 +61,7 @@ export const DuplicateTrainingModal: React.FC<DuplicateTrainingModalProps> = ({ 
           <button onClick={onClose} className="px-5 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-all">
             Cancelar
           </button>
-          <button onClick={handleSubmit} className="bg-indigo-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-all shadow-sm">
+          <button onClick={handleSubmit} className="bg-catalina-green text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-catalina-forest-green disabled:opacity-50 transition-all shadow-sm">
             Crear Duplicado
           </button>
         </div>
