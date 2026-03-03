@@ -29,7 +29,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSubmit }) 
         </p>
         <button
           onClick={() => setSubmitted(false)}
-          className="text-indigo-600 font-bold hover:underline"
+          className="text-catalina-green font-bold hover:underline"
         >
           Registrar a otra persona
         </button>
@@ -40,7 +40,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSubmit }) 
   return (
     <div className="max-w-xl mx-auto mt-10">
       <div className="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden animate-fadeIn">
-        <div className="bg-indigo-600 p-8 text-white">
+        <div className="bg-catalina-green p-8 text-white">
           <h2 className="text-3xl font-bold mb-2">Registro al Evento</h2>
           <p className="opacity-90">Completa el formulario para solicitar tu acceso al workshop exclusivo.</p>
         </div>
@@ -52,7 +52,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSubmit }) 
               required
               type="text"
               placeholder="Juan Pérez"
-              className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-catalina-green focus:border-catalina-green outline-none transition-all"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
@@ -64,7 +64,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSubmit }) 
               required
               type="email"
               placeholder="juan@empresa.com"
-              className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-catalina-green focus:border-catalina-green outline-none transition-all"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
@@ -75,7 +75,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSubmit }) 
             <input
               type="text"
               placeholder="Empresa Tech S.A."
-              className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-catalina-green focus:border-catalina-green outline-none transition-all"
               value={formData.organization}
               onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
             />
@@ -83,7 +83,7 @@ export const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSubmit }) 
 
           <button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl transition-colors shadow-lg shadow-indigo-200 flex items-center justify-center gap-2"
+            className="w-full bg-catalina-green hover:bg-catalina-forest-green text-white font-bold py-4 rounded-xl transition-colors shadow-lg shadow-catalina-green/20 flex items-center justify-center gap-2"
           >
             Enviar Solicitud
             <i className="fas fa-paper-plane text-xs"></i>

@@ -23,7 +23,7 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({ exam, trainings, cur
   const handleSaveQuestion = (questionData: Omit<Question, 'id' | 'type'>) => {
     let updatedQuestions;
     if (editingQuestion) {
-      updatedQuestions = exam.questions.map(q => 
+      updatedQuestions = exam.questions.map(q =>
         q.id === editingQuestion.id ? { ...q, ...questionData, type: 'multiple' as const } : q
       );
     } else {
@@ -50,13 +50,13 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({ exam, trainings, cur
       <div className="border-b border-slate-200 mb-4">
         <nav className="-mb-px flex space-x-6">
           {['Resumen', 'Importar', 'Exportar'].map(tab => (
-            <button 
+            <button
               key={tab}
               onClick={() => setActiveTab(tab.toLowerCase().replace(' ', '_'))}
-              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${                activeTab === tab.toLowerCase().replace(' ', '_')
-                  ? 'border-indigo-500 text-indigo-600'
-                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-              }`}>
+              className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${activeTab === tab.toLowerCase().replace(' ', '_')
+                ? 'border-catalina-green text-catalina-green'
+                : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                }`}>
               {tab}
             </button>
           ))}
@@ -66,9 +66,9 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({ exam, trainings, cur
       {activeTab === 'resumen' && (
         <div>
           <div className="flex justify-between items-center mb-4">
-            <input type="text" placeholder="Filtrar por Pregunta..." className="w-1/3 px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+            <input type="text" placeholder="Filtrar por Pregunta..." className="w-1/3 px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-1 focus:ring-catalina-green" />
             {currentUserRole === 'super_super_admin' && (
-              <button onClick={() => handleOpenModal()} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700">Crear nueva pregunta</button>
+              <button onClick={() => handleOpenModal()} className="bg-catalina-green text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-catalina-forest-green">Crear nueva pregunta</button>
             )}
           </div>
           <table className="w-full text-left">
@@ -87,7 +87,7 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({ exam, trainings, cur
                   <td className="p-3">
                     {currentUserRole === 'super_super_admin' && (
                       <div className="flex gap-2">
-                        <button onClick={() => handleOpenModal(q)} className="text-slate-400 hover:text-indigo-600">Editar</button>
+                        <button onClick={() => handleOpenModal(q)} className="text-slate-400 hover:text-catalina-green">Editar</button>
                         <button onClick={() => handleDeleteQuestion(q.id)} className="text-slate-400 hover:text-red-600">Eliminar</button>
                       </div>
                     )}
@@ -100,13 +100,13 @@ export const QuestionBank: React.FC<QuestionBankProps> = ({ exam, trainings, cur
       )}
 
       {activeTab === 'importar' && <ImportTab exam={exam} trainings={trainings} onUpdateExam={onUpdateExam} currentUserRole={currentUserRole} />}
-      
-      {isModalOpen && 
-        <QuestionModal 
-          trainings={trainings} 
-          question={editingQuestion} 
-          onSave={handleSaveQuestion} 
-          onClose={() => setIsModalOpen(false)} 
+
+      {isModalOpen &&
+        <QuestionModal
+          trainings={trainings}
+          question={editingQuestion}
+          onSave={handleSaveQuestion}
+          onClose={() => setIsModalOpen(false)}
         />
       }
     </div>
@@ -129,7 +129,7 @@ const ImportTab: React.FC<QuestionBankProps> = ({ exam, trainings, onUpdateExam 
     setDriveUrl('');
     setDriveStatus('idle');
     setDriveError('');
-    if(fileInputRef.current) fileInputRef.current.value = '';
+    if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
   const handleSourceSelection = (source: 'excel' | 'word' | 'drive') => {
@@ -144,7 +144,7 @@ const ImportTab: React.FC<QuestionBankProps> = ({ exam, trainings, onUpdateExam 
     if (!row['Opción B']) rowErrors.push(`Fila ${index + 2}: falta Opción B`);
     if (!row['Opción C']) rowErrors.push(`Fila ${index + 2}: falta Opción C`);
     if (!row['Opción D']) rowErrors.push(`Fila ${index + 2}: falta Opción D`);
-    if (!['A','B','C','D'].includes(row['Correcta']?.toUpperCase()))
+    if (!['A', 'B', 'C', 'D'].includes(row['Correcta']?.toUpperCase()))
       rowErrors.push(`Fila ${index + 2}: "Correcta" debe ser A, B, C o D`);
     const trainingExists = trainings.some(t => t.title === row['Capacitación']);
     if (!trainingExists)
@@ -184,7 +184,7 @@ const ImportTab: React.FC<QuestionBankProps> = ({ exam, trainings, onUpdateExam 
       reader.readAsArrayBuffer(file);
     }
   };
-  
+
   const parseWordContent = (text: string) => {
     const blocks = text.split(/\n\s*\n/);  // Separar por bloques vacíos
     return blocks.map(block => {
@@ -246,7 +246,7 @@ const ImportTab: React.FC<QuestionBankProps> = ({ exam, trainings, onUpdateExam 
     setImportSource('none');
     resetState();
   };
-  
+
   const handleDownloadTemplate = () => {
     const template = [
       ['Pregunta', 'Opción A', 'Opción B', 'Opción C', 'Opción D', 'Correcta', 'Capacitación'],
@@ -307,23 +307,23 @@ const ImportTab: React.FC<QuestionBankProps> = ({ exam, trainings, onUpdateExam 
 
       {importSource !== 'none' && (
         <div>
-          <button onClick={() => setImportSource('none')} className="text-sm text-indigo-600 hover:underline mb-4">{'< Cambiar fuente'}</button>
-          
+          <button onClick={() => setImportSource('none')} className="text-sm text-catalina-green hover:underline mb-4">{'< Cambiar fuente'}</button>
+
           {importSource === 'excel' && (
             <div>
               <h4 className="font-bold mb-2">Importar desde Excel</h4>
               <button onClick={handleDownloadTemplate} className="text-sm bg-slate-100 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-200 font-medium mb-4">Descargar plantilla</button>
-              <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} ref={fileInputRef} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"/>
+              <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} ref={fileInputRef} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100" />
             </div>
           )}
 
           {importSource === 'word' && (
-             <div>
+            <div>
               <h4 className="font-bold mb-2">Importar desde Word</h4>
-               <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4 text-sm">
+              <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4 text-sm">
                 ⚠️ <strong>Modo Beta:</strong> El archivo Word debe seguir el formato exacto.
               </div>
-              <input type="file" accept=".docx" onChange={handleFileUpload} ref={fileInputRef} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100"/>
+              <input type="file" accept=".docx" onChange={handleFileUpload} ref={fileInputRef} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-violet-700 hover:file:bg-violet-100" />
             </div>
           )}
 
@@ -334,11 +334,11 @@ const ImportTab: React.FC<QuestionBankProps> = ({ exam, trainings, onUpdateExam 
                 <p><strong>PASO 1:</strong> Abre tu Google Doc con las preguntas.</p>
                 <p><strong>PASO 2:</strong> Ve a Archivo → Descargar → Microsoft Word (.docx).</p>
                 <p><strong>PASO 3:</strong> Usa la opción "Importar Word" de arriba.</p>
-                <hr className="my-2"/>
+                <hr className="my-2" />
                 <p className="font-bold">O si tienes el link público del Doc:</p>
                 <div className="flex gap-2 mt-2">
-                  <input type="text" value={driveUrl} onChange={e => setDriveUrl(e.target.value)} placeholder="https://docs.google.com/..." className="flex-grow px-3 py-2 rounded-lg border border-slate-300 text-sm"/>
-                  <button onClick={handleGoogleDriveImport} disabled={driveStatus === 'loading'} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:bg-indigo-300">
+                  <input type="text" value={driveUrl} onChange={e => setDriveUrl(e.target.value)} placeholder="https://docs.google.com/..." className="flex-grow px-3 py-2 rounded-lg border border-slate-300 text-sm" />
+                  <button onClick={handleGoogleDriveImport} disabled={driveStatus === 'loading'} className="bg-catalina-green text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-catalina-forest-green disabled:bg-catalina-green/40">
                     {driveStatus === 'loading' ? 'Conectando...' : 'Conectar'}
                   </button>
                 </div>
@@ -382,7 +382,7 @@ const ImportTab: React.FC<QuestionBankProps> = ({ exam, trainings, onUpdateExam 
               </div>
               <div className="flex justify-end gap-2 mt-4">
                 <button onClick={resetState} className="px-4 py-2 rounded bg-slate-200 text-slate-800">Cancelar</button>
-                <button onClick={handleConfirmImport} className="px-4 py-2 rounded bg-indigo-600 text-white">Confirmar importación</button>
+                <button onClick={handleConfirmImport} className="px-4 py-2 rounded bg-catalina-green text-white">Confirmar importación</button>
               </div>
             </div>
           )}
@@ -422,9 +422,9 @@ const QuestionModal: React.FC<QuestionModalProps> = ({ trainings, question, onSa
       <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg">
         <form onSubmit={handleSubmit}>
           <h2 className="text-lg font-bold mb-4">{question ? 'Editar' : 'Nueva'} Pregunta</h2>
-          <textarea 
-            value={formData.text} 
-            onChange={e => setFormData({...formData, text: e.target.value})} 
+          <textarea
+            value={formData.text}
+            onChange={e => setFormData({ ...formData, text: e.target.value })}
             placeholder="Enunciado de la pregunta"
             className="w-full p-2 border rounded mb-4"
             required
@@ -432,20 +432,20 @@ const QuestionModal: React.FC<QuestionModalProps> = ({ trainings, question, onSa
           <div className="space-y-2 mb-4">
             {formData.options.map((opt, i) => (
               <div key={i} className="flex items-center gap-2">
-                <input 
-                  type="radio" 
-                  name="correctAnswer" 
-                  checked={formData.correctAnswer === i} 
-                  onChange={() => setFormData({...formData, correctAnswer: i})} 
+                <input
+                  type="radio"
+                  name="correctAnswer"
+                  checked={formData.correctAnswer === i}
+                  onChange={() => setFormData({ ...formData, correctAnswer: i })}
                 />
-                <input 
-                  type="text" 
-                  value={opt} 
+                <input
+                  type="text"
+                  value={opt}
                   onChange={e => {
                     const newOptions = [...formData.options] as [string, string, string, string];
                     newOptions[i] = e.target.value;
-                    setFormData({...formData, options: newOptions});
-                  }} 
+                    setFormData({ ...formData, options: newOptions });
+                  }}
                   placeholder={`Opción ${String.fromCharCode(65 + i)}`}
                   className="w-full p-2 border rounded"
                   required
@@ -453,9 +453,9 @@ const QuestionModal: React.FC<QuestionModalProps> = ({ trainings, question, onSa
               </div>
             ))}
           </div>
-          <select 
-            value={formData.trainingTag} 
-            onChange={e => setFormData({...formData, trainingTag: e.target.value})} 
+          <select
+            value={formData.trainingTag}
+            onChange={e => setFormData({ ...formData, trainingTag: e.target.value })}
             className="w-full p-2 border rounded mb-4"
             required
           >
@@ -464,7 +464,7 @@ const QuestionModal: React.FC<QuestionModalProps> = ({ trainings, question, onSa
           </select>
           <div className="flex justify-end gap-2">
             <button type="button" onClick={onClose} className="px-4 py-2 rounded bg-slate-200 text-slate-800">Cancelar</button>
-            <button type="submit" className="px-4 py-2 rounded bg-indigo-600 text-white">Guardar</button>
+            <button type="submit" className="px-4 py-2 rounded bg-catalina-green text-white">Guardar</button>
           </div>
         </form>
       </div>

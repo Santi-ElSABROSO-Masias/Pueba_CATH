@@ -50,7 +50,7 @@
       <div className="relative" ref={menuRef}>
         {/* Botón de configuración */}
         <button 
-          className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+          className="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-catalina-green hover:bg-catalina-green/5 transition-colors"
           onClick={() => setIsOpen(!isOpen)}
           title="Opciones"
         >
@@ -61,7 +61,7 @@
         {isOpen && (
           <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-20 animate-fadeIn">
             <button 
-              className="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 flex items-center gap-2 transition-colors"
+              className="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-catalina-green flex items-center gap-2 transition-colors"
               onClick={() => { onEdit(); setIsOpen(false); }}
             >
               <i className="fas fa-pencil-alt w-4"></i> Editar
@@ -113,7 +113,7 @@
             <div className="h-px bg-slate-100 my-1"></div>
 
             <button 
-              className="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-indigo-600 flex items-center gap-2 transition-colors"
+              className="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-50 hover:text-catalina-green flex items-center gap-2 transition-colors"
               onClick={() => { onShare(); setIsOpen(false); }}
             >
               <i className="fas fa-share-alt w-4"></i> Compartir

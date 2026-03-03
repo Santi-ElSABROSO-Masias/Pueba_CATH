@@ -53,7 +53,7 @@ export const EditTrainingModal: React.FC<EditTrainingModalProps> = ({ training, 
               name="title"
               value={formData.title}
               onChange={handleChange}
-              className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none"
+              className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-catalina-green/20 outline-none"
             />
           </div>
 
@@ -65,7 +65,7 @@ export const EditTrainingModal: React.FC<EditTrainingModalProps> = ({ training, 
                 name="date"
                 value={formData.date}
                 onChange={handleChange}
-                className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-catalina-green/20 outline-none"
                 />
             </div>
             <div>
@@ -75,7 +75,7 @@ export const EditTrainingModal: React.FC<EditTrainingModalProps> = ({ training, 
                 name="schedule"
                 value={formData.schedule}
                 onChange={handleChange}
-                className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-catalina-green/20 outline-none"
                 />
             </div>
           </div>
@@ -88,7 +88,7 @@ export const EditTrainingModal: React.FC<EditTrainingModalProps> = ({ training, 
                 name="maxCapacity"
                 value={formData.maxCapacity}
                 onChange={handleChange}
-                className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-catalina-green/20 outline-none"
                 />
             </div>
             <div>
@@ -98,7 +98,7 @@ export const EditTrainingModal: React.FC<EditTrainingModalProps> = ({ training, 
                 name="duration"
                 value={formData.duration}
                 onChange={handleChange}
-                className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none"
+                className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-catalina-green/20 outline-none"
                 />
             </div>
           </div>
@@ -110,7 +110,7 @@ export const EditTrainingModal: React.FC<EditTrainingModalProps> = ({ training, 
               name="registration_deadline"
               value={formData.registration_deadline}
               onChange={handleChange}
-              className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500/20 outline-none"
+              className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-catalina-green/20 outline-none"
             />
             <p className="text-xs text-slate-500 mt-1">Debe ser anterior a la fecha de inicio.</p>
           </div>
@@ -122,7 +122,7 @@ export const EditTrainingModal: React.FC<EditTrainingModalProps> = ({ training, 
                 name="is_active" 
                 checked={formData.is_active || false}
                 onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
-                className="rounded text-indigo-600 focus:ring-indigo-500"
+                className="rounded text-catalina-green focus:ring-catalina-green"
               />
               <label htmlFor="isActive" className="text-sm text-slate-700 font-medium">Activo en el cronograma</label>
           </div>
@@ -138,7 +138,7 @@ export const EditTrainingModal: React.FC<EditTrainingModalProps> = ({ training, 
           </button>
           <button
             onClick={handleSave}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 shadow-sm transition-colors"
+            className="bg-catalina-green text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-catalina-forest-green shadow-sm transition-colors"
           >
             Guardar Cambios
           </button>

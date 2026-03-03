@@ -70,7 +70,7 @@ export function ExtendDeadlineModal({ training, onClose, onExtend }: ExtendDeadl
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Nueva Fecha Límite</label>
                 <input 
                 type="datetime-local"
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-catalina-green/20 transition-all font-medium"
                 value={newDeadline}
                 onChange={(e) => setNewDeadline(e.target.value)}
                 min={training.registration_deadline}
@@ -82,7 +82,7 @@ export function ExtendDeadlineModal({ training, onClose, onExtend }: ExtendDeadl
             <div>
                 <label className="block text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Motivo de la Extensión</label>
                 <textarea
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all text-sm resize-none h-24"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-catalina-green/20 transition-all text-sm resize-none h-24"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Ej: Solicitud de la empresa para registrar trabajadores adicionales"

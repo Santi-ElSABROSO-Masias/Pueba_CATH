@@ -28,7 +28,7 @@ export const ExamEmailShare: React.FC<ExamEmailShareProps> = ({ exam }) => {
           <div>
             <label className="block text-sm font-medium text-slate-700">Mensaje sugerido</label>
             <div className="mt-1 p-3 bg-slate-50 rounded-lg border border-slate-200 text-sm whitespace-pre-wrap">{message}</div>
-            <button onClick={() => handleCopy(message)} className="mt-2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700">Copiar mensaje completo</button>
+            <button onClick={() => handleCopy(message)} className="mt-2 bg-catalina-green text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-catalina-forest-green">Copiar mensaje completo</button>
           </div>
         </div>
       ) : (

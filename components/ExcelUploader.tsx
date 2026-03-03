@@ -222,7 +222,7 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({ training, existing
                     Importación Masiva
                 </h2>
                 <p className="text-xs text-slate-500 font-medium mt-1">
-                    Carga participantes para: <span className="text-indigo-600 font-bold">{training.title}</span>
+                    Carga participantes para: <span className="text-catalina-green font-bold">{training.title}</span>
                 </p>
             </div>
             <button onClick={onClose} className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-red-500 transition-colors">
@@ -236,7 +236,7 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({ training, existing
             {!file ? (
                 <div 
                     onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-slate-300 rounded-2xl p-12 text-center cursor-pointer hover:border-indigo-500 hover:bg-indigo-50 transition-all group"
+                    className="border-2 border-dashed border-slate-300 rounded-2xl p-12 text-center cursor-pointer hover:border-catalina-green hover:bg-catalina-green/5 transition-all group"
                 >
                     <input 
                         type="file" 
@@ -245,7 +245,7 @@ export const ExcelUploader: React.FC<ExcelUploaderProps> = ({ training, existing
                         accept=".xlsx, .xls, .csv" 
                         className="hidden" 
                     />
-                    <div className="w-16 h-16 bg-indigo-100 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                    <div className="w-16 h-16 bg-catalina-green/10 text-catalina-green rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                         <i className="fas fa-cloud-upload-alt text-3xl"></i>
                     </div>
                     <h3 className="font-bold text-slate-700">Haz clic o arrastra tu Excel aquí</h3>

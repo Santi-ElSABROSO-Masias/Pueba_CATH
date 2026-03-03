@@ -1,3 +1,33 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Montserrat', sans-serif;
+    color: #333333;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Placeholder styling — regular weight, muted color */
+  ::placeholder {
+    font-weight: 400;
+    color: #9ca3af;
+  }
+
+  /* Smooth focus transitions on all inputs */
+  input, select, textarea {
+    font-family: 'Montserrat', sans-serif;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+}
+
+@layer utilities {
+  .animate-fadeIn {
+    animation: fadeIn 0.4s ease-out;
+  }
+  .animate-slideUp {
+    animation: slideUp 0.5s ease-out;
+  }
+}

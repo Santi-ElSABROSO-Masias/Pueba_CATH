@@ -92,7 +92,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ trainings, users, cu
       {/* Header y Controles */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+          <div className="p-3 bg-catalina-green/5 text-catalina-green rounded-xl">
             <i className="far fa-calendar-alt text-xl"></i>
           </div>
           <div>
@@ -107,7 +107,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ trainings, users, cu
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value as any)}
-            className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-indigo-500/20"
+            className="px-4 py-2 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-catalina-green/20"
           >
             <option value="ALL">Todos los Estados</option>
             <option value="ACTIVE">🟢 Activos</option>
@@ -117,7 +117,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ trainings, users, cu
 
           <div className="flex bg-slate-100 p-1 rounded-xl">
             <button onClick={handlePrevMonth} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-slate-500 transition-all"><i className="fas fa-chevron-left"></i></button>
-            <button onClick={handleToday} className="px-3 text-xs font-bold text-slate-600 hover:text-indigo-600 transition-colors">Hoy</button>
+            <button onClick={handleToday} className="px-3 text-xs font-bold text-slate-600 hover:text-catalina-green transition-colors">Hoy</button>
             <button onClick={handleNextMonth} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white hover:shadow-sm text-slate-500 transition-all"><i className="fas fa-chevron-right"></i></button>
           </div>
         </div>
@@ -150,8 +150,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ trainings, users, cu
             const hasFullDay = dayTrainings.some(t => t.isFullDay);
 
             return (
-              <div key={day} className={`bg-white p-2 min-h-[120px] transition-colors hover:bg-slate-50/50 relative group ${isToday ? 'bg-indigo-50/30' : ''}`}>
-                <span className={`text-sm font-bold block mb-2 w-7 h-7 flex items-center justify-center rounded-full ${isToday ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400'}`}>
+              <div key={day} className={`bg-white p-2 min-h-[120px] transition-colors hover:bg-slate-50/50 relative group ${isToday ? 'bg-catalina-green/5/30' : ''}`}>
+                <span className={`text-sm font-bold block mb-2 w-7 h-7 flex items-center justify-center rounded-full ${isToday ? 'bg-catalina-green text-white shadow-md' : 'text-slate-400'}`}>
                   {day}
                 </span>
 

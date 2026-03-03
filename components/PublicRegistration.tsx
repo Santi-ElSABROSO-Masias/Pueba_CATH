@@ -45,7 +45,7 @@ export const PublicRegistration: React.FC<PublicRegistrationProps> = ({ training
   return (
     <div className="max-w-2xl mx-auto my-10 animate-fadeIn p-4 md:p-0">
       <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden">
-        <div className="bg-indigo-600 p-8 md:p-12 text-white relative">
+        <div className="bg-catalina-green p-8 md:p-12 text-white relative">
           <div className="absolute top-0 right-0 p-6 opacity-10">
             <i className="fas fa-graduation-cap text-9xl"></i>
           </div>
@@ -70,7 +70,7 @@ export const PublicRegistration: React.FC<PublicRegistrationProps> = ({ training
                 <input
                   required
                   minLength={5}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-300"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-catalina-green/20 outline-none transition-all placeholder:text-slate-300"
                   placeholder="Ej. Juan Manuel Pérez Soto"
                   value={formData.name}
                   onChange={e => setFormData({...formData, name: e.target.value})}
@@ -82,7 +82,7 @@ export const PublicRegistration: React.FC<PublicRegistrationProps> = ({ training
                   required
                   pattern="[0-9]*"
                   minLength={8}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-300"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-catalina-green/20 outline-none transition-all placeholder:text-slate-300"
                   placeholder="Solo números"
                   value={formData.dni}
                   onChange={e => setFormData({...formData, dni: e.target.value})}
@@ -93,7 +93,7 @@ export const PublicRegistration: React.FC<PublicRegistrationProps> = ({ training
                 <input
                   required
                   type="email"
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-300"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-catalina-green/20 outline-none transition-all placeholder:text-slate-300"
                   placeholder="juan.perez@empresa.com"
                   value={formData.email}
                   onChange={e => setFormData({...formData, email: e.target.value})}
@@ -112,7 +112,7 @@ export const PublicRegistration: React.FC<PublicRegistrationProps> = ({ training
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Empresa</label>
                 <input
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-300"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-catalina-green/20 outline-none transition-all placeholder:text-slate-300"
                   placeholder="Nombre de la empresa"
                   value={formData.organization}
                   onChange={e => setFormData({...formData, organization: e.target.value})}
@@ -122,7 +122,7 @@ export const PublicRegistration: React.FC<PublicRegistrationProps> = ({ training
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Área / Departamento</label>
                 <input
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-300"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-catalina-green/20 outline-none transition-all placeholder:text-slate-300"
                   placeholder="Ej. Operaciones"
                   value={formData.area}
                   onChange={e => setFormData({...formData, area: e.target.value})}
@@ -132,7 +132,7 @@ export const PublicRegistration: React.FC<PublicRegistrationProps> = ({ training
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Cargo Actual</label>
                 <input
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-300"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-catalina-green/20 outline-none transition-all placeholder:text-slate-300"
                   placeholder="Ej. Supervisor de Planta"
                   value={formData.role}
                   onChange={e => setFormData({...formData, role: e.target.value})}
@@ -153,7 +153,7 @@ export const PublicRegistration: React.FC<PublicRegistrationProps> = ({ training
                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">{q}</label>
                     <input
                       required
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all placeholder:text-slate-300"
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-catalina-green/20 outline-none transition-all placeholder:text-slate-300"
                       placeholder="Escribe aquí tu respuesta..."
                       onChange={e => setFormData({
                         ...formData, 
@@ -172,7 +172,7 @@ export const PublicRegistration: React.FC<PublicRegistrationProps> = ({ training
               className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl hover:bg-slate-800 transition-all shadow-xl flex items-center justify-center gap-3 text-sm md:text-base uppercase tracking-widest"
             >
               Confirmar Inscripción
-              <i className="fas fa-check-circle text-xs text-indigo-400"></i>
+              <i className="fas fa-check-circle text-xs text-catalina-green/70"></i>
             </button>
             <p className="text-center text-[10px] text-slate-400 font-medium mt-6 leading-relaxed">
               La información proporcionada se utilizará exclusivamente para el control de asistencia y emisión de constancias de participación del evento.
