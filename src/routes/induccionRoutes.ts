@@ -4,20 +4,13 @@ import path from 'path';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { enviarCredencialesPorEmail } from '../modules/induccion-temporal/utils/mailer.js';
+import { supabase } from '../config/supabaseClient.js';
 
 const router = Router();
 router.use(json()); // Ensure body parsing is active for this route group
 
-// Configuración de multer (Local Storage)
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/induccion');
-    },
-    filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname);
-        cb(null, `${uuidv4()}${ext}`);
-    }
-});
+// Configuración de multer (Memory Storage for Supabase)
+const storage = multer.memoryStorage();
 const upload = multer({
     storage,
     limits: { fileSize: 500 * 1024 * 1024 } // 500MB max
@@ -125,31 +118,93 @@ router.post('/content/upload', upload.single('file'), async (req, res) => {
             return res.status(400).json({ message: 'Se requiere un archivo para este tipo de contenido' });
         }
 
-        const urlStorage = tipo === 'texto' ? '' : `/uploads/induccion/${file?.filename}`;
+        let urlStorage = '';
 
+        if (tipo !== 'texto' && file) {
+            const ext = path.extname(file.originalname);
+            const fileName = `${uuidv4()}${ext}`;
+
+            // Upload to Supabase Storage
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('induccion')
+                .upload(fileName, file.buffer, {
+                    contentType: file.mimetype,
+                    upsert: false
+                });
+
+            if (uploadError) {
+                console.error("Supabase Upload Error:", uploadError);
+                throw new Error('Supabase Error: ' + JSON.stringify(uploadError));
+            }
+
+            // Get Public URL
+            const { data: publicUrlData } = supabase.storage
+                .from('induccion')
+                .getPublicUrl(fileName);
+
+            urlStorage = publicUrlData.publicUrl;
+        }
+
+        // Delegar la creación del contenido en Campus_CATH_Backend (NestJS => Prisma => Supabase)
+        const nestResponse = await fetch('http://localhost:3001/api/courses/induction/content', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ titulo, tipo, urlStorage })
+        });
+
+        if (!nestResponse.ok) {
+            throw new Error('Falló la sincronización con Campus_CATH_Backend');
+        }
+
+        const nestData = await nestResponse.json();
+        const activity = nestData.activity;
+
+        // Transformar la Activity de Prisma al formato visual que requiere Frontend GestorContenido
         const contenido = {
-            id: uuidv4(),
-            titulo,
-            tipo,
-            urlStorage,
-            orden: 0,
+            id: activity.id,
+            titulo: activity.title,
+            tipo: tipo, // original uploaded type
+            urlStorage: activity.contentUrl,
+            orden: activity.sequenceOrder,
             activo: true,
             subidoEn: new Date().toISOString()
         };
 
-        // Guardar en DB
         res.status(201).json(contenido);
-    } catch (error) {
-        res.status(500).json({ message: 'Error al subir archivo' });
+    } catch (error: any) {
+        console.error("Upload error proxy:", error);
+        import('fs').then(fs => fs.writeFileSync('./upload-error.log', error.stack || error.toString()));
+        res.status(500).json({ message: 'Error al sincronizar archivo con el Campus Virtual', detail: error.message });
     }
 });
 
 router.get('/content', async (req, res) => {
     try {
-        // Consultar DB
-        res.status(200).json([]);
+        // Consultar contenido real sincronizado en Campus_CATH_Backend
+        const nestResponse = await fetch('http://localhost:3001/api/courses');
+        const courses = await nestResponse.json();
+
+        const inductionCourse = courses.find((c: any) => c.courseType === 'InduccionCorta');
+        if (!inductionCourse || !inductionCourse.modules.length) {
+            return res.status(200).json([]);
+        }
+
+        // Extraer y transformar activities del primer módulo para mostrar en GestorContenido
+        const activities = inductionCourse.modules[0].activities;
+        const mappedContent = activities.map((act: any) => ({
+            id: act.id,
+            titulo: act.title,
+            tipo: act.activityType.toLowerCase() === 'documento' ? 'pdf' : act.activityType.toLowerCase(),
+            urlStorage: act.contentUrl,
+            orden: act.sequenceOrder,
+            activo: true,
+            subidoEn: new Date().toISOString()
+        }));
+
+        res.status(200).json(mappedContent);
     } catch (error) {
-        res.status(500).json({ error: 'Error listando contenido' });
+        console.error("GET /content proxy error:", error);
+        res.status(500).json({ error: 'Error listando contenido desde Campus Virtual' });
     }
 });
 

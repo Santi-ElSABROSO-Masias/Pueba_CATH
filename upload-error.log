@@ -1,0 +1,3 @@
+Error: Supabase Error: {"name":"StorageApiError","message":"new row violates row-level security policy","status":400,"statusCode":"403"}
+    at <anonymous> (C:\Users\Daniel Sar\.vscode\Pueba_CATH\src\routes\induccionRoutes.ts:137:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
