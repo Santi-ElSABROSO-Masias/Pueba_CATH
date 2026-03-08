@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, json } from 'express';
 import multer from 'multer';
 import path from 'path';
 import bcrypt from 'bcryptjs';
@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { enviarCredencialesPorEmail } from '../modules/induccion-temporal/utils/mailer.js';
 
 const router = Router();
+router.use(json()); // Ensure body parsing is active for this route group
 
 // Configuración de multer (Local Storage)
 const storage = multer.diskStorage({
@@ -28,18 +29,34 @@ const upload = multer({
 router.post('/trabajadores', async (req, res) => {
     try {
         const { dni, nombre, apellido, empresa, email, celular } = req.body;
+
+        if (!dni) {
+            return res.status(400).json({ error: 'El DNI es requerido' });
+        }
+
         // Generar username y password
         const username = `temp_${dni}`;
         const letras = Math.random().toString(36).substring(2, 6).toUpperCase();
-        const ultimos = dni.substring(Math.max(0, dni.length - 4));
+        const safeDni = String(dni);
+        const ultimos = safeDni.substring(Math.max(0, safeDni.length - 4));
         const password = `${letras}${ultimos}!`;
         const password_hash = await bcrypt.hash(password, 10);
 
-        // Guardar en DB (Simulado)
+        // Guardar en DB delegando la petición a Campus_CATH_Backend
+        const backendResponse = await fetch('http://localhost:3001/api/users/worker', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dni: username, nombre, apellido, empresa, email, password })
+        });
+
+        if (!backendResponse.ok) {
+            const errBody = await backendResponse.text();
+            throw new Error(`Fallo al crear usuario en BD Central: ${errBody}`);
+        }
 
         // Simulación: Envío de credenciales reales al trabajador
         if (celular) {
-            console.log(`\n[WHATSAPP-MOCK] Enviando a ${celular}: Hola ${nombre}, fuiste registrado para la Inducción Temporal en Pueba_CATH. Ingresa a localhost:3000/induccion. Usuario: ${username} | Clave: ${password}\n`);
+            console.log(`\n[WHATSAPP-MOCK] Enviando a ${celular}: Hola ${nombre}, fuiste registrado para la Inducción Temporal en Pueba_CATH. Ingresa a localhost:5173/login. Usuario: ${username} | Clave: ${password}\n`);
         }
         if (email) {
             // Reemplazando el MOCK por envío real de Nodemailer
@@ -48,8 +65,10 @@ router.post('/trabajadores', async (req, res) => {
         }
 
         res.status(201).json({ id: uuidv4(), username, password }); // In real app, don't send raw password back, email it instead
-    } catch (error) {
-        res.status(500).json({ error: 'Error registrando trabajador' });
+    } catch (error: any) {
+        console.error("🔥 Error crítico en induccionRoutes:", error.message, error.stack);
+        import('fs').then(fs => fs.writeFileSync('./error-debug.log', error.stack || error.toString()));
+        res.status(500).json({ error: 'Error registrando trabajador', detail: error.message });
     }
 });
 

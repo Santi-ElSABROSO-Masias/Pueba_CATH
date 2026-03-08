@@ -25,7 +25,7 @@ export const RegistroTrabajadorForm: React.FC = () => {
 
         try {
             const result = await registrarTrabajador(formData);
-            setSuccessMessage(`Trabajador registrado. Se notificó al trabajador que ingrese a Campus_CATH (http://localhost:5173). Username: ${result.username}`);
+            setSuccessMessage(`Trabajador registrado. Se notificó al trabajador que ingrese a Campus_CATH (http://localhost:5173/login). Username: ${result.username}`);
             setFormData({ dni: '', nombre: '', apellido: '', empresa: '', email: '', celular: '' });
         } catch (err: any) {
             console.error('Error registering worker:', err);

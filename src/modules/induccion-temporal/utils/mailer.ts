@@ -27,7 +27,7 @@ export const enviarCredencialesPorEmail = async (email: string, nombre: string, 
                     <p>Has sido registrado en la plataforma para realizar la Inducción de Trabajos Temporales.</p>
                     <p>Para iniciar, ingresa al siguiente enlace con tus credenciales:</p>
                     <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0;">
-                        <p style="margin: 0 0 10px 0;"><strong>Enlace:</strong> <a href="http://localhost:5173">http://localhost:5173</a></p>
+                        <p style="margin: 0 0 10px 0;"><strong>Enlace:</strong> <a href="http://localhost:5173/login">http://localhost:5173/login</a></p>
                         <p style="margin: 0 0 10px 0;"><strong>Usuario:</strong> ${user}</p>
                         <p style="margin: 0;"><strong>Contraseña temporal:</strong> ${pass}</p>
                     </div>
