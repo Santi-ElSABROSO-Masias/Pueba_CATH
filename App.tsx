@@ -530,6 +530,7 @@ const AppContent: React.FC = () => {
             onAddUser={handleAddUser}
             onUpdateUser={handleUpdateUser}
             onToggleStatus={handleToggleUserStatus}
+            onAddCompany={addCompany}
           />
         )}
 

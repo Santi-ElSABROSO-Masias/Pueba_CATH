@@ -54,14 +54,14 @@ export const Auth: React.FC = () => {
 
         <div className="relative z-10 animate-fadeIn">
           <img
-            src="/assets/logo_liebre.jpg"
+            src="/assets/logo_liebre.png"
             alt="Mascota Catalina Huanca"
-            className="w-56 h-56 mb-8 rounded-full shadow-2xl border-4 border-white/20 object-cover mx-auto"
+            className="w-64 h-auto mb-1 mx-auto object-contain drop-shadow-2xl"
           />
           <img
-            src="/assets/logo_generico_1.jpg"
+            src="/assets/logo_generico_1.png"
             alt="Logo Genérico"
-            className="w-40 h-auto mt-4 mx-auto opacity-90"
+            className="w-60 h-auto mt-1 mx-auto opacity-90"
           />
           <h1 className="text-3xl font-semibold tracking-tight mt-6">
             Plataforma de Capacitaciones
@@ -78,7 +78,7 @@ export const Auth: React.FC = () => {
           {/* Logo + Título */}
           <div className="text-center mb-8">
             <img
-              src="/assets/logo_generico_1.jpg"
+              src="/assets/logo_generico_1.png"
               alt="Logo Catalina Huanca"
               className="w-44 h-auto mx-auto mb-5"
             />
