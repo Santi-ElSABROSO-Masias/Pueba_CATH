@@ -4,16 +4,17 @@
   "description": "Sistema de Gestión de Eventos MVP",
   "type": "module",
   "scripts": {
-    "start": "node server.ts",
-    "dev": "tsx watch server.ts",
+    "dev": "vite",
+    "build": "tsc && vite build",
     "lint": "tsc --noEmit",
-    "build": "vite build"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/multer": "^2.0.0",
     "@types/uuid": "^10.0.0",
+    "axios": "^1.13.6",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.3.1",
     "exceljs": "^4.4.0",
@@ -28,6 +29,7 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-markdown": "^10.1.0",
+    "react-router-dom": "^7.13.1",
     "react-webcam": "^7.2.0",
     "tsx": "^4.21.0",
     "uuid": "^13.0.0",

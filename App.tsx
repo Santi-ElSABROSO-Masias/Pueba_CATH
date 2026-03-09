@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { AdminDashboard } from './components/AdminDashboard';
 import { TrainingManager } from './components/TrainingManager';
@@ -20,11 +21,16 @@ import { EventUser, UserStatus, SystemUser, Training, Notification, Company, Tra
 import { createNotificationsForTraining, createCourseOpenedNotification, createRegistrationConfirmedNotification } from './utils/notificationLogic';
 import { isTrainingFinished, isSixHoursAfterEnd } from './utils/time';
 
-import { AuthProvider, useAuth } from './AuthContext';
+import { useAuth } from './AuthContext';
 import { NavigationProvider } from './contexts/NavigationContext';
+import { AuthProvider } from './AuthContext';
+import { useTrainings } from './src/hooks/useTrainings';
+import { useUsers } from './src/hooks/useUsers';
+import { useCompanies } from './src/hooks/useCompanies';
+import { useSystemUsers } from './src/hooks/useSystemUsers';
 
 const AppContent: React.FC = () => {
-  const { user: currentUser, login: setCurrentUser, logout: handleLogout } = useAuth();
+  const { user: currentUser, login: setCurrentUser, logout: handleLogout, isLoading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState<'trainings' | 'dashboard' | 'public' | 'calendar' | 'notifications' | 'users' | 'evaluaciones' | 'public_exam' | 'induccion_temporal' | 'licencias_manejo' | 'acreditacion_vehicular' | 'alto_riesgo'>('trainings');
   const [selectedTrainingId, setSelectedTrainingId] = useState<string>('');
   const [exams, setExams] = useState<Exam[]>(() => {
@@ -172,18 +178,7 @@ const AppContent: React.FC = () => {
 
 
 
-  // --- DATOS MOCK PARA MVP DE ROLES ---
-  const [companies, setCompanies] = useState<Company[]>([
-    { id: 'c1', name: 'TechFlow S.A.', quotaMax: 100, quotaUsed: 10 },
-    { id: 'c2', name: 'Minera Los Andes', quotaMax: 50, quotaUsed: 5 }
-  ]);
 
-  const [systemUsers, setSystemUsers] = useState<SystemUser[]>([
-    { id: 'su1', name: 'Admin Global', email: 'admin@system.com', role: 'super_super_admin', companyId: null, isActive: true },
-    { id: 'su2', name: 'Operador TechFlow', email: 'ops@techflow.com', role: 'admin_contratista', companyId: 'c1', isActive: true },
-    { id: 'su3', name: 'Validador Nivel 2', email: 'validador@system.com', role: 'super_admin', companyId: null, isActive: true }
-  ]);
-  // -------------------------------------
 
   // Helper para calcular fechas relativas a la próxima semana
   const getNextDate = (dayOfWeek: number): string => {
@@ -194,156 +189,10 @@ const AppContent: React.FC = () => {
     return d.toISOString().split('T')[0];
   };
 
-  const [trainings, setTrainings] = useState<Training[]>(() => {
-    const mondayDate = getNextDate(1);
-    const thursdayDate = (() => {
-      const d = new Date(mondayDate + 'T00:00:00');
-      d.setDate(d.getDate() + 3);
-      return d.toISOString().split('T')[0];
-    })();
-    const fridayDate = getNextDate(5);
-    const saturdayDate = getNextDate(6);
-    const sundayDate = getNextDate(0);
-
-    return [
-      {
-        id: 't1',
-        title: 'Inducción Básica de Seguridad',
-        description: 'Capacitación integral de seguridad obligatoria para ingreso a planta. Abarca normativa interna y EPP.',
-        date: mondayDate,
-        endDate: thursdayDate,
-        isFullDay: true,
-        registration_deadline: new Date(new Date(mondayDate).getTime() - 24 * 60 * 60 * 1000).toISOString(), // 1 día antes
-        maxCapacity: 60,
-        isPublished: true,
-        customQuestions: ['¿Posee examen médico vigente?'],
-        instructorName: 'Equipo SSOMA',
-        color: '#0EA5E9',
-        duration: '4 días',
-        schedule: '8:00 am - 6:00 pm',
-        group: 'Grupo 1',
-        companyId: null, // Global
-        status: TrainingStatus.ACTIVE
-      },
-      {
-        id: 't2',
-        title: 'Manejo Defensivo - RITRA - Fatiga y Somnolencia',
-        description: 'Curso mandatorio para conductores internos y externos. Enfoque en prevención de accidentes vehiculares.',
-        date: fridayDate,
-        registration_deadline: new Date(new Date(fridayDate).getTime() - 24 * 60 * 60 * 1000).toISOString(),
-        maxCapacity: 60,
-        isPublished: true,
-        customQuestions: ['Licencia de conducir', 'Categoría'],
-        instructorName: 'Carlos Vial',
-        color: '#10B981',
-        duration: '4 horas',
-        schedule: '8:00 am - 12:00 m',
-        group: 'Grupo 1',
-        companyId: 'c1' // Específico para TechFlow
-      },
-      {
-        id: 't3',
-        title: 'Trabajos de Alto Riesgo en Espacios Confinados',
-        description: 'Protocolos de entrada, monitoreo de atmósfera y rescate en espacios confinados.',
-        date: fridayDate,
-        registration_deadline: new Date(new Date(fridayDate).getTime() - 24 * 60 * 60 * 1000).toISOString(),
-        maxCapacity: 60,
-        isPublished: true,
-        customQuestions: [],
-        instructorName: 'Seguridad Industrial',
-        color: '#F97316',
-        duration: '4 horas',
-        schedule: '2:00 pm - 6:00 pm',
-        group: 'Grupo 1',
-        companyId: null
-      },
-      {
-        id: 't4',
-        title: 'Trabajos de Alto Riesgo en Altura',
-        description: 'Uso correcto de arnés, líneas de vida y prevención de caídas a distinto nivel.',
-        date: saturdayDate,
-        registration_deadline: new Date(new Date(saturdayDate).getTime() - 24 * 60 * 60 * 1000).toISOString(),
-        maxCapacity: 60,
-        isPublished: true,
-        customQuestions: ['¿Sufre de vértigo?'],
-        instructorName: 'Seguridad Industrial',
-        color: '#8B5CF6',
-        duration: '4 horas',
-        schedule: '8:00 am - 12:00 m',
-        group: 'Grupo 1',
-        companyId: null
-      },
-      {
-        id: 't5',
-        title: 'Trabajos de Alto Riesgo en Caliente',
-        description: 'Prevención de incendios en trabajos de soldadura, corte y esmerilado.',
-        date: saturdayDate,
-        registration_deadline: new Date(new Date(saturdayDate).getTime() - 24 * 60 * 60 * 1000).toISOString(),
-        maxCapacity: 60,
-        isPublished: true,
-        customQuestions: [],
-        instructorName: 'Seguridad Industrial',
-        color: '#EF4444',
-        duration: '4 horas',
-        schedule: '2:00 pm - 6:00 pm',
-        group: 'Grupo 1',
-        companyId: 'c2' // Específico Minera Los Andes
-      },
-      {
-        id: 't6',
-        title: 'Trabajos de Aislamiento y Bloqueo de Energías',
-        description: 'Procedimiento LOTOTO para intervención segura de maquinaria y equipos energizados.',
-        date: sundayDate,
-        registration_deadline: new Date(new Date(sundayDate).getTime() - 24 * 60 * 60 * 1000).toISOString(),
-        maxCapacity: 60,
-        isPublished: true,
-        customQuestions: [],
-        instructorName: 'Mantenimiento & Seguridad',
-        color: '#F59E0B',
-        duration: '4 horas',
-        schedule: '8:00 am - 12:00 m',
-        group: 'Grupo 1',
-        companyId: null
-      },
-      {
-        id: 't7',
-        title: 'Trabajos de Alto Riesgo en Izajes',
-        description: 'Estrobado, señalización y seguridad en operaciones con grúas y cargas suspendidas.',
-        date: sundayDate,
-        registration_deadline: new Date(new Date(sundayDate).getTime() - 24 * 60 * 60 * 1000).toISOString(),
-        maxCapacity: 60,
-        isPublished: true,
-        customQuestions: [],
-        instructorName: 'Certificador Externo',
-        color: '#EC4899',
-        duration: '4 horas',
-        schedule: '2:00 pm - 6:00 pm',
-        group: 'Grupo 1',
-        companyId: null
-      }
-    ];
-  });
-
-  const [users, setUsers] = useState<EventUser[]>([
-    {
-      id: 'u1',
-      trainingId: 't1',
-      name: 'Andrés López',
-      email: 'andres@product.com',
-      phone: '987654321',
-      dni: '12345678',
-      organization: 'TechFlow S.A.',
-      area: 'Sistemas',
-      role: 'Analista Senior',
-      status: UserStatus.LINK_SENT,
-      meetingLink: 'https://teams.live.com/123456789',
-      attended: true,
-      registeredAt: new Date().toISOString(),
-      identity_validated: false,
-      validation_link: '',
-      validation_completed: false
-    }
-  ]);
+  const { trainings, loading: trainingsLoading, createTraining, updateTraining, setTrainings } = useTrainings();
+  const { users, loading: usersLoading, registerUser, updateUserStatus, toggleAttendance, setUsers } = useUsers();
+  const { companies, loading: companiesLoading, addCompany, setCompanies } = useCompanies();
+  const { systemUsers, loading: systemUsersLoading, addSystemUser, updateSystemUser, toggleUserStatus, setSystemUsers } = useSystemUsers();
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
@@ -405,32 +254,50 @@ const AppContent: React.FC = () => {
   }, []);
 
   // --- Handlers de Usuario Sistema ---
-  const handleAddUser = (user: Omit<SystemUser, 'id'>) => {
-    const newUser = { ...user, id: Math.random().toString(36).substr(2, 5) };
-    setSystemUsers(prev => [...prev, newUser]);
+  const handleAddUser = async (user: Omit<SystemUser, 'id'>) => {
+    try {
+      await addSystemUser(user);
+    } catch (e: any) {
+      alert(e.message);
+    }
   };
 
-  const handleUpdateUser = (user: SystemUser) => {
-    setSystemUsers(prev => prev.map(u => u.id === user.id ? user : u));
+  const handleUpdateUser = async (user: SystemUser) => {
+    try {
+      await updateSystemUser(user);
+    } catch (e: any) {
+      alert(e.message);
+    }
   };
 
-  const handleToggleUserStatus = (id: string) => {
-    setSystemUsers(prev => prev.map(u => u.id === id ? { ...u, isActive: !u.isActive } : u));
+  const handleToggleUserStatus = async (id: string) => {
+    try {
+      await toggleUserStatus(id);
+    } catch (e: any) {
+      alert(e.message);
+    }
   };
   // ----------------------------------
 
-  const handleCreateTraining = (t: Omit<Training, 'id'>) => {
-    const newId = 't' + Math.random().toString(36).substr(2, 5);
-    const newTraining = { ...t, id: newId, companyId: currentUser?.role === 'super_super_admin' ? null : currentUser?.companyId };
-    setTrainings(prev => [newTraining, ...prev]);
-
-    const newNotifs = createNotificationsForTraining(newTraining);
-    const courseOpenedNotif = createCourseOpenedNotification(newTraining);
-    setNotifications(prev => [...prev, ...newNotifs, courseOpenedNotif]);
+  const handleCreateTraining = async (t: Omit<Training, 'id'>) => {
+    try {
+      const newTraining = await createTraining(t);
+      const newNotifs = createNotificationsForTraining(newTraining);
+      const courseOpenedNotif = createCourseOpenedNotification(newTraining);
+      setNotifications(prev => [...prev, ...newNotifs, courseOpenedNotif]);
+    } catch (e) {
+      console.error(e);
+      alert('Error creating training');
+    }
   };
 
-  const handleUpdateTraining = (updatedTraining: Training) => {
-    setTrainings(prev => prev.map(t => t.id === updatedTraining.id ? updatedTraining : t));
+  const handleUpdateTraining = async (updatedTraining: Training) => {
+    try {
+      await updateTraining(updatedTraining.id, updatedTraining);
+    } catch (e) {
+      console.error(e);
+      alert('Error updating training');
+    }
   };
 
   const handleSelectTraining = (id: string) => {
@@ -438,52 +305,37 @@ const AppContent: React.FC = () => {
     setActiveTab('dashboard');
   };
 
-  const handleRegister = (data: any) => {
-    const newUser: EventUser = {
-      id: 'u' + Math.random().toString(36).substr(2, 7),
-      trainingId: data.trainingId,
-      name: data.name,
-      email: data.email,
-      phone: data.phone || '',
-      dni: data.dni,
-      organization: data.organization,
-      area: data.area,
-      role: data.role,
-      status: UserStatus.REGISTERED,
-      attended: false,
-      registeredAt: new Date().toISOString(),
-      customAnswers: data.custom,
-      identity_validated: false,
-      validation_link: '',
-      validation_completed: false
-    };
-    setUsers(prev => [newUser, ...prev]);
+  const handleRegister = async (data: any) => {
+    try {
+      const newUser: Partial<EventUser> = {
+        trainingId: data.trainingId,
+        name: data.name,
+        email: data.email,
+        phone: data.phone || '',
+        dni: data.dni,
+        organization: data.organization,
+        area: data.area,
+        role: data.role,
+        status: UserStatus.REGISTERED,
+        customAnswers: data.custom,
+      };
+      await registerUser(newUser);
+    } catch (e: any) {
+      alert(e.message);
+    }
   };
 
-  const handleBulkRegister = (newUsersData: Partial<EventUser>[], trainingId: string) => {
-    const newUsers: EventUser[] = newUsersData.map(u => ({
-      id: 'u' + Math.random().toString(36).substr(2, 7),
-      trainingId: trainingId,
-      name: u.name || '',
-      email: u.email || '',
-      phone: u.phone || '',
-      dni: u.dni || '',
-      organization: u.organization || '',
-      area: u.area || '',
-      role: u.role || '',
-      brevete: u.brevete,
-      status: UserStatus.REGISTERED,
-      attended: false,
-      registeredAt: new Date().toISOString(),
-      customAnswers: {},
-      identity_validated: false,
-      validation_link: '',
-      validation_completed: false
-    }));
-    setUsers(prev => [...newUsers, ...prev]);
+  const handleBulkRegister = async (newUsersData: Partial<EventUser>[], trainingId: string) => {
+    // Ideally this goes to a backend bulk endpoint. 
+    // Simulating by mapping for now until a true bulk endpoint is exposed.
+    alert('Importación masiva: Conectando con API (En desarrollo en el backend)');
+    /*
+    const newUsers = newUsersData.map(u => ({ ...u, trainingId }));
+    // await apiClient.post('/registrations/bulk', newUsers)
+    */
   };
 
-  const handleManualRegister = (userData: Partial<EventUser>, trainingId: string, newCompany?: string) => {
+  const handleManualRegister = async (userData: Partial<EventUser>, trainingId: string, newCompany?: string) => {
     let finalOrganization = userData.organization || '';
 
     if (newCompany) {
@@ -494,46 +346,54 @@ const AppContent: React.FC = () => {
         quotaMax: 0,
         quotaUsed: 0
       };
-      setCompanies(prev => [...prev, newCompanyObj]);
+      setCompanies(prev => [...prev, newCompanyObj]); // TODO: API Integration for companies
       finalOrganization = newCompany;
     }
 
-    const newUser: EventUser = {
-      id: 'u' + Math.random().toString(36).substr(2, 7),
-      trainingId: trainingId,
-      name: userData.name || '',
-      email: userData.email || '',
-      phone: userData.phone || '',
-      dni: userData.dni || '',
-      organization: finalOrganization,
-      area: userData.area || '',
-      role: userData.role || '',
-      brevete: userData.brevete,
-      dniPhoto: userData.dniPhoto,
-      status: UserStatus.REGISTERED,
-      attended: false,
-      registeredAt: new Date().toISOString(),
-      customAnswers: {},
-      identity_validated: false,
-      validation_link: '',
-      validation_completed: false
-    };
-    setUsers(prev => [newUser, ...prev]);
-    // Notificación de registro confirmado
-    const training = trainings.find(t => t.id === trainingId);
-    if (training) {
-      const regNotif = createRegistrationConfirmedNotification(training, userData.name || '', userData.email || '');
-      setNotifications(prev => [...prev, regNotif]);
+    try {
+      const newUser: Partial<EventUser> = {
+        trainingId: trainingId,
+        name: userData.name || '',
+        email: userData.email || '',
+        phone: userData.phone || '',
+        dni: userData.dni || '',
+        organization: finalOrganization,
+        area: userData.area || '',
+        role: userData.role || '',
+        brevete: userData.brevete,
+        dniPhoto: userData.dniPhoto,
+        status: UserStatus.REGISTERED,
+      };
+      await registerUser(newUser);
+
+      const training = trainings.find(t => t.id === trainingId);
+      if (training) {
+        const regNotif = createRegistrationConfirmedNotification(training, userData.name || '', userData.email || '');
+        setNotifications(prev => [...prev, regNotif]);
+      }
+      alert('Trabajador registrado exitosamente');
+    } catch (e: any) {
+      alert(e.message);
     }
-    alert('Trabajador registrado exitosamente');
   };
 
-  const handleUpdateStatus = (userId: string, status: UserStatus, meetingLink?: string) => {
-    setUsers(prev => prev.map(u => u.id === userId ? { ...u, status, meetingLink: meetingLink || u.meetingLink } : u));
+  const handleUpdateStatus = async (userId: string, status: UserStatus, meetingLink?: string) => {
+    try {
+      await updateUserStatus(userId, status, meetingLink);
+    } catch (e: any) {
+      alert(e.message);
+    }
   };
 
-  const handleToggleAttendance = (userId: string) => {
-    setUsers(prev => prev.map(u => u.id === userId ? { ...u, attended: !u.attended } : u));
+  const handleToggleAttendance = async (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    if (user) {
+      try {
+        await toggleAttendance(userId, !user.attended);
+      } catch (e: any) {
+        alert(e.message);
+      }
+    }
   };
 
   const handleConsolidate = (trainingId: string) => {
@@ -597,8 +457,8 @@ const AppContent: React.FC = () => {
     );
   }
 
-  if (isInitializing) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><i className="fas fa-circle-notch fa-spin text-indigo-600 text-3xl"></i></div>;
-  if (!currentUser) return <Auth />;
+  if (isInitializing || trainingsLoading || usersLoading || companiesLoading || systemUsersLoading || authLoading) return <div className="min-h-screen flex items-center justify-center bg-slate-50"><i className="fas fa-circle-notch fa-spin text-indigo-600 text-3xl"></i></div>;
+  if (!currentUser) return null;
 
   return (
     <Layout
@@ -721,11 +581,35 @@ const AppContent: React.FC = () => {
   );
 };
 
+const ProtectedAppContent: React.FC = () => {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center bg-slate-50"><i className="fas fa-circle-notch fa-spin text-indigo-600 text-3xl"></i></div>;
+  }
+
+  if (!user) {
+    return (
+      <Routes>
+        <Route path="/login" element={<Auth />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    );
+  }
+
+  return (
+    <Routes>
+      <Route path="/login" element={<Navigate to="/" replace />} />
+      <Route path="/*" element={<AppContent />} />
+    </Routes>
+  );
+};
+
 const App: React.FC = () => {
   return (
     <AuthProvider>
       <NavigationProvider>
-        <AppContent />
+        <ProtectedAppContent />
       </NavigationProvider>
     </AuthProvider>
   );

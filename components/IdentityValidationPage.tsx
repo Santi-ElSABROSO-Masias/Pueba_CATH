@@ -1,43 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { EventUser, Training, UserStatus } from '../types'; // Asumiendo que Training también es necesario
+import { apiClient } from '../src/api/client';
+import { EventUser, UserStatus } from '../types';
 
-// --- Mocks de API (reemplazar con llamadas reales) ---
 type UserWithTraining = EventUser & { training_name: string };
-
-const getUserByValidationToken = async (token: string | null): Promise<UserWithTraining | null> => {
-  console.log('Buscando usuario con token:', token);
-  if (!token) return null;
-  // Simulación
-  return {
-    id: 'usr_abc',
-    trainingId: 'trn_xyz',
-    name: 'Rosa María Flores',
-    dni: '87654321',
-    email: 'rosa.flores@example.com',
-    phone: '+51912345678',
-    organization: 'Constructora XYZ',
-    area: 'Seguridad y Salud',
-    role: 'Prevencionista',
-    status: 'APROBADO',
-    attended: false,
-    registeredAt: new Date().toISOString(),
-    identity_validated: false,
-    validation_link: `http://localhost:3000/validar-identidad?token=${token}`,
-    validation_completed: false,
-    training_name: 'Trabajos de Alto Riesgo en Altura',
-  } as UserWithTraining;
-};
-
-const updateUserValidation = async (userId: string, data: Partial<EventUser>) => {
-  console.log(`Actualizando validación para ${userId}:`, data);
-  return { success: true };
-};
-
-const sendTeamsLink = async (user: EventUser) => {
-  console.log(`Enviando link de Teams a ${user.name}`);
-  return { success: true };
-};
-// --- Fin Mocks ---
 
 export function IdentityValidationPage() {
   const [token, setToken] = useState<string | null>(null);
@@ -61,14 +26,14 @@ export function IdentityValidationPage() {
         return;
       }
       try {
-        const userData = await getUserByValidationToken(tokenFromUrl);
-        if (userData) {
-          setUser(userData);
+        const response = await apiClient.get(`/validation/${tokenFromUrl}`);
+        if (response.data.success) {
+          setUser(response.data.data.user);
         } else {
           setError("Link inválido o expirado");
         }
-      } catch (err) {
-        setError("Error al cargar tus datos.");
+      } catch (err: any) {
+        setError(err.response?.data?.message || "Error al cargar tus datos.");
       } finally {
         setLoading(false);
       }
@@ -79,50 +44,30 @@ export function IdentityValidationPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-  
+
     if (!dniPhoto || !selfiePhoto || !user) {
       alert("Debes subir ambas fotos");
       return;
     }
-  
+
     setSubmitting(true);
-  
+
     try {
-      // 1. Marcar como validado en BD
-      await updateUserValidation(user.id, {
-        identity_validated: true,
-        validation_date: new Date().toISOString(),
-        status: UserStatus.APPROVED
+      const formData = new FormData();
+      formData.append('dniPhoto', dniPhoto);
+      formData.append('selfiePhoto', selfiePhoto);
+
+      const response = await apiClient.post(`/validation/${token}/upload-dni`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
-      
-      // 2. Obtener datos de la capacitación (simulado por ahora)
-      const training = { meetingLink: 'https://teams.microsoft.com/...' }; // Simulación
-      
-      // 3. ENVIAR LINK AUTOMÁTICAMENTE (si existe)
-      if (training.meetingLink) {
-        // await sendTeamsLinkToUser(user, training.meetingLink);
-        
-        // 4. Actualizar estado a LINK_SENT
-        await updateUserValidation(user.id, {
-          status: UserStatus.LINK_SENT,
-          meetingLink: training.meetingLink
-        });
-        
-        setSuccess("¡Validación exitosa! Revisa tu email y WhatsApp para el link de Teams.");
-      } else {
-        // Marcar como pendiente de link
-        await updateUserValidation(user.id, {
-          status: UserStatus.PENDING_LINK,
-          identity_validated: true
-        });
-        
-        // Notificar al admin que hay usuarios esperando link
-        // await notifyAdminPendingLinks(trainingId);
-        setSuccess("Validación exitosa. Recibirás el link cuando esté disponible.");
+
+      if (response.data.success) {
+        setSuccess("¡Validación y documentación enviada exitosamente! Tu solicitud será revisada.");
       }
-      
-    } catch (error) {
-      alert("Error al validar: " + (error as Error).message);
+    } catch (error: any) {
+      alert("Error al validar: " + (error.response?.data?.message || error.message));
     } finally {
       setSubmitting(false);
     }
@@ -135,7 +80,7 @@ export function IdentityValidationPage() {
   if (error) {
     return <div className="text-center p-10 text-red-600">{error}</div>;
   }
-  
+
   if (success) {
     return <div className="text-center p-10 text-emerald-600">{success}</div>;
   }
@@ -169,7 +114,7 @@ export function IdentityValidationPage() {
         <h1>Validación de Identidad</h1>
         <p>Capacitación: <strong>{user.training_name}</strong></p>
       </div>
-      
+
       <form onSubmit={handleSubmit}>
         <div className="user-info-readonly">
           <h3>Tus datos registrados:</h3>
@@ -177,11 +122,11 @@ export function IdentityValidationPage() {
           <p><strong>DNI:</strong> {user.dni}</p>
           <p><strong>Email:</strong> {user.email}</p>
         </div>
-        
+
         <div className="photo-section">
           <h3>1. Foto de tu DNI</h3>
           <p>Toma una foto clara del frente de tu Documento Nacional de Identidad.</p>
-          <input 
+          <input
             type="file"
             accept="image/*"
             onChange={(e) => setDniPhoto(e.target.files ? e.target.files[0] : null)}
@@ -194,11 +139,11 @@ export function IdentityValidationPage() {
             </div>
           )}
         </div>
-        
+
         <div className="photo-section">
           <h3>2. Selfie (foto de tu rostro)</h3>
           <p>Tómate una foto clara de tu rostro para verificar tu identidad.</p>
-          <input 
+          <input
             type="file"
             accept="image/*"
             capture="user"
@@ -212,8 +157,8 @@ export function IdentityValidationPage() {
             </div>
           )}
         </div>
-        
-        <button 
+
+        <button
           type="submit"
           disabled={!dniPhoto || !selfiePhoto || submitting}
           className="submit-btn"

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SystemUser, UserRole, ROLE_LABELS } from '../types';
 import { useAuth } from '../AuthContext';
 
@@ -10,28 +10,37 @@ export const Auth: React.FC = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Estado simulado para pruebas de rol
-  const [simulatedRole, setSimulatedRole] = useState<UserRole>('super_super_admin');
-  const [simulatedCompanyId, setSimulatedCompanyId] = useState<string>('c1');
+  useEffect(() => {
+    document.title = isLogin ? 'Login — Plataforma de Capacitaciones' : 'Registro — Plataforma de Capacitaciones';
+    return () => {
+      document.title = 'Plataforma de Capacitaciones — Catalina Huanca'; // Reset on unmount
+    };
+  }, [isLogin]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
-    setTimeout(() => {
-      const mockUser: SystemUser = {
-        id: Math.random().toString(36).substr(2, 9),
-        email,
-        name: isLogin ? email.split('@')[0] : name,
-        role: simulatedRole,
-        companyId: simulatedRole === 'admin_contratista' ? simulatedCompanyId : null,
-        isActive: true
-      };
-
-      login(mockUser);
+    try {
+      if (isLogin) {
+        await login({ email, password_hash: password });
+      } else {
+        // En una app real, aquí llamarías a un endpoint de registro `/api/auth/register`
+        // Por ahora simularemos un error para indicar que el registro no está abierto al público
+        throw new Error('El registro público está deshabilitado. Solicite cuenta a su administrador.');
+      }
+    } catch (err: any) {
+      if (err.response && err.response.data && err.response.data.message) {
+        setError(err.response.data.message);
+      } else {
+        setError(err.message || 'Error de conexión con el servidor.');
+      }
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -77,7 +86,7 @@ export const Auth: React.FC = () => {
               {isLogin ? 'Acceso al Sistema' : 'Registro de Cuenta'}
             </h2>
             <p className="text-sm text-catalina-grey/60 mt-1 font-normal">
-              {isLogin ? 'Ingresa tus credenciales institucionales' : 'Crea tu cuenta para acceder'}
+              {isLogin ? 'Ingresa tus credenciales' : 'Crea tu cuenta para acceder'}
             </p>
           </div>
 
@@ -102,13 +111,14 @@ export const Auth: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-catalina-grey mb-1.5">
-                  Correo Institucional
+                  Correo
                 </label>
                 <input
                   required
                   type="email"
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-catalina-green/20 focus:border-catalina-green outline-none transition-all text-catalina-grey"
-                  placeholder="usuario@catalinahuanca.com"
+                  placeholder="ejemplo@correo.com"
+                  autoComplete="off"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -123,26 +133,17 @@ export const Auth: React.FC = () => {
                   type="password"
                   className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-catalina-green/20 focus:border-catalina-green outline-none transition-all text-catalina-grey"
                   placeholder="••••••••"
+                  autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
 
-              {/* Selector de Rol — Solo DEMO/MVP */}
-              <div className="pt-4 border-t border-gray-100">
-                <label className="block text-xs font-semibold text-catalina-forest-green uppercase tracking-wider mb-1.5">
-                  Rol Simulado (MVP)
-                </label>
-                <select
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-sm bg-gray-50 focus:ring-2 focus:ring-catalina-green/20 focus:border-catalina-green outline-none transition-all text-catalina-grey"
-                  value={simulatedRole}
-                  onChange={(e) => setSimulatedRole(e.target.value as any)}
-                >
-                  <option value="admin_contratista">{ROLE_LABELS.admin_contratista}</option>
-                  <option value="super_admin">{ROLE_LABELS.super_admin}</option>
-                  <option value="super_super_admin">{ROLE_LABELS.super_super_admin}</option>
-                </select>
-              </div>
+              {error && (
+                <div className="bg-red-50 text-red-600 p-3 rounded-xl border border-red-100 text-sm font-medium mb-4">
+                  {error}
+                </div>
+              )}
 
               {/* Botón Principal CTA */}
               <button

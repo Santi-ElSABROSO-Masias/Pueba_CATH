@@ -10,9 +10,9 @@ export enum UserStatus {
 export type UserRole = 'admin_contratista' | 'super_admin' | 'super_super_admin';
 
 export const ROLE_LABELS: Record<UserRole, string> = {
-  admin_contratista: 'Administrador Contratista',
-  super_admin: 'Super Admin (Nivel 2)',
-  super_super_admin: 'Super Super Admin (Nivel 1)'
+  admin_contratista: 'Administrador',
+  super_admin: 'Capacitador',
+  super_super_admin: 'Gerencia SSO'
 };
 
 export type Permission =

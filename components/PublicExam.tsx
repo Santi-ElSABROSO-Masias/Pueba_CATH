@@ -6,21 +6,30 @@ interface PublicExamProps {
   onSubmitResult: (examId: string, result: Omit<ExamResult, 'id' | 'examId' | 'completedAt'>) => void;
 }
 
-const getExamFromStorage = (examId: string): Exam | null => {
-  const saved = localStorage.getItem('eventmanager_exams');
-  if (!saved) return null;
-  const exams: Exam[] = JSON.parse(saved);
-  return exams.find(e => e.publicLink?.endsWith(examId)) || null;
-};
+import { apiClient } from '../src/api/client';
 
 type ExamStage = 'welcome' | 'info' | 'password' | 'taking' | 'result';
 
 export const PublicExam: React.FC<PublicExamProps> = ({ examId, onSubmitResult }) => {
   const [exam, setExam] = useState<Exam | null>(null);
 
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const examFromStorage = getExamFromStorage(examId);
-    setExam(examFromStorage);
+    const fetchExam = async () => {
+      try {
+        setLoading(true);
+        const response = await apiClient.get(`/public/exams/${examId}`);
+        if (response.data.success) {
+          setExam(response.data.data);
+        }
+      } catch (err) {
+        console.error("Error fetching public exam:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchExam();
   }, [examId]);
   const [stage, setStage] = useState<ExamStage>('welcome');
   const [formData, setFormData] = useState({ name: '', dni: '', email: '', organization: '' });
@@ -36,23 +45,69 @@ export const PublicExam: React.FC<PublicExamProps> = ({ examId, onSubmitResult }
   }, [exam]);
   const [finalResult, setFinalResult] = useState<ExamResult | null>(null);
 
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
     if (!exam) return;
 
-    const correctAnswers = exam.questions.filter(q => answers[q.id] === q.correctAnswer).length;
-    const score = exam.questions.length > 0 ? (correctAnswers / exam.questions.length) * 100 : 0;
-    const passed = score >= exam.minPassingScore;
+    try {
+      const response = await apiClient.post(`/public/exams/${exam.id}/submit`, {
+        participantName: formData.name,
+        dni: formData.dni,
+        email: formData.email,
+        organization: formData.organization,
+        answers
+      });
 
-    const result: Omit<ExamResult, 'id' | 'examId' | 'completedAt'> = {
-      participantName: formData.name,
-      dni: formData.dni,
-      score,
-      passed,
-    };
-    onSubmitResult(exam.id, result);
-    setFinalResult({ ...result, id: '', examId: exam.id, completedAt: new Date().toISOString() });
-    setStage('result');
+      if (response.data.success) {
+        const finalResult = response.data.data;
+        setFinalResult(finalResult);
+        // Simulate onSubmitResult to keep App.tsx compatibility if needed, 
+        // though the real source of truth is now the DB.
+        onSubmitResult(exam.id, finalResult);
+        setStage('result');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Error al enviar el examen');
+      alert('Error al enviar el examen. Por favor intenta de nuevo.');
+    }
   }, [exam, answers, formData, onSubmitResult]);
+
+
+
+  useEffect(() => {
+    if (stage !== 'taking') return;
+    if (timeLeft === 0) {
+      handleSubmit();
+      return;
+    }
+    const timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
+    return () => clearInterval(timer);
+  }, [stage, timeLeft, handleSubmit]);
+
+  const handleStart = () => {
+    setError('');
+    if (!exam) return;
+    // Validaremos un intento pre-render si hay un endpoint. 
+    // Por simplicidad del MVP, confiaremos en el backend al momento de hacer el `submit`.
+    if (exam.requiresPassword) {
+      setStage('password');
+    } else {
+      setStage('taking');
+    }
+  };
+
+  const handlePasswordCheck = () => {
+    if (!exam) return;
+    if (password === exam.password) {
+      setStage('taking');
+      setError('');
+    } else {
+      setError('Contraseña incorrecta.');
+    }
+  };
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center bg-slate-50"><i className="fas fa-circle-notch fa-spin text-emerald-600 text-3xl"></i></div>;
+  }
 
   if (!exam) {
     return (
@@ -67,38 +122,6 @@ export const PublicExam: React.FC<PublicExamProps> = ({ examId, onSubmitResult }
       </div>
     );
   }
-
-  useEffect(() => {
-    if (stage !== 'taking') return;
-    if (timeLeft === 0) {
-      handleSubmit();
-      return;
-    }
-    const timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
-    return () => clearInterval(timer);
-  }, [stage, timeLeft, handleSubmit]);
-
-  const handleStart = () => {
-    if (exam.results.some(r => r.dni === formData.dni)) {
-      setError('Ya rendiste este examen anteriormente.');
-      return;
-    }
-    setError('');
-    if (exam.requiresPassword) {
-      setStage('password');
-    } else {
-      setStage('taking');
-    }
-  };
-
-  const handlePasswordCheck = () => {
-    if (password === exam.password) {
-      setStage('taking');
-      setError('');
-    } else {
-      setError('Contraseña incorrecta.');
-    }
-  };
 
   const today = new Date();
   const formattedDate = today.toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -445,8 +468,8 @@ export const PublicExam: React.FC<PublicExamProps> = ({ examId, onSubmitResult }
                         <label
                           key={i}
                           className={`flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all ${answers[q.id] === i
-                              ? 'bg-emerald-50 border-emerald-400 shadow-sm'
-                              : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
+                            ? 'bg-emerald-50 border-emerald-400 shadow-sm'
+                            : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
                             }`}
                         >
                           <input
