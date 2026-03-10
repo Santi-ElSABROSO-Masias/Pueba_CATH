@@ -44,10 +44,10 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
       <nav className="w-full md:w-[260px] md:min-w-[240px] bg-catalina-forest-green text-white flex flex-col sticky top-0 h-auto md:h-screen z-50 shadow-xl transition-all duration-300">
         {/* Logo */}
         <div className="flex items-center gap-3 p-6">
-          <div className="p-2 bg-catalina-green rounded-lg shadow-lg shrink-0">
-            <i className="fas fa-graduation-cap text-xl"></i>
+          <div className="bg-white p-1 rounded-lg shadow-lg shrink-0 flex items-center justify-center">
+            <img src="/assets/logo ch.png" alt="Logo CH" className="w-8 h-8 object-contain" />
           </div>
-          <h1 className="font-semibold text-xl tracking-tight whitespace-nowrap">EventManager</h1>
+          <h1 className="font-semibold text-xl tracking-tight whitespace-nowrap">Catalina Huanca</h1>
         </div>
 
         {/* Navigation */}

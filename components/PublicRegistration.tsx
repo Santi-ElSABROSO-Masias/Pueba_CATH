@@ -8,14 +8,14 @@ interface PublicRegistrationProps {
 }
 
 export const PublicRegistration: React.FC<PublicRegistrationProps> = ({ training, onSubmit }) => {
-  const [formData, setFormData] = useState({ 
-    name: '', 
-    email: '', 
-    dni: '', 
-    organization: '', 
-    area: '', 
-    role: '', 
-    custom: {} as any 
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    dni: '',
+    organization: '',
+    area: '',
+    role: '',
+    custom: {} as any
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -46,8 +46,8 @@ export const PublicRegistration: React.FC<PublicRegistrationProps> = ({ training
     <div className="max-w-2xl mx-auto my-10 animate-fadeIn p-4 md:p-0">
       <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden">
         <div className="bg-catalina-green p-8 md:p-12 text-white relative">
-          <div className="absolute top-0 right-0 p-6 opacity-10">
-            <i className="fas fa-graduation-cap text-9xl"></i>
+          <div className="absolute top-0 right-0 p-6 opacity-20">
+            <img src="/assets/logo ch.png" alt="Logo CH" className="w-32 h-32 object-contain filter grayscale" />
           </div>
           <div className="inline-block px-3 py-1 bg-white/20 rounded-lg text-[10px] font-black uppercase tracking-widest mb-4">Registro Oficial</div>
           <h2 className="text-3xl md:text-4xl font-black mb-4 leading-tight">{training.title}</h2>
@@ -73,7 +73,7 @@ export const PublicRegistration: React.FC<PublicRegistrationProps> = ({ training
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-catalina-green/20 outline-none transition-all placeholder:text-slate-300"
                   placeholder="Ej. Juan Manuel Pérez Soto"
                   value={formData.name}
-                  onChange={e => setFormData({...formData, name: e.target.value})}
+                  onChange={e => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
               <div>
@@ -85,7 +85,7 @@ export const PublicRegistration: React.FC<PublicRegistrationProps> = ({ training
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-catalina-green/20 outline-none transition-all placeholder:text-slate-300"
                   placeholder="Solo números"
                   value={formData.dni}
-                  onChange={e => setFormData({...formData, dni: e.target.value})}
+                  onChange={e => setFormData({ ...formData, dni: e.target.value })}
                 />
               </div>
               <div>
@@ -96,7 +96,7 @@ export const PublicRegistration: React.FC<PublicRegistrationProps> = ({ training
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-catalina-green/20 outline-none transition-all placeholder:text-slate-300"
                   placeholder="juan.perez@empresa.com"
                   value={formData.email}
-                  onChange={e => setFormData({...formData, email: e.target.value})}
+                  onChange={e => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
             </div>
@@ -115,7 +115,7 @@ export const PublicRegistration: React.FC<PublicRegistrationProps> = ({ training
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-catalina-green/20 outline-none transition-all placeholder:text-slate-300"
                   placeholder="Nombre de la empresa"
                   value={formData.organization}
-                  onChange={e => setFormData({...formData, organization: e.target.value})}
+                  onChange={e => setFormData({ ...formData, organization: e.target.value })}
                 />
               </div>
               <div>
@@ -125,7 +125,7 @@ export const PublicRegistration: React.FC<PublicRegistrationProps> = ({ training
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-catalina-green/20 outline-none transition-all placeholder:text-slate-300"
                   placeholder="Ej. Operaciones"
                   value={formData.area}
-                  onChange={e => setFormData({...formData, area: e.target.value})}
+                  onChange={e => setFormData({ ...formData, area: e.target.value })}
                 />
               </div>
               <div>
@@ -135,7 +135,7 @@ export const PublicRegistration: React.FC<PublicRegistrationProps> = ({ training
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-catalina-green/20 outline-none transition-all placeholder:text-slate-300"
                   placeholder="Ej. Supervisor de Planta"
                   value={formData.role}
-                  onChange={e => setFormData({...formData, role: e.target.value})}
+                  onChange={e => setFormData({ ...formData, role: e.target.value })}
                 />
               </div>
             </div>
@@ -156,8 +156,8 @@ export const PublicRegistration: React.FC<PublicRegistrationProps> = ({ training
                       className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-catalina-green/20 outline-none transition-all placeholder:text-slate-300"
                       placeholder="Escribe aquí tu respuesta..."
                       onChange={e => setFormData({
-                        ...formData, 
-                        custom: {...formData.custom, [q]: e.target.value}
+                        ...formData,
+                        custom: { ...formData.custom, [q]: e.target.value }
                       })}
                     />
                   </div>
