@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { ContenidoCurso } from '../types/induccion.types';
 import { useInduccion } from '../hooks/useInduccion';
 import { ContentUploader } from './ContentUploader';
+import { useAuth } from '../../../../AuthContext';
 // Icons needed (we can simulate or use basic SVG for now)
 
 export const GestorContenido: React.FC = () => {
+    const { isSuperSuperAdmin } = useAuth();
+    const canEdit = isSuperSuperAdmin();
     const { listarContenido, reordenarContenido, eliminarContenido, loading, error } = useInduccion();
     const [contenidos, setContenidos] = useState<ContenidoCurso[]>([]);
     const [showUploader, setShowUploader] = useState(false);
@@ -76,6 +79,7 @@ export const GestorContenido: React.FC = () => {
     };
 
     const handleToggleActivo = (id: string) => {
+        if (!canEdit) return;
         // we mock the toggle functionality in local state since the endpoint is not explicitly requested,
         // but in real world we'd patch the specific item
         setContenidos(contenidos.map(c => c.id === id ? { ...c, activo: !c.activo } : c));
@@ -85,15 +89,17 @@ export const GestorContenido: React.FC = () => {
         <div className="bg-white p-6 shadow-sm rounded-xl border border-slate-200">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-slate-800">Gestor de Contenido del Curso</h2>
-                <button
-                    onClick={() => setShowUploader(!showUploader)}
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 transition"
-                >
-                    {showUploader ? 'Cancelar' : 'Agregar Contenido'}
-                </button>
+                {canEdit && (
+                    <button
+                        onClick={() => setShowUploader(!showUploader)}
+                        className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 transition"
+                    >
+                        {showUploader ? 'Cancelar' : 'Agregar Contenido'}
+                    </button>
+                )}
             </div>
 
-            {showUploader && (
+            {canEdit && showUploader && (
                 <div className="mb-8">
                     <ContentUploader
                         onUploadSuccess={(nuevoContenido) => {
@@ -118,11 +124,11 @@ export const GestorContenido: React.FC = () => {
                         contenidos.map((item) => (
                             <div
                                 key={item.id}
-                                draggable
-                                onDragStart={(e) => handleDragStart(e, item.id)}
-                                onDragOver={handleDragOver}
-                                onDrop={(e) => handleDrop(e, item.id)}
-                                className={`flex items-center justify-between p-4 bg-white border ${draggedItemId === item.id ? 'border-indigo-500 opacity-50' : 'border-slate-200'} rounded-lg shadow-sm cursor-move hover:border-indigo-300 transition-colors`}
+                                draggable={canEdit}
+                                onDragStart={(e) => canEdit && handleDragStart(e, item.id)}
+                                onDragOver={(e) => canEdit && handleDragOver(e)}
+                                onDrop={(e) => canEdit && handleDrop(e, item.id)}
+                                className={`flex items-center justify-between p-4 bg-white border ${draggedItemId === item.id ? 'border-indigo-500 opacity-50' : 'border-slate-200'} rounded-lg shadow-sm ${canEdit ? 'cursor-move hover:border-indigo-300' : ''} transition-colors`}
                             >
                                 <div className="flex items-center gap-4">
                                     <div className="text-slate-400">
@@ -141,21 +147,25 @@ export const GestorContenido: React.FC = () => {
                                         {item.activo ? 'Activo' : 'Oculto'}
                                     </span>
 
-                                    <button
-                                        onClick={() => handleToggleActivo(item.id)}
-                                        className="p-2 text-slate-400 hover:text-indigo-600 transition"
-                                        title={item.activo ? 'Ocultar' : 'Mostrar'}
-                                    >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.activo ? "M15 12a3 3 0 11-6 0 3 3 0 016 0z" : "M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"}></path></svg>
-                                    </button>
+                                    {canEdit && (
+                                        <>
+                                            <button
+                                                onClick={() => handleToggleActivo(item.id)}
+                                                className="p-2 text-slate-400 hover:text-indigo-600 transition"
+                                                title={item.activo ? 'Ocultar' : 'Mostrar'}
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.activo ? "M15 12a3 3 0 11-6 0 3 3 0 016 0z" : "M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"}></path></svg>
+                                            </button>
 
-                                    <button
-                                        onClick={() => handleDelete(item.id)}
-                                        className="p-2 text-slate-400 hover:text-red-600 transition"
-                                        title="Eliminar"
-                                    >
-                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                    </button>
+                                            <button
+                                                onClick={() => handleDelete(item.id)}
+                                                className="p-2 text-slate-400 hover:text-red-600 transition"
+                                                title="Eliminar"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        </>
+                                    )}
                                 </div>
                             </div>
                         ))
