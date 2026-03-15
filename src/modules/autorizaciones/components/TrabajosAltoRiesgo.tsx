@@ -4,33 +4,101 @@ import { AltoRiesgoRequest } from '../../../../types/auth';
 import { TimelineTracker } from './shared/TimelineTracker';
 import { DocumentUploader } from './shared/DocumentUploader';
 import { ApprovalPanel } from './shared/ApprovalPanel';
+import { supabase } from '../../../config/supabaseClient';
+import { apiClient } from '../../../api/client';
 
-// --- DATA MOCK INICIAL ---
-const MOCK_RIESGO: AltoRiesgoRequest[] = [
-    {
-        id: 'TAR-001',
-        solicitanteId: 'u3',
-        solicitanteNombre: 'Fernando Silva',
-        empresa: 'Constructora Beta',
-        fechaCreacion: '2026-10-20',
-        estado: 'CAPACITACION',
-        tiposTrabajo: ['Altura', 'Espacio Confinado'],
-        historial: [],
-        documentos: [
-            { id: 'd1', nombre: 'Récord de Conductor', estado: 'CARGADO', archivoUrl: '#' },
-            { id: 'd2', nombre: 'Aptitud Médica (Altura)', estado: 'CARGADO', archivoUrl: '#' },
-        ]
-    }
-];
+const TIPOS_REQUIEREN_EMO = ['Altura', 'Caliente', 'Espacio Confinado'];
+
+// Mapping helpers for Supabase
+const mapDBToUI = (dbRow: any): AltoRiesgoRequest => {
+    let extraData: any = {};
+    try {
+        if (dbRow.rejection_reason) {
+            extraData = JSON.parse(dbRow.rejection_reason);
+        }
+    } catch { }
+
+    return {
+        id: dbRow.id,
+        solicitanteId: dbRow.worker_id,
+        solicitanteNombre: dbRow.worker_name,
+        empresa: dbRow.company,
+        fechaCreacion: new Date(dbRow.date_requested).toISOString().split('T')[0],
+        estado: extraData.estadoUI || 'BORRADOR',
+        tiposTrabajo: extraData.tiposTrabajo || [dbRow.work_type].filter(Boolean),
+        documentos: extraData.documentos || [],
+        historial: extraData.historial || [],
+        fechaCapacitacion: extraData.fechaCapacitacion,
+        fechaEMO: extraData.fechaEMO,
+        vigencia: extraData.vigencia,
+    };
+};
+
+const mapUIToDB = (req: AltoRiesgoRequest) => {
+    const extraData = {
+        estadoUI: req.estado,
+        tiposTrabajo: req.tiposTrabajo,
+        documentos: req.documentos,
+        historial: req.historial,
+        fechaCapacitacion: req.fechaCapacitacion,
+        fechaEMO: req.fechaEMO,
+        vigencia: req.vigencia,
+    };
+    return {
+        id: req.id,
+        worker_id: req.solicitanteId || '00000000-0000-0000-0000-000000000000',
+        worker_name: req.solicitanteNombre,
+        dni: '00000000', // Campo requerido en DB
+        company: req.empresa,
+        work_type: req.tiposTrabajo.join(', '),
+        location: 'No especificada',
+        date_requested: new Date(req.fechaCreacion).toISOString(),
+        date_needed: new Date().toISOString(),
+        status: ['APROBADO'].includes(req.estado) ? 'approved' : ['RECHAZADO'].includes(req.estado) ? 'rejected' : 'pending',
+        rejection_reason: JSON.stringify(extraData)
+    };
+};
 
 export const TrabajosAltoRiesgo: React.FC = () => {
     const { user, isSuperAdmin, isSuperSuperAdmin, isAdminContratista } = useAuth();
-    const [solicitudes, setSolicitudes] = useState<AltoRiesgoRequest[]>(MOCK_RIESGO);
+    const [solicitudes, setSolicitudes] = useState<AltoRiesgoRequest[]>([]);
     const [vista, setVista] = useState<'LISTA' | 'DETALLE' | 'NUEVA'>('LISTA');
     const [selectedId, setSelectedId] = useState<string | null>(null);
 
+    // Initial Fetch & Realtime Subscription
+    React.useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const { data } = await apiClient.get('/authorizations/high-risk');
+                if (data.success) {
+                    setSolicitudes(data.data.map(mapDBToUI));
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        };
+        fetchData();
+
+        const channel = supabase.channel('public:auth_high_risk_works')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'auth_high_risk_works' }, (payload: any) => {
+                if (payload.eventType === 'INSERT') {
+                    setSolicitudes(prev => [...prev.filter(r => r.id !== payload.new.id), mapDBToUI(payload.new)]);
+                } else if (payload.eventType === 'UPDATE') {
+                    setSolicitudes(prev => prev.map(req => req.id === payload.new.id ? mapDBToUI(payload.new) : req));
+                } else if (payload.eventType === 'DELETE') {
+                    setSolicitudes(prev => prev.filter(req => req.id !== payload.old.id));
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, []);
+
     // --- ESTADO LOCAL NUEVA SOLICITUD ---
     const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+    const [newDocuments, setNewDocuments] = useState<any[]>([]); // To hold documents while creating
     const TIPOS_DISPONIBLES = ['Altura', 'Caliente', 'Espacio Confinado', 'Bloqueo de Energía', 'Izajes'];
 
     const toggleType = (tipo: string) => {
@@ -110,6 +178,23 @@ export const TrabajosAltoRiesgo: React.FC = () => {
         const req = solicitudes.find(s => s.id === selectedId);
         if (!req) return null;
 
+        // EMO Logic Checks
+        const requiereEMO = req.tiposTrabajo.some(t => TIPOS_REQUIEREN_EMO.includes(t));
+
+        // Fechas Locales state for the Document Verification step
+        const [localFechaCapacitacion, setLocalFechaCapacitacion] = useState(req.fechaCapacitacion || new Date().toISOString().split('T')[0]);
+        const [localFechaEMO, setLocalFechaEMO] = useState(req.fechaEMO || new Date().toISOString().split('T')[0]);
+        const [localVigencia, setLocalVigencia] = useState(req.vigencia || '');
+
+        // Auto calculate Vigencia based on EMO
+        React.useEffect(() => {
+            if (requiereEMO && localFechaEMO && !req.vigencia) { // Only auto-calculate if it wasn't saved before
+                const date = new Date(localFechaEMO);
+                date.setFullYear(date.getFullYear() + 1);
+                setLocalVigencia(date.toISOString().split('T')[0]);
+            }
+        }, [localFechaEMO, requiereEMO, req.vigencia]);
+
         const timelineSteps = [
             { label: 'Borrador', status: 'completed' as const },
             { label: 'Aprob. Gerencial', status: 'completed' as const },
@@ -154,9 +239,91 @@ export const TrabajosAltoRiesgo: React.FC = () => {
                             {(isSuperAdmin() || isSuperSuperAdmin()) && req.estado === 'CAPACITACION' && (
                                 <ApprovalPanel
                                     title="Resultado de Capacitación"
-                                    onApprove={() => alert('Trabajador Aprobó Capacitación. Avanza a Verificación Documental Final.')}
-                                    onReject={(comment) => alert(`El trabajador reprobó. Rezagado a recuperación: ${comment}`)}
+                                    onApprove={async () => {
+                                        const updated = { ...req, estado: 'VERIFICACION_DOCUMENTAL' as any };
+                                        await supabase.from('auth_high_risk_works').update(mapUIToDB(updated)).eq('id', req.id);
+                                        setVista('LISTA');
+                                    }}
+                                    onReject={async (comment) => {
+                                        const updated = { ...req, estado: 'RECHAZADO' as any };
+                                        updated.historial = [...updated.historial, { id: crypto.randomUUID(), actor: user?.name || 'Admin', rol: 'Evaluador', accion: 'Rechazo', fecha: new Date().toISOString(), comentario: comment }];
+                                        await supabase.from('auth_high_risk_works').update(mapUIToDB(updated)).eq('id', req.id);
+                                        setVista('LISTA');
+                                    }}
                                 />
+                            )}
+
+                            {/* Final EMO/Vigencia Approval Panel */}
+                            {(isSuperAdmin() || isSuperSuperAdmin()) && req.estado === 'VERIFICACION_DOCUMENTAL' && (
+                                <div className="bg-indigo-50 rounded-2xl p-6 border border-indigo-100 mt-4">
+                                    <h3 className="font-bold text-indigo-900 mb-4"><i className="fas fa-calendar-check mr-2"></i>Gestión de Fechas y Vigencia Final</h3>
+
+                                    <div className="space-y-4 mb-6">
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-1">Fecha de Capacitación</label>
+                                            <input type="date" value={localFechaCapacitacion} onChange={e => setLocalFechaCapacitacion(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-indigo-200 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                        </div>
+
+                                        {requiereEMO && (
+                                            <>
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Fecha de Examen Médico (EMO)</label>
+                                                    <input type="date" value={localFechaEMO} onChange={e => setLocalFechaEMO(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-indigo-200 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                                    <p className="text-xs text-slate-500 mt-1">Requerido por los tipos de trabajo solicitados.</p>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Vigencia Calculada (Editable)</label>
+                                                    <input type="date" value={localVigencia} onChange={e => setLocalVigencia(e.target.value)} className="w-full px-4 py-2 rounded-lg border border-indigo-400 bg-white font-bold text-indigo-700 outline-none focus:ring-2 focus:ring-indigo-500" />
+                                                    <p className="text-xs text-indigo-600 mt-1">Por defecto: Fecha EMO + 1 año exacto.</p>
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    <button
+                                        onClick={async () => {
+                                            if (requiereEMO && (!localFechaEMO || !localVigencia)) {
+                                                return alert("Debe especificar la Fecha de EMO y la Vigencia antes de emitir la autorización.");
+                                            }
+
+                                            try {
+                                                const response = await apiClient.put(`/authorizations/high-risk/${req.id}/approve`, {
+                                                    status: 'approved',
+                                                    fechaCapacitacion: localFechaCapacitacion,
+                                                    fechaEMO: requiereEMO ? localFechaEMO : undefined,
+                                                    vigencia: requiereEMO ? localVigencia : undefined,
+                                                    tiposTrabajo: req.tiposTrabajo
+                                                }, {
+                                                    responseType: 'blob'
+                                                });
+
+                                                const contentType = response.headers['content-type'];
+                                                if (contentType && contentType.includes('application/pdf')) {
+                                                    const blob = new Blob([response.data], { type: 'application/pdf' });
+                                                    const url = window.URL.createObjectURL(blob);
+                                                    const a = document.createElement('a');
+                                                    a.style.display = 'none';
+                                                    a.href = url;
+                                                    a.download = `Autorizacion_${req.id}.pdf`;
+                                                    document.body.appendChild(a);
+                                                    a.click();
+                                                    window.URL.revokeObjectURL(url);
+                                                    document.body.removeChild(a);
+                                                    alert("Autorización de Trabajo Generada. Vigencia: " + (requiereEMO ? localVigencia : 'N/A: No requiere EMO'));
+                                                } else {
+                                                    alert("Autorización aprobada correctamente.");
+                                                }
+
+                                                setVista('LISTA');
+                                            } catch (error: any) {
+                                                alert("Error al aprobar: " + error.message);
+                                            }
+                                        }}
+                                        className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all shadow-md shadow-indigo-500/30"
+                                    >
+                                        <i className="fas fa-stamp mr-2"></i> Emitir Autorización Final
+                                    </button>
+                                </div>
                             )}
                         </div>
 
@@ -234,12 +401,36 @@ export const TrabajosAltoRiesgo: React.FC = () => {
 
                     <DocumentUploader
                         requiredDocs={getDynamicChecklist()}
-                        documents={[]}
-                        onDocumentChange={() => { }}
+                        documents={newDocuments}
+                        onDocumentChange={setNewDocuments}
                     />
 
                     <div className="mt-8 flex justify-end">
-                        <button onClick={() => { alert('Solicitud Multi-Tipo Emitida exitosamente.'); setVista('LISTA'); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold shadow-md shadow-indigo-500/20 transition-all">
+                        <button onClick={async () => {
+                            if (selectedTypes.length === 0) return alert('Seleccione al menos un tipo habilitado');
+
+                            const newReq: AltoRiesgoRequest = {
+                                id: crypto.randomUUID(),
+                                solicitanteId: '00000000-0000-0000-0000-000000000000',
+                                solicitanteNombre: 'Conductor ' + Date.now().toString().slice(-4),
+                                empresa: user?.companyId ? 'Empresa ID: ' + user.companyId : 'Constructor Limitada',
+                                fechaCreacion: new Date().toISOString(),
+                                estado: 'CAPACITACION' as any,
+                                tiposTrabajo: selectedTypes,
+                                documentos: newDocuments,
+                                historial: []
+                            };
+                            const dbPayload = mapUIToDB(newReq);
+                            try {
+                                await apiClient.post('/authorizations/high-risk', dbPayload);
+                                alert('Solicitud Multi-Tipo Emitida exitosamente.');
+                                setVista('LISTA');
+                                setSelectedTypes([]);
+                                setNewDocuments([]);
+                            } catch (error: any) {
+                                alert('Error al guardar: ' + (error.response?.data?.message || error.message));
+                            }
+                        }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold shadow-md shadow-indigo-500/20 transition-all">
                             Emitir Solicitud
                         </button>
                     </div>

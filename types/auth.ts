@@ -38,6 +38,9 @@ export interface VehicularRequest extends BaseAuthRequest {
 
 export interface AltoRiesgoRequest extends BaseAuthRequest {
     tiposTrabajo: string[];
+    fechaCapacitacion?: string;
+    fechaEMO?: string;
+    vigencia?: string;
 }
 
 export interface LicenciaRequest extends BaseAuthRequest {

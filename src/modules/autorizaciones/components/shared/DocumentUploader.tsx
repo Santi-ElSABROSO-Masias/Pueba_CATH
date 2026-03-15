@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { DocumentRecord } from '../../../../../types/auth';
+import { apiClient } from '../../../../api/client';
 
 interface DocumentUploaderProps {
     requiredDocs: string[]; // Ej. ['Licencia', 'Récord Conductor']
@@ -12,29 +13,42 @@ export const DocumentUploader: React.FC<DocumentUploaderProps> = ({ requiredDocs
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [activeDocType, setActiveDocType] = useState<string | null>(null);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file || !activeDocType) return;
 
-        // TODO: En producción subiría a un S3 o similar. Aquí simulamos URL.
-        const fakeUrl = URL.createObjectURL(file);
+        try {
+            const formData = new FormData();
+            formData.append('file', file);
 
-        const updatedDocs = [...documents];
-        const docIndex = updatedDocs.findIndex(d => d.nombre === activeDocType);
-
-        if (docIndex >= 0) {
-            updatedDocs[docIndex] = { ...updatedDocs[docIndex], estado: 'CARGADO', archivoUrl: fakeUrl };
-        } else {
-            updatedDocs.push({
-                id: `doc_${Date.now()}`,
-                nombre: activeDocType,
-                estado: 'CARGADO',
-                archivoUrl: fakeUrl
+            const { data } = await apiClient.post('/authorizations/upload', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
-        }
 
-        onDocumentChange(updatedDocs);
-        setActiveDocType(null);
+            if (!data.success) throw new Error(data.message || 'Error en subida');
+            const publicUrl = data.url;
+
+            const updatedDocs = [...documents];
+            const docIndex = updatedDocs.findIndex(d => d.nombre === activeDocType);
+
+            if (docIndex >= 0) {
+                updatedDocs[docIndex] = { ...updatedDocs[docIndex], estado: 'CARGADO', archivoUrl: publicUrl };
+            } else {
+                updatedDocs.push({
+                    id: `doc_${Date.now()}`,
+                    nombre: activeDocType,
+                    estado: 'CARGADO',
+                    archivoUrl: publicUrl
+                });
+            }
+
+            onDocumentChange(updatedDocs);
+        } catch (error) {
+            console.error('Error al subir el documento a Supabase:', error);
+            alert('Error al subir el documento. Revisa la consola para más detalles.');
+        } finally {
+            setActiveDocType(null);
+        }
     };
 
     const triggerUpload = (docName: string) => {

@@ -4,36 +4,94 @@ import { LicenciaRequest, DocumentRecord, RequestStatus } from '../../../../type
 import { TimelineTracker } from './shared/TimelineTracker';
 import { DocumentUploader } from './shared/DocumentUploader';
 import { ApprovalPanel } from './shared/ApprovalPanel';
+import { supabase } from '../../../config/supabaseClient';
+import { apiClient } from '../../../api/client';
 
-// --- DATA MOCK INICIAL ---
-const MOCK_LICENCIAS: LicenciaRequest[] = [
-    {
-        id: 'LIC-001',
-        solicitanteId: 'u1',
-        solicitanteNombre: 'Carlos Méndez',
-        empresa: 'TechFlow S.A.',
-        fechaCreacion: '2026-10-15',
-        estado: 'PENDIENTE_APROBACION',
-        breveteBase: 'A-IIB',
-        incluyeCamioneta: true,
-        intentosTeorico: 0,
-        intentosPractico: 0,
-        historial: [{ id: 'h1', actor: 'Carlos Méndez', rol: 'Operador', accion: 'Creación de Borrador', fecha: '2026-10-14' }],
-        documentos: [
-            { id: 'd1', nombre: 'Licencia de conducir vigente', estado: 'CARGADO', archivoUrl: '#' },
-            { id: 'd2', nombre: 'Récord de conductor', estado: 'CARGADO', archivoUrl: '#' },
-            { id: 'd3', nombre: 'Constancia médica de manejo', estado: 'CARGADO', archivoUrl: '#' },
-            { id: 'd4', nombre: 'Experiencia acreditada', estado: 'CARGADO', archivoUrl: '#' },
-            { id: 'd5', nombre: 'Certificado NSC (Camioneta)', estado: 'CARGADO', archivoUrl: '#' },
-        ]
-    }
-];
+// Mapping helpers for Supabase
+const mapDBToUI = (dbRow: any): LicenciaRequest => {
+    let extraData: any = {};
+    try {
+        if (dbRow.rejection_reason) {
+            extraData = JSON.parse(dbRow.rejection_reason);
+        }
+    } catch { }
+
+    return {
+        id: dbRow.id,
+        solicitanteId: dbRow.worker_id,
+        solicitanteNombre: dbRow.worker_name,
+        empresa: dbRow.company,
+        fechaCreacion: extraData.fechaCreacion || new Date().toISOString().split('T')[0],
+        estado: extraData.estadoUI || 'BORRADOR',
+        breveteBase: dbRow.license_category || 'A-I',
+        incluyeCamioneta: extraData.incluyeCamioneta || false,
+        intentosTeorico: extraData.intentosTeorico || 0,
+        intentosPractico: extraData.intentosPractico || 0,
+        documentos: extraData.documentos || [],
+        historial: extraData.historial || []
+    };
+};
+
+const mapUIToDB = (req: LicenciaRequest) => {
+    const extraData = {
+        estadoUI: req.estado,
+        incluyeCamioneta: req.incluyeCamioneta,
+        intentosTeorico: req.intentosTeorico,
+        intentosPractico: req.intentosPractico,
+        documentos: req.documentos,
+        historial: req.historial,
+        fechaCreacion: req.fechaCreacion,
+    };
+    return {
+        id: req.id,
+        worker_id: req.solicitanteId || '00000000-0000-0000-0000-000000000000',
+        worker_name: req.solicitanteNombre,
+        dni: '00000000',
+        company: req.empresa,
+        license_number: 'N/A',
+        license_category: req.breveteBase,
+        expiration_date: new Date().toISOString(),
+        status: ['APROBADO'].includes(req.estado) ? 'approved' : ['RECHAZADO'].includes(req.estado) ? 'rejected' : 'pending',
+        rejection_reason: JSON.stringify(extraData)
+    };
+};
 
 export const LicenciasManejo: React.FC = () => {
     const { user, isSuperAdmin, isSuperSuperAdmin, isAdminContratista } = useAuth();
-    const [solicitudes, setSolicitudes] = useState<LicenciaRequest[]>(MOCK_LICENCIAS);
+    const [solicitudes, setSolicitudes] = useState<LicenciaRequest[]>([]);
     const [vista, setVista] = useState<'LISTA' | 'DETALLE' | 'NUEVA'>('LISTA');
     const [selectedId, setSelectedId] = useState<string | null>(null);
+
+    // Initial Fetch & Realtime Subscription
+    React.useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const { data } = await apiClient.get('/authorizations/driving-licenses');
+                if (data.success) {
+                    setSolicitudes(data.data.map(mapDBToUI));
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        };
+        fetchData();
+
+        const channel = supabase.channel('public:auth_driving_licenses')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'auth_driving_licenses' }, (payload: any) => {
+                if (payload.eventType === 'INSERT') {
+                    setSolicitudes(prev => [...prev.filter(r => r.id !== payload.new.id), mapDBToUI(payload.new)]);
+                } else if (payload.eventType === 'UPDATE') {
+                    setSolicitudes(prev => prev.map(req => req.id === payload.new.id ? mapDBToUI(payload.new) : req));
+                } else if (payload.eventType === 'DELETE') {
+                    setSolicitudes(prev => prev.filter(req => req.id !== payload.old.id));
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, []);
 
     // --- RENDERERS ---
     const renderLista = () => (
@@ -153,8 +211,17 @@ export const LicenciasManejo: React.FC = () => {
                             {(isSuperAdmin() || isSuperSuperAdmin()) && req.estado === 'PENDIENTE_APROBACION' && (
                                 <ApprovalPanel
                                     title="Evaluación Gerencial / Dueño de Contrato"
-                                    onApprove={() => alert('Aprobado. Pasa a Eval Médica.')}
-                                    onReject={(comment) => alert(`Rechazado: ${comment}`)}
+                                    onApprove={async () => {
+                                        const updated = { ...req, estado: 'EVALUACION_MEDICA' as any };
+                                        await apiClient.put(`/authorizations/driving-licenses/${req.id}/approve`, mapUIToDB(updated));
+                                        setVista('LISTA');
+                                    }}
+                                    onReject={async (comment) => {
+                                        const updated = { ...req, estado: 'RECHAZADO' as any };
+                                        updated.historial = [...updated.historial, { id: crypto.randomUUID(), actor: user?.name || 'Admin', rol: 'Evaluador', accion: 'Rechazo', fecha: new Date().toISOString(), comentario: comment }];
+                                        await apiClient.put(`/authorizations/driving-licenses/${req.id}/approve`, mapUIToDB(updated));
+                                        setVista('LISTA');
+                                    }}
                                 />
                             )}
                         </div>
@@ -176,6 +243,11 @@ export const LicenciasManejo: React.FC = () => {
         );
     };
 
+    // State variables for NUEVA
+    const [nuevoBrevete, setNuevoBrevete] = useState('A-I');
+    const [nuevoCamioneta, setNuevoCamioneta] = useState(false);
+    const [newDocuments, setNewDocuments] = useState<any[]>([]);
+
     return (
         <div className="space-y-6">
             {vista === 'LISTA' && (
@@ -185,7 +257,7 @@ export const LicenciasManejo: React.FC = () => {
                         <p className="text-slate-500 mt-1">Gestión y control de autorizaciones de conducción en planta.</p>
                     </div>
                     {isAdminContratista() && (
-                        <button onClick={() => setVista('NUEVA')} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-500/20 transition-all flex items-center gap-2">
+                        <button onClick={() => { setVista('NUEVA'); setNewDocuments([]); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-indigo-500/20 transition-all flex items-center gap-2">
                             <i className="fas fa-plus"></i> Ingresar Solicitud
                         </button>
                     )}
@@ -213,7 +285,7 @@ export const LicenciasManejo: React.FC = () => {
                         </div>
                         <div>
                             <label className="block text-sm font-semibold text-slate-700 mb-2">Categoría Brevete MTC</label>
-                            <select className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                            <select value={nuevoBrevete} onChange={e => setNuevoBrevete(e.target.value)} className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
                                 <option>A-I</option>
                                 <option>A-IIa</option>
                                 <option>A-IIb</option>
@@ -223,7 +295,7 @@ export const LicenciasManejo: React.FC = () => {
                             </select>
                         </div>
                         <div className="flex items-center gap-3 pt-6">
-                            <input type="checkbox" id="camioneta" className="w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300" />
+                            <input type="checkbox" id="camioneta" checked={nuevoCamioneta} onChange={e => setNuevoCamioneta(e.target.checked)} className="w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300" />
                             <label htmlFor="camioneta" className="text-sm font-semibold text-slate-700 cursor-pointer">
                                 El conductor manejará Camioneta (Requiere Certificado NSC)
                             </label>
@@ -231,13 +303,37 @@ export const LicenciasManejo: React.FC = () => {
                     </div>
 
                     <DocumentUploader
-                        requiredDocs={['Licencia de conducir vigente', 'Récord de conductor', 'Constancia médica de manejo', 'Experiencia acreditada', 'Fotocheck de afiliación']}
-                        documents={[]}
-                        onDocumentChange={() => { }}
+                        requiredDocs={nuevoCamioneta ? ['Licencia de conducir vigente', 'Récord de conductor', 'Constancia médica de manejo', 'Experiencia acreditada', 'Fotocheck de afiliación', 'Certificado NSC (Camioneta)'] : ['Licencia de conducir vigente', 'Récord de conductor', 'Constancia médica de manejo', 'Experiencia acreditada', 'Fotocheck de afiliación']}
+                        documents={newDocuments}
+                        onDocumentChange={setNewDocuments}
                     />
 
                     <div className="mt-8 flex justify-end">
-                        <button onClick={() => { alert('Solicitud Enviada (En Borrador o Pendiente).'); setVista('LISTA'); }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold shadow-md shadow-indigo-500/20 transition-all">
+                        <button onClick={async () => {
+                            const newReq: LicenciaRequest = {
+                                id: crypto.randomUUID(),
+                                solicitanteId: '00000000-0000-0000-0000-000000000000',
+                                solicitanteNombre: 'Conductor ' + Date.now().toString().slice(-4),
+                                empresa: user?.companyId ? 'Empresa ID: ' + user.companyId : 'Constructor Limitada',
+                                fechaCreacion: new Date().toISOString().split('T')[0],
+                                estado: 'PENDIENTE_APROBACION' as any,
+                                breveteBase: nuevoBrevete,
+                                incluyeCamioneta: nuevoCamioneta,
+                                intentosTeorico: 0,
+                                intentosPractico: 0,
+                                documentos: newDocuments,
+                                historial: []
+                            };
+                            const dbPayload = mapUIToDB(newReq);
+                            try {
+                                await apiClient.post('/authorizations/driving-licenses', dbPayload);
+                                alert('Solicitud de Licencia Emitida exitosamente.');
+                                setVista('LISTA');
+                                setNewDocuments([]);
+                            } catch (error: any) {
+                                alert('Error al guardar: ' + (error.response?.data?.message || error.message));
+                            }
+                        }} className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold shadow-md shadow-indigo-500/20 transition-all">
                             Emitir Solicitud
                         </button>
                     </div>
