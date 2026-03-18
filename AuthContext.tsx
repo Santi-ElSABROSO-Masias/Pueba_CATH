@@ -21,24 +21,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      // Intentar cargar la sesión con el backend
-      apiClient.get('/auth/me')
-        .then(response => {
-          if (response.data.success) {
-            setUser(response.data.data.user);
-          }
-        })
-        .catch(() => {
+    const verifySession = async () => {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        setIsLoadingAuth(false);
+        return;
+      }
+
+      try {
+        // Validar expiración localmente
+        const payloadBase64 = token.split('.')[1];
+        const decodedJson = atob(payloadBase64);
+        const decoded = JSON.parse(decodedJson);
+
+        if (decoded.exp && decoded.exp * 1000 < Date.now()) {
+          console.warn('El token ha expirado. Limpiando sesión.');
           logout();
-        })
-        .finally(() => {
           setIsLoadingAuth(false);
-        });
-    } else {
-      setIsLoadingAuth(false);
-    }
+          return;
+        }
+
+        // Obtener datos de usuario del backend
+        const response = await apiClient.get('/auth/me'); // o /auth/verify
+        if (response.data.success) {
+          // Si es válido, restaura la sesión automáticamente
+          setUser(response.data.data.user);
+        } else {
+          logout();
+        }
+      } catch (error) {
+        console.error('Error al verificar la sesión:', error);
+        logout();
+      } finally {
+        setIsLoadingAuth(false);
+      }
+    };
+
+    verifySession();
   }, []);
 
   const login = async (credentials: { email: string; password_hash: string }) => {
@@ -79,6 +98,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return 'own_company';
     return ROLE_PERMISSIONS[user.role].viewScope;
   };
+
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-indigo-600 mb-4"></div>
+        <p className="text-slate-500 font-medium">Verificando sesión...</p>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={{
