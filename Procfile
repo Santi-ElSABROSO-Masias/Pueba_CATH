@@ -1,1 +1,1 @@
-web: node_modules/.bin/serve -s dist --listen tcp://0.0.0.0:3000
+web: node_modules/.bin/serve -s dist -l 3000
