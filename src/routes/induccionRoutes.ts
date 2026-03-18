@@ -49,7 +49,8 @@ router.post('/trabajadores', async (req, res) => {
 
         // Simulación: Envío de credenciales reales al trabajador
         if (celular) {
-            console.log(`\n[WHATSAPP-MOCK] Enviando a ${celular}: Hola ${nombre}, fuiste registrado para la Inducción Temporal en Pueba_CATH. Ingresa a localhost:5173/login. Usuario: ${username} | Clave: ${password}\n`);
+            const campusUrl = process.env.VITE_CAMPUS_URL || 'https://plataforma-catalina-campus-cath.c2awqr.easypanel.host';
+            console.log(`\n[WHATSAPP-MOCK] Enviando a ${celular}: Hola ${nombre}, fuiste registrado para la Inducción Temporal en Pueba_CATH. Ingresa a ${campusUrl}/login. Usuario: ${username} | Clave: ${password}\n`);
         }
         if (email) {
             // Reemplazando el MOCK por envío real de Nodemailer
