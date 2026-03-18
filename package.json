@@ -9,6 +9,9 @@
     "lint": "tsc --noEmit",
     "preview": "vite preview"
     },
+    "engines": {
+  "node": ">=20.0.0"
+    },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",
     "@types/bcryptjs": "^2.4.6",
@@ -46,4 +49,5 @@
     "@vitejs/plugin-react": "^5.1.4",
     "typescript": "^5.9.3"
   }
+ 
 }
