@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // La URL base del backend que acabamos de crear
-export const API_URL = (import.meta as any).env.VITE_API_URL || 'http://localhost:3000/api';
+export const API_URL = (import.meta as any).env.VITE_API_URL || 'https://plataforma-catalina-eventmanager-backend.c2awqr.easypanel.host/api';
 
 export const apiClient = axios.create({
     baseURL: API_URL,
