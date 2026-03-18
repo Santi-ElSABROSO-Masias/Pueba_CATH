@@ -8,12 +8,14 @@ interface AvailableTrainingsProps {
 }
 
 export const AvailableTrainings: React.FC<AvailableTrainingsProps> = ({ trainings, onSelectTraining }) => {
+  if (!trainings || !Array.isArray(trainings)) return null;
   
   // Filter logic: Published, Active, and Deadline not passed (optional, maybe show closed ones as disabled?)
   // The user said "only displays published and open trainings".
   // So we filter out closed ones.
   
   const availableTrainings = trainings.filter(t => {
+      if (!t) return false;
       // Must be published
       if (!t.isPublished) return false;
       // Must be active (if generated from schedule)

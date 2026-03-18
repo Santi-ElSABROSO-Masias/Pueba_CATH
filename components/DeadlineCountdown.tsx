@@ -6,6 +6,15 @@ interface DeadlineCountdownProps {
 }
 
 export function DeadlineCountdown({ deadline, trainingName }: DeadlineCountdownProps) {
+  if (!deadline) {
+    return (
+      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold bg-slate-100 text-slate-500 border border-slate-200">
+        <i className="fas fa-clock"></i>
+        <span>Sin fecha límite</span>
+      </div>
+    );
+  }
+
   const [timeLeft, setTimeLeft] = useState(calculateTimeLeft(deadline));
   const [status, setStatus] = useState(getDeadlineStatus(deadline));
   

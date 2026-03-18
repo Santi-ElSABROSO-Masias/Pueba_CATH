@@ -27,6 +27,8 @@ const COLORS = [
 ];
 
 export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, users, onCreateTraining, onUpdateTraining, onSelectTraining, userRole, onScheduleGenerated }) => {
+  if (!trainings || !Array.isArray(trainings)) return null;
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [sharingId, setSharingId] = useState<string | null>(null);

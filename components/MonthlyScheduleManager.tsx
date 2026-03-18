@@ -274,7 +274,7 @@ export function MonthlyScheduleManager({ onScheduleGenerated, users = [] }: Mont
                     </p>
                     <p className="flex items-center gap-2 text-amber-600 font-medium">
                         <i className="fas fa-hourglass-end w-4 text-center"></i> 
-                        Deadline: {new Date(training.registration_deadline).toLocaleDateString()}
+                        Deadline: {training?.registration_deadline ? new Date(training.registration_deadline).toLocaleDateString() : 'Sin fecha'}
                     </p>
                   </div>
                   

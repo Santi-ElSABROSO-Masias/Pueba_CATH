@@ -20,7 +20,7 @@ export function ExtendDeadlineModal({ training, onClose, onExtend }: ExtendDeadl
       return;
     }
     
-    if (new Date(newDeadline) <= new Date(training.registration_deadline)) {
+    if (training?.registration_deadline && new Date(newDeadline) <= new Date(training.registration_deadline)) {
       alert("La nueva fecha debe ser posterior a la actual");
       return;
     }
@@ -57,8 +57,8 @@ export function ExtendDeadlineModal({ training, onClose, onExtend }: ExtendDeadl
             <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 text-sm space-y-2">
                 <p><strong className="text-blue-700">Capacitación:</strong> {training.title}</p>
                 <p><strong className="text-blue-700">Fecha del curso:</strong> {training.date}</p>
-                <p><strong className="text-blue-700">Deadline actual:</strong> {new Date(training.registration_deadline).toLocaleString()}</p>
-                {getTimeLeft(training.registration_deadline) === 0 && (
+                <p><strong className="text-blue-700">Deadline actual:</strong> {training?.registration_deadline ? new Date(training.registration_deadline).toLocaleString() : 'Sin fecha'}</p>
+                {training?.registration_deadline && getTimeLeft(training.registration_deadline) === 0 && (
                 <div className="flex items-center gap-2 text-amber-600 font-bold mt-2 text-xs">
                     <i className="fas fa-exclamation-triangle"></i>
                     El deadline ya venció o está por vencer
@@ -73,8 +73,8 @@ export function ExtendDeadlineModal({ training, onClose, onExtend }: ExtendDeadl
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-catalina-green/20 transition-all font-medium"
                 value={newDeadline}
                 onChange={(e) => setNewDeadline(e.target.value)}
-                min={training.registration_deadline}
-                max={training.date} // Asumiendo que date es YYYY-MM-DD, esto podría necesitar ajuste si date incluye hora
+                min={training?.registration_deadline || ''}
+                max={training?.date || ''} // Asumiendo que date es YYYY-MM-DD, esto podría necesitar ajuste si date incluye hora
                 required
                 />
             </div>

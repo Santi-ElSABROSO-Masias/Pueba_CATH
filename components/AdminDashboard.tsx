@@ -31,6 +31,8 @@ interface AdminDashboardProps {
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   users, trainings, selectedTrainingId, onUpdateStatus, onToggleAttendance, onExport, onBulkRegister, onManualRegister, onConsolidate, companyName, companies = [], currentUserCompanyId = null, exams, examResults
 }) => {
+  if (!trainings || !Array.isArray(trainings)) return null;
+
   const { can, user } = useAuth();
   const [filterStatus, setFilterStatus] = useState<UserStatus | 'ALL'>('ALL');
   const [searchDni, setSearchDni] = useState('');

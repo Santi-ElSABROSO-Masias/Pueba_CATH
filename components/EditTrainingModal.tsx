@@ -108,7 +108,7 @@ export const EditTrainingModal: React.FC<EditTrainingModalProps> = ({ training, 
             <input
               type="datetime-local"
               name="registration_deadline"
-              value={formData.registration_deadline}
+              value={formData.registration_deadline || ''}
               onChange={handleChange}
               className="w-full px-4 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-catalina-green/20 outline-none"
             />
