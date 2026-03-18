@@ -14,6 +14,7 @@ interface CalendarViewProps {
 
 
 export const CalendarView: React.FC<CalendarViewProps> = ({ trainings, users, currentUser, onSelectTraining }) => {
+  if (!trainings || !Array.isArray(trainings) || trainings.length === 0) return <div className="p-8 text-center text-slate-500">No hay capacitaciones disponibles</div>;
   const { can } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedStatus, setSelectedStatus] = useState<TrainingStatus | 'ALL'>('ALL');

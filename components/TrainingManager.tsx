@@ -27,7 +27,7 @@ const COLORS = [
 ];
 
 export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, users, onCreateTraining, onUpdateTraining, onSelectTraining, userRole, onScheduleGenerated }) => {
-  if (!trainings || !Array.isArray(trainings)) return null;
+  if (!trainings || !Array.isArray(trainings) || trainings.length === 0) return <div className="p-8 text-center">No hay capacitaciones disponibles</div>;
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);

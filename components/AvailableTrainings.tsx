@@ -8,7 +8,7 @@ interface AvailableTrainingsProps {
 }
 
 export const AvailableTrainings: React.FC<AvailableTrainingsProps> = ({ trainings, onSelectTraining }) => {
-  if (!trainings || !Array.isArray(trainings)) return null;
+  if (!trainings || !Array.isArray(trainings) || trainings.length === 0) return <div className="p-8 text-center">No hay capacitaciones disponibles</div>;
   
   // Filter logic: Published, Active, and Deadline not passed (optional, maybe show closed ones as disabled?)
   // The user said "only displays published and open trainings".

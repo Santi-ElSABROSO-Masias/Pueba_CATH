@@ -11,6 +11,7 @@ interface QuestionBankProps {
 }
 
 export const QuestionBank: React.FC<QuestionBankProps> = ({ exam, trainings, currentUserRole, onUpdateExam }) => {
+  if (!trainings || !Array.isArray(trainings) || trainings.length === 0) return <div className="p-8 text-center text-slate-500">No hay capacitaciones disponibles</div>;
   const [activeTab, setActiveTab] = useState('resumen');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);

@@ -10,6 +10,7 @@ interface ExamPublishProps {
 }
 
 export const ExamPublish: React.FC<ExamPublishProps> = ({ exam, onUpdateExam, trainings, users }) => {
+  if (!trainings || !Array.isArray(trainings) || trainings.length === 0) return <div className="p-8 text-center text-slate-500">No hay capacitaciones disponibles</div>;
   const [countdown, setCountdown] = useState('');
 
   const getTrainingEndTime = (training: Training): Date => {

@@ -31,7 +31,7 @@ interface AdminDashboardProps {
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   users, trainings, selectedTrainingId, onUpdateStatus, onToggleAttendance, onExport, onBulkRegister, onManualRegister, onConsolidate, companyName, companies = [], currentUserCompanyId = null, exams, examResults
 }) => {
-  if (!trainings || !Array.isArray(trainings)) return null;
+  if (!trainings || !Array.isArray(trainings) || trainings.length === 0) return <div className="p-8 text-center">No hay capacitaciones disponibles</div>;
 
   const { can, user } = useAuth();
   const [filterStatus, setFilterStatus] = useState<UserStatus | 'ALL'>('ALL');
@@ -49,7 +49,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   useAutoCloseOnNavigate('admin-manual-form', showManualForm, () => setShowManualForm(false));
   useAutoCloseOnNavigate('admin-extend-modal', showExtendModal, () => setShowExtendModal(false));
 
-  const activeTraining = trainings.find(t => t.id === currentTrainingId);
+  const activeTraining = trainings?.find(t => t.id === currentTrainingId);
+  if (!activeTraining) return <div className="p-8 text-center">Selecciona una capacitación</div>;
   const filteredUsers = users.filter(u =>
     u.trainingId === currentTrainingId &&
     (filterStatus === 'ALL' || u.status === filterStatus) &&

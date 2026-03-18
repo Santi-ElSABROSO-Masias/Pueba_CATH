@@ -231,9 +231,13 @@ export const EvaluacionesModule: React.FC<EvaluacionesModuleProps> = ({
           className="w-full px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-sm focus:border-catalina-green focus:ring-1 focus:ring-catalina-green outline-none transition-all shadow-sm"
         >
           <option value="" disabled>-- Elige una capacitación --</option>
-          {trainings.map(t => (
-            <option key={t.id} value={t.id}>{t.title}</option>
-          ))}
+          {(!trainings || trainings.length === 0) ? (
+            <option value="" disabled>No hay capacitaciones disponibles</option>
+          ) : (
+            trainings.map(t => (
+              <option key={t.id} value={t.id}>{t.title}</option>
+            ))
+          )}
         </select>
       </div>
 
