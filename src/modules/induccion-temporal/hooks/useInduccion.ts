@@ -1,24 +1,28 @@
 import { useState, useCallback } from 'react';
-import { campusApiClient } from '../../../api/client';
 import { TrabajadorTemporal, SolicitudInduccion, ContenidoCurso, ResultadoEvaluacion, Certificado, EstadoSolicitud } from '../types/induccion.types';
 
 export function useInduccion() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const apiCall = async <T = any>(endpoint: string, method: string = 'GET', data?: any): Promise<T> => {
+    const apiCall = async (endpoint: string, options: RequestInit = {}) => {
         setLoading(true);
         setError(null);
         try {
-            const response = await campusApiClient.request<T>({
-                url: `/induccion${endpoint}`,
-                method,
-                data,
+            const response = await fetch(`/api/induccion${endpoint}`, {
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(options.headers || {}),
+                },
             });
-            return response.data;
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.message || errData.error || 'Error en la petición');
+            }
+            return await response.json();
         } catch (err: any) {
-            const message = err.response?.data?.message || err.message || 'Error en la petición';
-            setError(message);
+            setError(err.message);
             throw err;
         } finally {
             setLoading(false);
@@ -26,39 +30,42 @@ export function useInduccion() {
     };
 
     const registrarTrabajador = useCallback((data: Partial<TrabajadorTemporal>) => {
-        return apiCall('/trabajadores', 'POST', data);
+        return apiCall('/trabajadores', { method: 'POST', body: JSON.stringify(data) });
     }, []);
 
     const registrarMasivo = useCallback((trabajadores: TrabajadorTemporal[]) => {
-        return apiCall('/trabajadores/masivo', 'POST', { trabajadores });
+        return apiCall('/trabajadores/masivo', { method: 'POST', body: JSON.stringify({ trabajadores }) });
     }, []);
 
     const crearSolicitud = useCallback((data: Partial<SolicitudInduccion>) => {
-        return apiCall('/solicitud', 'POST', data);
+        return apiCall('/solicitud', { method: 'POST', body: JSON.stringify(data) });
     }, []);
 
     const cambiarDecisionSolicitud = useCallback((id: string, decision: EstadoSolicitud, observaciones?: string) => {
-        return apiCall(`/solicitud/${id}/decision`, 'PATCH', { estado: decision, observaciones });
+        return apiCall(`/solicitud/${id}/decision`, {
+            method: 'PATCH',
+            body: JSON.stringify({ estado: decision, observaciones })
+        });
     }, []);
 
     const listarContenido = useCallback((): Promise<ContenidoCurso[]> => {
-        return apiCall<ContenidoCurso[]>('/content', 'GET');
+        return apiCall('/content', { method: 'GET' });
     }, []);
 
     const reordenarContenido = useCallback((ordenacion: { id: string; orden: number }[]) => {
-        return apiCall('/content/reorder', 'PATCH', { ordenacion });
+        return apiCall('/content/reorder', { method: 'PATCH', body: JSON.stringify({ ordenacion }) });
     }, []);
 
     const eliminarContenido = useCallback((id: string) => {
-        return apiCall(`/content/${id}`, 'DELETE');
+        return apiCall(`/content/${id}`, { method: 'DELETE' });
     }, []);
 
     const registrarEvaluacion = useCallback((data: Partial<ResultadoEvaluacion>) => {
-        return apiCall('/evaluacion', 'POST', data);
+        return apiCall('/evaluacion', { method: 'POST', body: JSON.stringify(data) });
     }, []);
 
     const obtenerCertificado = useCallback((id: string): Promise<Certificado> => {
-        return apiCall<Certificado>(`/certificado/${id}`, 'GET');
+        return apiCall(`/certificado/${id}`, { method: 'GET' });
     }, []);
 
     return {
