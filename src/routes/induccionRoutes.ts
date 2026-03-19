@@ -6,6 +6,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { enviarCredencialesPorEmail } from '../modules/induccion-temporal/utils/mailer.js';
 import { supabase } from '../config/supabaseClient.js';
 
+const CAMPUS_BACKEND_URL = process.env.CAMPUS_BACKEND_URL || 'https://plataforma-catalina-campus-cath-backend.c2awqr.easypanel.host';
+
 const router = Router();
 router.use(json()); // Ensure body parsing is active for this route group
 
@@ -36,7 +38,7 @@ router.post('/trabajadores', async (req, res) => {
         const password_hash = await bcrypt.hash(password, 10);
 
         // Guardar en DB delegando la petición a Campus_CATH_Backend
-        const backendResponse = await fetch('http://localhost:3001/api/users/worker', {
+        const backendResponse = await fetch(`${CAMPUS_BACKEND_URL}/api/users/worker`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ dni: username, nombre, apellido, empresa, email, password })
@@ -147,7 +149,7 @@ router.post('/content/upload', upload.single('file'), async (req, res) => {
         }
 
         // Delegar la creación del contenido en Campus_CATH_Backend (NestJS => Prisma => Supabase)
-        const nestResponse = await fetch('http://localhost:3001/api/courses/induction/content', {
+        const nestResponse = await fetch(`${CAMPUS_BACKEND_URL}/api/courses/induction/content`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ titulo, tipo, urlStorage })
@@ -182,7 +184,7 @@ router.post('/content/upload', upload.single('file'), async (req, res) => {
 router.get('/content', async (req, res) => {
     try {
         // Consultar contenido real sincronizado en Campus_CATH_Backend
-        const nestResponse = await fetch('http://localhost:3001/api/courses');
+        const nestResponse = await fetch(`${CAMPUS_BACKEND_URL}/api/courses`);
         const courses = await nestResponse.json();
 
         const inductionCourse = courses.find((c: any) => c.courseType === 'InduccionCorta');
