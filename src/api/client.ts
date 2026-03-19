@@ -1,26 +1,38 @@
 import axios from 'axios';
 
-// La URL base del backend que acabamos de crear
+// URLs base de los backends
 export const API_URL = (import.meta as any).env.VITE_API_URL || 'https://plataforma-catalina-eventmanager-backend.c2awqr.easypanel.host/api';
 
+export const CAMPUS_API_URL = (import.meta as any).env.VITE_CAMPUS_API_URL || 'https://plataforma-catalina-campus-cath-backend.c2awqr.easypanel.host/api';
+
+// Cliente principal (eventmanager-backend)
 export const apiClient = axios.create({
     baseURL: API_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
 });
 
-// Interceptor para agregar el token JWT de Zustand/Context
+// Cliente para Campus CATH
+export const campusApiClient = axios.create({
+    baseURL: CAMPUS_API_URL,
+    headers: { 'Content-Type': 'application/json' },
+});
+
+// Interceptor principal
 apiClient.interceptors.request.use(
     (config) => {
-        // Si estás usando localStorage o sessionStorage
         const token = localStorage.getItem('auth_token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
+        if (token) config.headers.Authorization = `Bearer ${token}`;
         return config;
     },
-    (error) => {
-        return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
+);
+
+// Interceptor Campus
+campusApiClient.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('auth_token');
+        if (token) config.headers.Authorization = `Bearer ${token}`;
+        return config;
+    },
+    (error) => Promise.reject(error)
 );

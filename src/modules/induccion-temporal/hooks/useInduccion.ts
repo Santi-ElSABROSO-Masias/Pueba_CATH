@@ -1,29 +1,24 @@
 import { useState, useCallback } from 'react';
+import { campusApiClient } from '../../../api/client';
 import { TrabajadorTemporal, SolicitudInduccion, ContenidoCurso, ResultadoEvaluacion, Certificado, EstadoSolicitud } from '../types/induccion.types';
 
 export function useInduccion() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const apiCall = async (endpoint: string, options: RequestInit = {}) => {
+    const apiCall = async <T = any>(endpoint: string, method: string = 'GET', data?: any): Promise<T> => {
         setLoading(true);
         setError(null);
         try {
-            const baseUrl = import.meta.env.VITE_API_URL || 'https://plataforma-catalina-campus-cath-backend.c2awqr.easypanel.host/api';
-            const response = await fetch(`${baseUrl}/induccion${endpoint}`, {
-                ...options,
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(options.headers || {}),
-                },
+            const response = await campusApiClient.request<T>({
+                url: `/induccion${endpoint}`,
+                method,
+                data,
             });
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(errData.message || 'Error en la petición');
-            }
-            return await response.json();
+            return response.data;
         } catch (err: any) {
-            setError(err.message);
+            const message = err.response?.data?.message || err.message || 'Error en la petición';
+            setError(message);
             throw err;
         } finally {
             setLoading(false);
@@ -31,42 +26,39 @@ export function useInduccion() {
     };
 
     const registrarTrabajador = useCallback((data: Partial<TrabajadorTemporal>) => {
-        return apiCall('/trabajadores', { method: 'POST', body: JSON.stringify(data) });
+        return apiCall('/trabajadores', 'POST', data);
     }, []);
 
     const registrarMasivo = useCallback((trabajadores: TrabajadorTemporal[]) => {
-        return apiCall('/trabajadores/masivo', { method: 'POST', body: JSON.stringify({ trabajadores }) });
+        return apiCall('/trabajadores/masivo', 'POST', { trabajadores });
     }, []);
 
     const crearSolicitud = useCallback((data: Partial<SolicitudInduccion>) => {
-        return apiCall('/solicitud', { method: 'POST', body: JSON.stringify(data) });
+        return apiCall('/solicitud', 'POST', data);
     }, []);
 
     const cambiarDecisionSolicitud = useCallback((id: string, decision: EstadoSolicitud, observaciones?: string) => {
-        return apiCall(`/solicitud/${id}/decision`, {
-            method: 'PATCH',
-            body: JSON.stringify({ estado: decision, observaciones })
-        });
+        return apiCall(`/solicitud/${id}/decision`, 'PATCH', { estado: decision, observaciones });
     }, []);
 
     const listarContenido = useCallback((): Promise<ContenidoCurso[]> => {
-        return apiCall('/content', { method: 'GET' });
+        return apiCall<ContenidoCurso[]>('/content', 'GET');
     }, []);
 
     const reordenarContenido = useCallback((ordenacion: { id: string; orden: number }[]) => {
-        return apiCall('/content/reorder', { method: 'PATCH', body: JSON.stringify({ ordenacion }) });
+        return apiCall('/content/reorder', 'PATCH', { ordenacion });
     }, []);
 
     const eliminarContenido = useCallback((id: string) => {
-        return apiCall(`/content/${id}`, { method: 'DELETE' });
+        return apiCall(`/content/${id}`, 'DELETE');
     }, []);
 
     const registrarEvaluacion = useCallback((data: Partial<ResultadoEvaluacion>) => {
-        return apiCall('/evaluacion', { method: 'POST', body: JSON.stringify(data) });
+        return apiCall('/evaluacion', 'POST', data);
     }, []);
 
     const obtenerCertificado = useCallback((id: string): Promise<Certificado> => {
-        return apiCall(`/certificado/${id}`, { method: 'GET' });
+        return apiCall<Certificado>(`/certificado/${id}`, 'GET');
     }, []);
 
     return {
