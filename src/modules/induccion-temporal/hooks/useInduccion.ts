@@ -9,7 +9,8 @@ export function useInduccion() {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`/api/induccion${endpoint}`, {
+            const baseUrl = import.meta.env.VITE_API_URL || 'https://plataforma-catalina-campus-cath-backend.c2awqr.easypanel.host/api';
+            const response = await fetch(`${baseUrl}/induccion${endpoint}`, {
                 ...options,
                 headers: {
                     'Content-Type': 'application/json',
