@@ -47,6 +47,16 @@ export function useInduccion() {
                 password,
             });
 
+            // Enviar credenciales por email en background (no bloquea el registro)
+            if (data.email) {
+                campusApiClient.post('/notifications/send-credentials', {
+                    email: data.email,
+                    nombre: data.nombre,
+                    username,
+                    password,
+                }).catch((err) => console.warn('[EMAIL] No se pudo enviar credenciales:', err.message));
+            }
+
             return { username, password };
         });
     }, []);
