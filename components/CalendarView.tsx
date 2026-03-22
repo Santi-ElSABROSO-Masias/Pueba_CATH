@@ -161,31 +161,30 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ trainings, users, cu
                     <div
                       key={t.id}
                       onClick={() => setModalTraining({ training: t, status: t.calendarStatus, enrolled: t.enrolled })}
-                      className={`rounded-md border cursor-pointer transition-all hover:scale-[1.02] shadow-sm ${t.isFullDay
-                        ? 'text-[10px] p-2.5 min-h-[76px] flex flex-col justify-between border-l-[3px]'
-                        : 'text-[10px] p-1.5 font-medium truncate'
+                      className={`rounded-md border cursor-pointer transition-all hover:scale-[1.02] shadow-sm flex flex-col justify-between ${t.isFullDay
+                        ? 'text-[10px] p-2.5 min-h-[76px]'
+                        : 'text-[10px] p-1.5 px-2 font-medium min-h-[50px]'
                         }`}
                       style={{
                         backgroundColor: `${t.color}15` || '#f1f5f9',
                         borderColor: t.color || '#cbd5e1',
-                        color: t.color ? '#1e293b' : '#64748b'
                       }}
                       title={`${t.title} (${t.enrolled}/${t.maxCapacity})`}
                     >
                       <div className="flex justify-between items-center">
-                        <span className={`${t.isFullDay ? '' : 'truncate'}`} style={{ color: t.color, fontWeight: 'bold' }}>{t.title}</span>
+                        <span className="font-bold truncate" style={{ color: t.color }}>{t.title}</span>
                       </div>
                       {t.isFullDay ? (
                         <div className="mt-auto">
                           <div className="flex items-center gap-1.5 mt-1">
                             <span className="text-[7px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded" style={{ backgroundColor: `${t.color}25`, color: t.color }}>Jornada Completa</span>
                           </div>
-                          <div className="text-[8px] opacity-60 mt-1">
+                          <div className="text-[8px] opacity-70 mt-1 text-slate-500">
                             {t.schedule}
                           </div>
                         </div>
                       ) : (
-                        <div className="opacity-70 text-[8px] mt-0.5">
+                        <div className="text-[9px] mt-0.5 text-slate-500 font-normal">
                           {t.schedule}
                         </div>
                       )}

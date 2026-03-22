@@ -76,7 +76,10 @@ export const AvailableTrainings: React.FC<AvailableTrainingsProps> = ({ training
               </div>
 
               <div className="mb-4">
-                <h3 className="text-catalina-forest-green font-semibold text-lg leading-snug mb-2 group-hover:text-catalina-green transition-colors">
+                <h3 
+                  className="font-bold text-lg leading-snug mb-2 transition-colors group-hover:opacity-80"
+                  style={{ color: t.color || '#1e293b' }}
+                >
                   {t.title}
                 </h3>
                 <p className="text-catalina-grey/80 text-sm leading-relaxed line-clamp-2">

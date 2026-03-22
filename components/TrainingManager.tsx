@@ -458,7 +458,11 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
 
                 {/* Título y Descripción */}
                 <div className="mb-6">
-                  <h3 className="text-catalina-grey font-semibold text-lg leading-snug mb-2 group-hover:text-catalina-green transition-colors cursor-pointer" onClick={() => onSelectTraining(t.id)}>
+                  <h3 
+                    className="font-bold text-lg leading-snug mb-2 transition-colors cursor-pointer hover:opacity-80"
+                    style={{ color: t.color || '#1e293b' }}
+                    onClick={() => onSelectTraining(t.id)}
+                  >
                     {t.title}
                   </h3>
                   <p className="text-slate-500 text-sm leading-relaxed line-clamp-2">
