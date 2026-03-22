@@ -282,12 +282,15 @@ const AppContent: React.FC = () => {
   const handleCreateTraining = async (t: Omit<Training, 'id'>) => {
     try {
       const newTraining = await createTraining(t);
-      const newNotifs = createNotificationsForTraining(newTraining);
-      const courseOpenedNotif = createCourseOpenedNotification(newTraining);
-      setNotifications(prev => [...prev, ...newNotifs, courseOpenedNotif]);
+      if (newTraining) {
+        const newNotifs = createNotificationsForTraining(newTraining);
+        const courseOpenedNotif = createCourseOpenedNotification(newTraining);
+        setNotifications(prev => [...prev, ...newNotifs, courseOpenedNotif]);
+      }
     } catch (e) {
       console.error(e);
       alert('Error creating training');
+      throw e;
     }
   };
 
@@ -297,6 +300,7 @@ const AppContent: React.FC = () => {
     } catch (e) {
       console.error(e);
       alert('Error updating training');
+      throw e;
     }
   };
 

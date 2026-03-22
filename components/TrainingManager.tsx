@@ -102,30 +102,29 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Validaciones de fecha
     if (formData.registration_deadline) {
       if (new Date(formData.registration_deadline) >= new Date(formData.date)) {
         alert("La fecha límite debe ser anterior a la fecha del curso");
         return;
       }
-      if (new Date(formData.registration_deadline) < new Date()) {
-        // Permitimos editar deadlines pasados? Quizás para corregir.
-        // Pero al crear nuevo, debería ser futuro.
-        // Por simplicidad del MVP, solo warning o permitimos.
-        // alert("La fecha límite no puede ser en el pasado");
-      }
     } else {
       alert("La fecha límite de inscripción es obligatoria");
       return;
     }
 
-    if (editingId === 'new') {
-      onCreateTraining(formData as any);
-    } else if (editingId) {
-      onUpdateTraining({ ...formData, id: editingId } as any);
+    try {
+      if (editingId === 'new') {
+        await onCreateTraining(formData as any);
+      } else if (editingId) {
+        await onUpdateTraining({ ...formData, id: editingId } as any);
+      }
+      resetForm();
+    } catch (error) {
+       // Si hay error (validacion del backend), no resetemaos para que pueda corregir
+       console.log('Hubo un error al guardar la capacitación, previniendo reseteo.');
     }
-    resetForm();
   };
 
   const getShareUrl = (id: string) => `${window.location.origin}/registro?id=${id}`;

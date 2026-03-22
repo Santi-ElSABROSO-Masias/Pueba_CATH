@@ -3,7 +3,7 @@ import { apiClient } from '../api/client';
 import { Training } from '../../types';
 
 // Mapea la respuesta snake_case del backend al formato camelCase del frontend
-const mapTraining = (raw: any): Training => ({
+export const mapTraining = (raw: any): Training => ({
     id: raw.id,
     title: raw.title || '',
     description: raw.description || '',
@@ -34,7 +34,7 @@ const mapTraining = (raw: any): Training => ({
 });
 
 // Mapea datos camelCase del frontend al formato snake_case del backend
-const mapToBackend = (data: any) => {
+export const mapToBackend = (data: any) => {
     // Extraer start_time y end_time del campo "schedule" (ej: "8:00 am - 12:00 m")
     let startTime = '08:00';
     let endTime = '17:00';

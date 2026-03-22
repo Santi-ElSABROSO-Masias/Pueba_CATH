@@ -5,6 +5,8 @@ import { useAuth } from '../AuthContext';
 import { DeadlineCountdown } from './DeadlineCountdown';
 import { EditTrainingModal } from './EditTrainingModal';
 import { useAutoCloseOnNavigate } from '../hooks/useAutoCloseOnNavigate';
+import { apiClient } from '../src/api/client';
+import { mapToBackend } from '../src/hooks/useTrainings';
 
 interface MonthlyScheduleManagerProps {
   onScheduleGenerated?: (schedule: MonthlySchedule) => void;
@@ -62,6 +64,11 @@ export function MonthlyScheduleManager({ onScheduleGenerated, users = [] }: Mont
     
     if (confirm("¿Estás seguro de publicar este cronograma? Será visible para todos los administradores.")) {
         try {
+            await Promise.all(
+                currentSchedule.trainings.map(t => 
+                    apiClient.put(`/trainings/${t.id}`, { is_published: true })
+                )
+            );
             const updatedTrainings = currentSchedule.trainings.map(t => ({ ...t, isPublished: true }));
             const updated = await updateMonthlySchedule(currentSchedule.id, {
               status: 'published',
@@ -86,17 +93,17 @@ export function MonthlyScheduleManager({ onScheduleGenerated, users = [] }: Mont
   const handleSaveTraining = async (updatedTraining: Training) => {
       if (!currentSchedule) return;
 
-      const updatedTrainings = currentSchedule.trainings.map(t => 
-          t.id === updatedTraining.id ? updatedTraining : t
-      );
-
       try {
+          await apiClient.put(`/trainings/${updatedTraining.id}`, mapToBackend(updatedTraining));
+          const updatedTrainings = currentSchedule.trainings.map(t => 
+              t.id === updatedTraining.id ? updatedTraining : t
+          );
           const updatedSchedule = await updateMonthlySchedule(currentSchedule.id, {
               trainings: updatedTrainings
           });
           setCurrentSchedule(updatedSchedule);
           setEditingTraining(null);
-          if (onScheduleGenerated) onScheduleGenerated(updatedSchedule); // Update parent
+          if (onScheduleGenerated) onScheduleGenerated(updatedSchedule);
       } catch (error) {
           console.error("Error updating training:", error);
           alert("Error al actualizar la capacitación.");
@@ -106,12 +113,12 @@ export function MonthlyScheduleManager({ onScheduleGenerated, users = [] }: Mont
   const handleToggleActive = async (training: Training) => {
       if (!currentSchedule) return;
       
-      const updatedTraining = { ...training, is_active: !training.is_active };
-      const updatedTrainings = currentSchedule.trainings.map(t => 
-          t.id === training.id ? updatedTraining : t
-      );
-
       try {
+          await apiClient.put(`/trainings/${training.id}`, { is_active: !training.is_active });
+          const updatedTraining = { ...training, is_active: !training.is_active };
+          const updatedTrainings = currentSchedule.trainings.map(t => 
+              t.id === training.id ? updatedTraining : t
+          );
           const updatedSchedule = await updateMonthlySchedule(currentSchedule.id, {
               trainings: updatedTrainings
           });
@@ -153,6 +160,7 @@ export function MonthlyScheduleManager({ onScheduleGenerated, users = [] }: Mont
       if (!currentSchedule || !deleteConfirm.training) return;
 
       try {
+          await apiClient.delete(`/trainings/${deleteConfirm.training!.id}`);
           const updatedTrainings = currentSchedule.trainings.filter(t => t.id !== deleteConfirm.training!.id);
           const updatedSchedule = await updateMonthlySchedule(currentSchedule.id, {
               trainings: updatedTrainings

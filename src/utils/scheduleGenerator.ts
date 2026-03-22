@@ -1,6 +1,6 @@
-import { TrainingTemplate, MonthlySchedule, Training } from '../types';
-import { apiClient } from '../src/api/client';
-import { mapTraining } from '../src/hooks/useTrainings';
+import { TrainingTemplate, MonthlySchedule, Training } from './types';
+import { apiClient } from './api/client';
+import { mapTraining } from './hooks/useTrainings';
 
 // Mock database for templates
 const TEMPLATES: TrainingTemplate[] = [
