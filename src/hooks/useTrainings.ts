@@ -28,8 +28,8 @@ export const mapTraining = (raw: any): Training => {
     schedule: raw.schedule || '',
     group: raw.group_number || raw.group || '',
     companyId: raw.company_id ?? raw.companyId ?? null,
-    registration_deadline: raw.registration_deadline || '',
-    deadline_extended_at: raw.deadline_extended_at,
+    registration_deadline: raw.registration_deadline ? new Date(raw.registration_deadline).toISOString().slice(0, 16) : '',
+    deadline_extended_at: raw.deadline_extended_at ? new Date(raw.deadline_extended_at).toISOString().slice(0, 16) : undefined,
     deadline_extended_by: raw.deadline_extended_by,
     deadline_extension_reason: raw.deadline_extension_reason,
     monthly_schedule_id: raw.monthly_schedule_id,
@@ -70,12 +70,12 @@ export const mapToBackend = (data: any) => {
 
     // Construir fecha ISO para start_date
     const startDate = data.date
-        ? new Date(data.date + 'T00:00:00').toISOString()
+        ? new Date(data.date + 'T00:00:00').toISOString().slice(0, 16)
         : undefined;
 
     // Construir fecha ISO para registration_deadline
     const deadline = data.registration_deadline
-        ? new Date(data.registration_deadline).toISOString()
+        ? new Date(data.registration_deadline).toISOString().slice(0, 16)
         : undefined;
 
     const result: any = {
