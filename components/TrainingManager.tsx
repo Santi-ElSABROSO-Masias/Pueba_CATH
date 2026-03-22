@@ -11,6 +11,7 @@ interface TrainingManagerProps {
   users?: EventUser[]; // Para contar inscritos
   onCreateTraining: (training: Omit<Training, 'id'>) => void;
   onUpdateTraining: (training: Training) => void;
+  onDeleteTraining?: (id: string) => Promise<boolean>;
   onSelectTraining: (trainingId: string) => void;
   userRole: UserRole; // Nuevo prop para control de acceso
   onScheduleGenerated?: (schedule: MonthlySchedule) => void; // Prop para recargar trainings
@@ -39,7 +40,7 @@ const PREDEFINED_SCHEDULES = [
   '18:00 - 22:00'
 ];
 
-export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, users, onCreateTraining, onUpdateTraining, onSelectTraining, userRole, onScheduleGenerated }) => {
+export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, users, onCreateTraining, onUpdateTraining, onDeleteTraining, onSelectTraining, userRole, onScheduleGenerated }) => {
   const safeTrainings = Array.isArray(trainings) ? trainings : [];
 
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -49,6 +50,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
   const [publicLinkUrl, setPublicLinkUrl] = useState<string | null>(null);
   const [showScheduleManager, setShowScheduleManager] = useState(false);
   const [duplicatingTraining, setDuplicatingTraining] = useState<Training | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -188,6 +190,44 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
 
   return (
     <div className="space-y-8 animate-fadeIn">
+      {/* Modal de Eliminación */}
+      {deletingId && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 animate-fadeIn p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md flex flex-col p-8 text-center">
+            <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-5 text-3xl">
+              <i className="fas fa-exclamation-triangle"></i>
+            </div>
+            <h2 className="text-xl font-bold text-slate-800 mb-3">Eliminar Capacitación</h2>
+            <p className="text-sm text-slate-500 mb-8 leading-relaxed">
+              ¿Estás seguro de que deseas eliminar esta capacitación? Esta acción no se puede deshacer.
+            </p>
+            <div className="flex gap-4 p-4 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl -mx-8 -mb-8">
+              <button 
+                onClick={() => setDeletingId(null)}
+                className="flex-1 px-5 py-3 rounded-xl text-sm font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 transition-all shadow-sm"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={async () => {
+                  if (onDeleteTraining) {
+                    try {
+                      await onDeleteTraining(deletingId);
+                      setDeletingId(null);
+                    } catch(e) {
+                      alert("No se pudo eliminar la capacitación. Estaba reservada o hubo un problema de red.");
+                    }
+                  }
+                }}
+                className="flex-1 px-5 py-3 rounded-xl text-sm font-bold text-white bg-red-600 hover:bg-red-700 transition-all shadow-lg shadow-red-200"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Modal de Duplicación */}
       {participantsForModal.length > 0 && (
         <ParticipantsLinksModal
@@ -598,6 +638,17 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
                         >
                           <i className="fas fa-cog text-xs"></i>
                         </button>
+
+                        {/* Botón Eliminar */}
+                        {onDeleteTraining && (
+                          <button
+                            onClick={() => setDeletingId(t.id)}
+                            className="w-8 h-8 rounded-full hover:bg-red-50 text-slate-400 hover:text-red-500 flex items-center justify-center transition-colors"
+                            title="Eliminar"
+                          >
+                            <i className="fas fa-trash-alt text-xs"></i>
+                          </button>
+                        )}
                       </>
                     )}
                   </div>

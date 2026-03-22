@@ -175,6 +175,19 @@ export const useTrainings = () => {
         }
     };
 
+    const deleteTraining = async (id: string) => {
+        try {
+            const response = await apiClient.delete(`/trainings/${id}`);
+            if (response.data.success) {
+                setTrainings(prev => prev.filter(t => t.id !== id));
+                return true;
+            }
+            return false;
+        } catch (err: any) {
+            throw new Error(err.response?.data?.message || 'Error al eliminar la capacitación');
+        }
+    };
+
     return {
         trainings,
         setTrainings,
@@ -182,6 +195,7 @@ export const useTrainings = () => {
         error,
         refetch: fetchTrainings,
         createTraining,
-        updateTraining
+        updateTraining,
+        deleteTraining
     };
 };

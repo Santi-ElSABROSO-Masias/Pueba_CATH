@@ -189,7 +189,7 @@ const AppContent: React.FC = () => {
     return d.toISOString().split('T')[0];
   };
 
-  const { trainings, loading: trainingsLoading, createTraining, updateTraining, setTrainings } = useTrainings();
+  const { trainings, loading: trainingsLoading, createTraining, updateTraining, deleteTraining, setTrainings } = useTrainings();
   const { users, loading: usersLoading, registerUser, updateUserStatus, toggleAttendance, setUsers } = useUsers();
   const { companies, loading: companiesLoading, addCompany, setCompanies } = useCompanies();
   const { systemUsers, loading: systemUsersLoading, addSystemUser, updateSystemUser, toggleUserStatus, setSystemUsers } = useSystemUsers();
@@ -483,6 +483,7 @@ const AppContent: React.FC = () => {
               trainings={filteredTrainings}
               onCreateTraining={handleCreateTraining}
               onUpdateTraining={handleUpdateTraining}
+              onDeleteTraining={deleteTraining}
               onSelectTraining={handleSelectTraining}
               userRole={currentUser.role}
               onScheduleGenerated={(schedule) => {
