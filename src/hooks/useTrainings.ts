@@ -33,6 +33,85 @@ const mapTraining = (raw: any): Training => ({
     meetingLink: raw.meeting_link || raw.meetingLink || '',
 });
 
+// Mapea datos camelCase del frontend al formato snake_case del backend
+const mapToBackend = (data: any) => {
+    // Extraer start_time y end_time del campo "schedule" (ej: "8:00 am - 12:00 m")
+    let startTime = '08:00';
+    let endTime = '17:00';
+    if (data.schedule) {
+        const parts = data.schedule.split('-').map((s: string) => s.trim());
+        if (parts.length >= 2) {
+            startTime = normalizeTime(parts[0]);
+            endTime = normalizeTime(parts[1]);
+        }
+    }
+
+    // Parsear duration a número de horas
+    let durationHours: number | undefined;
+    if (data.duration) {
+        const match = data.duration.match(/(\d+)/);
+        if (match) durationHours = parseInt(match[1]);
+    }
+
+    // Parsear group a número
+    let groupNumber: number | undefined;
+    if (data.group) {
+        const match = data.group.match(/(\d+)/);
+        if (match) groupNumber = parseInt(match[1]);
+    }
+
+    // Construir fecha ISO para start_date
+    const startDate = data.date
+        ? new Date(data.date + 'T00:00:00').toISOString()
+        : undefined;
+
+    // Construir fecha ISO para registration_deadline
+    const deadline = data.registration_deadline
+        ? new Date(data.registration_deadline).toISOString()
+        : undefined;
+
+    const result: any = {
+        title: data.title,
+        description: data.description || '',
+        start_date: startDate,
+        start_time: startTime,
+        end_time: endTime,
+        max_capacity: data.maxCapacity ?? 60,
+        duration_hours: durationHours,
+        color: data.color,
+        group_number: groupNumber,
+        registration_deadline: deadline,
+        meeting_link: data.meetingLink || undefined,
+        status: 'active',
+        is_active: true,
+        is_published: data.isPublished ?? false,
+        company_id: data.companyId || undefined,
+    };
+
+    // Limpiar undefined values para no enviar campos vacíos
+    Object.keys(result).forEach(key => {
+        if (result[key] === undefined) delete result[key];
+    });
+
+    return result;
+};
+
+// Normaliza strings de hora a formato HH:mm (ej: "8:00 am" → "08:00")
+const normalizeTime = (timeStr: string): string => {
+    const cleaned = timeStr.toLowerCase().replace(/[^\d:apm]/g, '').trim();
+    const match = cleaned.match(/^(\d{1,2}):?(\d{2})?\s*(am|pm|m)?$/);
+    if (!match) return '08:00';
+
+    let hours = parseInt(match[1]);
+    const minutes = match[2] || '00';
+    const period = match[3];
+
+    if (period === 'pm' && hours < 12) hours += 12;
+    if (period === 'am' && hours === 12) hours = 0;
+
+    return `${hours.toString().padStart(2, '0')}:${minutes}`;
+};
+
 export const useTrainings = () => {
     const [trainings, setTrainings] = useState<Training[]>([]);
     const [loading, setLoading] = useState(true);
@@ -61,7 +140,8 @@ export const useTrainings = () => {
 
     const createTraining = async (trainingData: Omit<Training, 'id'>) => {
         try {
-            const response = await apiClient.post('/trainings', trainingData);
+            const backendData = mapToBackend(trainingData);
+            const response = await apiClient.post('/trainings', backendData);
             if (response.data.success) {
                 const mapped = mapTraining(response.data.data);
                 setTrainings(prev => [mapped, ...prev]);
@@ -74,7 +154,8 @@ export const useTrainings = () => {
 
     const updateTraining = async (id: string, updateData: Partial<Training>) => {
         try {
-            const response = await apiClient.put(`/trainings/${id}`, updateData);
+            const backendData = mapToBackend(updateData);
+            const response = await apiClient.put(`/trainings/${id}`, backendData);
             if (response.data.success) {
                 const mapped = mapTraining(response.data.data);
                 setTrainings(prev => prev.map(t => t.id === id ? mapped : t));
