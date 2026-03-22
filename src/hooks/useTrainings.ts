@@ -94,6 +94,7 @@ export const mapToBackend = (data: any) => {
         is_active: true,
         is_published: data.isPublished ?? false,
         company_id: data.companyId || undefined,
+        custom_questions: data.customQuestions || [],
     };
 
     // Limpiar undefined values para no enviar campos vacíos
