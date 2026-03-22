@@ -26,6 +26,18 @@ const COLORS = [
   '#6366F1', // Indigo
 ];
 
+const PREDEFINED_SCHEDULES = [
+  '07:00 - 09:00',
+  '07:00 - 11:00',
+  '08:00 - 10:00',
+  '08:00 - 12:00',
+  '09:00 - 13:00',
+  '10:00 - 14:00',
+  '13:00 - 17:00',
+  '14:00 - 18:00',
+  '18:00 - 22:00'
+];
+
 export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, users, onCreateTraining, onUpdateTraining, onSelectTraining, userRole, onScheduleGenerated }) => {
   const safeTrainings = Array.isArray(trainings) ? trainings : [];
 
@@ -352,13 +364,19 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Horario</label>
-                  <input
-                    type="text"
-                    placeholder="Ej. 8:00 am - 12:00 m"
+                  <select
                     className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm outline-none"
                     value={formData.schedule}
                     onChange={e => setFormData({ ...formData, schedule: e.target.value })}
-                  />
+                  >
+                    <option value="" disabled>Seleccione un horario</option>
+                    {PREDEFINED_SCHEDULES.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                    {formData.schedule && !PREDEFINED_SCHEDULES.includes(formData.schedule) && (
+                      <option value={formData.schedule}>Otro ({formData.schedule})</option>
+                    )}
+                  </select>
                 </div>
               </div>
             </div>
