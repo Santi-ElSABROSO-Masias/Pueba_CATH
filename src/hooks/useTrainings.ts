@@ -3,12 +3,19 @@ import { apiClient } from '../api/client';
 import { Training } from '../../types';
 
 // Mapea la respuesta snake_case del backend al formato camelCase del frontend
-export const mapTraining = (raw: any): Training => ({
+export const mapTraining = (raw: any): Training => {
+  const rawDate = raw.start_date || raw.date || '';
+  const dateStr = rawDate.includes('T') ? rawDate.split('T')[0] : rawDate;
+  
+  const rawEndDate = raw.end_date || raw.endDate || '';
+  const endDateStr = rawEndDate.includes('T') ? rawEndDate.split('T')[0] : rawEndDate;
+
+  return {
     id: raw.id,
     title: raw.title || '',
     description: raw.description || '',
-    date: raw.start_date || raw.date || '',
-    endDate: raw.end_date || raw.endDate,
+    date: dateStr,
+    endDate: endDateStr,
     isFullDay: raw.is_full_day ?? raw.isFullDay,
     maxCapacity: raw.max_capacity ?? raw.maxCapacity ?? 60,
     isPublished: raw.is_published ?? raw.isPublished ?? false,
@@ -31,7 +38,8 @@ export const mapTraining = (raw: any): Training => ({
     registeredCount: raw._count?.registrations ?? raw.registeredCount ?? 0,
     status: raw.status,
     meetingLink: raw.meeting_link || raw.meetingLink || '',
-});
+  };
+};
 
 // Mapea datos camelCase del frontend al formato snake_case del backend
 export const mapToBackend = (data: any) => {

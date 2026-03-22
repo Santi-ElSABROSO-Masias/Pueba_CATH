@@ -298,22 +298,20 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ trainings, users, cu
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => setModalTraining(null)}
-                  className={`px-4 py-3 rounded-xl font-bold text-slate-500 border border-slate-200 hover:bg-slate-50 transition-colors ${!can('canManageCalendar') ? 'col-span-2' : ''}`}
+                  className="px-4 py-3 rounded-xl font-bold text-slate-500 border border-slate-200 hover:bg-slate-50 transition-colors"
                 >
                   Cerrar
                 </button>
-                {can('canManageCalendar') && (
-                  <button
-                    onClick={() => {
-                      onSelectTraining(modalTraining.training.id);
-                      setModalTraining(null);
-                    }}
-                    className="bg-slate-900 text-white px-4 py-3 rounded-xl font-bold hover:bg-slate-800 shadow-lg shadow-slate-200 flex items-center justify-center gap-2 transition-all"
-                  >
-                    <i className="fas fa-external-link-alt text-xs"></i>
-                    Gestionar
-                  </button>
-                )}
+                <button
+                  onClick={() => {
+                    onSelectTraining(modalTraining.training.id);
+                    setModalTraining(null);
+                  }}
+                  className="bg-slate-900 text-white px-4 py-3 rounded-xl font-bold hover:bg-slate-800 shadow-lg shadow-slate-200 flex items-center justify-center gap-2 transition-all"
+                >
+                  <i className="fas fa-external-link-alt text-xs"></i>
+                  {can('canManageCalendar') ? 'Gestionar' : 'Ir al Curso'}
+                </button>
               </div>
             </div>
           </div>

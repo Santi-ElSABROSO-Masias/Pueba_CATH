@@ -60,7 +60,8 @@ export const AvailableTrainings: React.FC<AvailableTrainingsProps> = ({ training
           >
             {/* Accent Line */}
                         <div 
-              className={`absolute left-0 top-6 bottom-6 w-1 rounded-r-full opacity-80 bg-${t.color || 'catalina-green'}`}
+              className="absolute left-0 top-6 bottom-6 w-1 rounded-r-full opacity-80"
+              style={{ backgroundColor: t.color || '#2d6a4f' }}
             ></div>
 
             <div className="p-6 pl-7 flex flex-col h-full">
