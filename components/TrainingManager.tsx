@@ -27,7 +27,7 @@ const COLORS = [
 ];
 
 export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, users, onCreateTraining, onUpdateTraining, onSelectTraining, userRole, onScheduleGenerated }) => {
-  if (!trainings || !Array.isArray(trainings) || trainings.length === 0) return <div className="p-8 text-center">No hay capacitaciones disponibles</div>;
+  const safeTrainings = Array.isArray(trainings) ? trainings : [];
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -54,6 +54,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
 
   const isSuperSuperAdmin = userRole === 'super_super_admin';
   const isAdminContratista = userRole === 'admin_contratista';
+  const hasTrainings = safeTrainings.length > 0;
 
   const resetForm = () => {
     setFormData({
@@ -154,7 +155,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
   };
 
   const handleDuplicate = (originalTraining: Training, newDate: string, newTime: string, newCapacity: number) => {
-    const newGroupNumber = trainings.filter(t => t.title === originalTraining.title).length + 1;
+    const newGroupNumber = safeTrainings.filter(t => t.title === originalTraining.title).length + 1;
     const newGroup = `Grupo ${newGroupNumber}`;
 
     const duplicatedTraining = {
@@ -419,8 +420,17 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
         </div>
       ) : (
         /* GRID DE TARJETAS REDISEÑADAS */
+        !hasTrainings ? (
+          <div className="text-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+            <div className="w-16 h-16 bg-catalina-green/10 rounded-full flex items-center justify-center mx-auto mb-4 text-catalina-green text-2xl">
+              <i className="fas fa-inbox"></i>
+            </div>
+            <h3 className="text-catalina-forest-green font-medium text-lg">No hay capacitaciones disponibles</h3>
+            <p className="text-slate-500 text-sm mt-1">{isSuperSuperAdmin ? 'Crea una nueva capacitación para comenzar.' : 'Aún no se han programado capacitaciones.'}</p>
+          </div>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {trainings.map(t => (
+          {safeTrainings.map(t => (
             <div
               key={t.id}
               className="group relative bg-white rounded-2xl border border-slate-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 flex flex-col h-full overflow-hidden"
@@ -571,6 +581,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
             </div>
           ))}
         </div>
+        )
       )}
     </div>
   );
