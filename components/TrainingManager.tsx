@@ -4,6 +4,7 @@ import { Training, UserRole, MonthlySchedule, EventUser } from '../types';
 import { MonthlyScheduleManager } from './MonthlyScheduleManager';
 import { DuplicateTrainingModal } from './DuplicateTrainingModal';
 import { ParticipantsLinksModal } from './ParticipantsLinksModal';
+import { PublicLinkModal } from './PublicLinkModal';
 
 interface TrainingManagerProps {
   trainings: Training[];
@@ -45,6 +46,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [sharingId, setSharingId] = useState<string | null>(null);
   const [participantsForModal, setParticipantsForModal] = useState<EventUser[]>([]);
+  const [publicLinkUrl, setPublicLinkUrl] = useState<string | null>(null);
   const [showScheduleManager, setShowScheduleManager] = useState(false);
   const [duplicatingTraining, setDuplicatingTraining] = useState<Training | null>(null);
 
@@ -191,6 +193,13 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
         <ParticipantsLinksModal
           participants={participantsForModal}
           onClose={() => setParticipantsForModal([])}
+        />
+      )}
+
+      {publicLinkUrl && (
+        <PublicLinkModal
+          url={publicLinkUrl}
+          onClose={() => setPublicLinkUrl(null)}
         />
       )}
 
@@ -534,7 +543,10 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
                             <div className="px-3 py-2">
                               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">OPCIONES DE DIFUSIÓN</p>
                             </div>
-                            <button onClick={() => copyToClipboard(t.id)} className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg flex items-center gap-3">
+                            <button onClick={() => {
+                              setPublicLinkUrl(getShareUrl(t.id));
+                              setSharingId(null);
+                            }} className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg flex items-center gap-3">
                               <i className="fas fa-link text-slate-400 w-4"></i>
                               <span>Link de registro público</span>
                             </button>
@@ -545,7 +557,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
                               setSharingId(null);
                             }} className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-lg flex items-center gap-3">
                               <i className="fas fa-users text-slate-400 w-4"></i>
-                              <span>Links de validación ({t.registeredCount || 0})</span>
+                              <span>Links de validación ({users?.filter(u => u.trainingId === t.id && u.validation_link).length || 0})</span>
                             </button>
                           </div>
                         )}

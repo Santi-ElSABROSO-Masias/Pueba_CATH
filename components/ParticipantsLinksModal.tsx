@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { EventUser } from '../types';
 
 interface ParticipantsLinksModalProps {
@@ -7,11 +7,13 @@ interface ParticipantsLinksModalProps {
 }
 
 export const ParticipantsLinksModal: React.FC<ParticipantsLinksModalProps> = ({ participants, onClose }) => {
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const copyValidationLink = async (participant: EventUser) => {
     if (participant.validation_link) {
       await navigator.clipboard.writeText(participant.validation_link);
-      alert(`✅ Link de ${participant.name} copiado`);
+      setCopiedId(participant.id);
+      setTimeout(() => setCopiedId(null), 2000);
     } else {
       alert('Este participante aún no tiene un link de validación generado.');
     }
@@ -52,9 +54,9 @@ export const ParticipantsLinksModal: React.FC<ParticipantsLinksModalProps> = ({ 
                   <td className="px-6 py-4 whitespace-nowrap text-right">
                     <button 
                       onClick={() => copyValidationLink(p)}
-                      className="bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-bold py-2 px-3 rounded-lg transition-colors"
+                      className={`text-xs font-bold py-2 px-3 rounded-lg transition-colors w-[110px] text-center ${copiedId === p.id ? 'bg-emerald-100 text-emerald-700 pointer-events-none' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
                     >
-                      📋 Copiar link
+                      {copiedId === p.id ? '¡Copiado!' : '📋 Copiar link'}
                     </button>
                   </td>
                 </tr>
