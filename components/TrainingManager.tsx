@@ -50,20 +50,26 @@ const TITLE_COLORS: Record<string, string> = {
 };
 
 const getTrainingColor = (t: Training) => {
-  if (!t.title) return t.color || '#0EA5E9';
-  
-  // Try mapping explicitly by title first if color is default or empty
-  if (!t.color || t.color === '#0EA5E9' || t.color === '#2d6a4f' || t.color === '') {
+  let finalColor = '#0EA5E9';
+
+  if (!t.title) {
+    finalColor = t.color || '#0EA5E9';
+  } else if (!t.color || t.color === '#0EA5E9' || t.color === '#2d6a4f' || t.color === '') {
     const normalize = (str: string) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const normalizedTitle = normalize(t.title);
     
     for (const [key, color] of Object.entries(TITLE_COLORS)) {
       if (normalizedTitle.includes(normalize(key))) {
-         return color;
+         finalColor = color;
+         break;
       }
     }
+  } else if (t.color && t.color !== '') {
+    finalColor = t.color;
   }
-  return t.color && t.color !== '' ? t.color : '#0EA5E9';
+
+  console.log(`[getTrainingColor Temp] Título: "${t.title}" | DB Color: "${t.color}" | Asignado: "${finalColor}"`);
+  return finalColor;
 };
 
 export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, users, onCreateTraining, onUpdateTraining, onDeleteTraining, onSelectTraining, userRole, onScheduleGenerated }) => {
