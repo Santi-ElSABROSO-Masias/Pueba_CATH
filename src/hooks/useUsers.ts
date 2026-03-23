@@ -2,6 +2,43 @@ import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from '../api/client';
 import { EventUser, UserStatus } from '../../types';
 
+// Mapea del camelCase (frontend) a snake_case (Backend endpoint /registrations)
+export const mapUserToBackend = (data: Partial<EventUser>) => ({
+    training_id: data.trainingId,
+    full_name: data.name,
+    dni: data.dni,
+    email: data.email,
+    phone: data.phone,
+    organization: data.organization,
+    area: data.area || undefined,
+    role: data.role || undefined,
+    brevete: data.brevete || undefined,
+    // customAnswers y photo se ignorarán si el esquema no los declara, o se deben tratar aparte
+});
+
+// Mapea back a Frontend
+export const mapUserFromBackend = (raw: any): EventUser => ({
+    id: raw.id,
+    trainingId: raw.training_id || raw.trainingId,
+    name: raw.full_name || raw.name,
+    email: raw.email,
+    phone: raw.phone || '',
+    dni: raw.dni || '',
+    organization: raw.organization || '',
+    area: raw.area || '',
+    role: raw.role || '',
+    brevete: raw.brevete,
+    status: raw.status as UserStatus || UserStatus.REGISTERED,
+    meetingLink: raw.meeting_link,
+    attended: raw.attended || false,
+    registeredAt: raw.created_at || raw.registeredAt || new Date().toISOString(),
+    identity_validated: raw.identity_validated || false,
+    validation_link: raw.validation_link || '',
+    score: raw.score,
+    certificateUrl: raw.certificate_url,
+    dniPhoto: raw.dni_photo || raw.dniPhoto,
+});
+
 export const useUsers = () => {
     const [users, setUsers] = useState<EventUser[]>([]);
     const [loading, setLoading] = useState(true);
@@ -13,7 +50,8 @@ export const useUsers = () => {
             // Endpoint to list registrations and the associated users
             const response = await apiClient.get('/registrations');
             if (response.data.success) {
-                setUsers(response.data.data);
+                const mapped = (response.data.data || []).map(mapUserFromBackend);
+                setUsers(mapped);
                 setError(null);
             }
         } catch (err: any) {
@@ -30,10 +68,12 @@ export const useUsers = () => {
 
     const registerUser = async (userData: Partial<EventUser>) => {
         try {
-            const response = await apiClient.post('/registrations', userData);
+            const backendData = mapUserToBackend(userData);
+            const response = await apiClient.post('/registrations', backendData);
             if (response.data.success) {
-                setUsers(prev => [response.data.data, ...prev]);
-                return response.data.data;
+                const mapped = mapUserFromBackend(response.data.data);
+                setUsers(prev => [mapped, ...prev]);
+                return mapped;
             }
         } catch (err: any) {
             throw new Error(err.response?.data?.message || 'Error al registrar al trabajador');
