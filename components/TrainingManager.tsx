@@ -121,7 +121,8 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
   const handleSave = async () => {
     // Validaciones de fecha
     if (formData.registration_deadline) {
-      if (new Date(formData.registration_deadline) >= new Date(formData.date)) {
+      // Se añade T00:00:00 para forzar parser en Zona Horaria Local al igual que datetime-local
+      if (new Date(formData.registration_deadline) >= new Date(formData.date + 'T00:00:00')) {
         alert("La fecha límite debe ser anterior a la fecha del curso");
         return;
       }
