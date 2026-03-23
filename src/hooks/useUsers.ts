@@ -76,7 +76,13 @@ export const useUsers = () => {
                 return mapped;
             }
         } catch (err: any) {
-            throw new Error(err.response?.data?.message || 'Error al registrar al trabajador');
+            let errorMsg = err.response?.data?.message || 'Error al registrar al trabajador';
+            if (err.response?.data?.errors) {
+                const zodIssues = err.response.data.errors.map((e: any) => `${e.field}: ${e.message}`).join(', ');
+                errorMsg = `Error de validación: ${zodIssues}`;
+                console.error('Zod Error Details:', err.response.data.errors);
+            }
+            throw new Error(errorMsg);
         }
     };
 
