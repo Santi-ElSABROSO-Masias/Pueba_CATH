@@ -28,8 +28,8 @@ export const mapTraining = (raw: any): Training => {
     schedule: raw.schedule || '',
     group: raw.group_number || raw.group || '',
     companyId: raw.company_id ?? raw.companyId ?? null,
-    registration_deadline: raw.registration_deadline ? new Date(raw.registration_deadline).toISOString().slice(0, 16) : '',
-    deadline_extended_at: raw.deadline_extended_at ? new Date(raw.deadline_extended_at).toISOString().slice(0, 16) : undefined,
+    registration_deadline: raw.registration_deadline ? String(raw.registration_deadline).slice(0, 16) : '',
+    deadline_extended_at: raw.deadline_extended_at ? String(raw.deadline_extended_at).slice(0, 16) : undefined,
     deadline_extended_by: raw.deadline_extended_by,
     deadline_extension_reason: raw.deadline_extension_reason,
     monthly_schedule_id: raw.monthly_schedule_id,
@@ -68,15 +68,11 @@ export const mapToBackend = (data: any) => {
         if (match) groupNumber = parseInt(match[1]);
     }
 
-    // Construir fecha ISO para start_date
-    const startDate = data.date
-        ? new Date(data.date + 'T00:00:00').toISOString().slice(0, 16)
-        : undefined;
+    // Construir fecha string ISO pura para start_date evitando desfasaje UTC
+    const startDate = data.date ? `${data.date}T00:00` : undefined;
 
-    // Construir fecha ISO para registration_deadline
-    const deadline = data.registration_deadline
-        ? new Date(data.registration_deadline).toISOString().slice(0, 16)
-        : undefined;
+    // Construir fecha pura para registration_deadline (ya viene de datetime-local limitando a yyyy-MM-ddThh:mm)
+    const deadline = data.registration_deadline ? String(data.registration_deadline).slice(0, 16) : undefined;
 
     const result: any = {
         title: data.title,
@@ -95,6 +91,7 @@ export const mapToBackend = (data: any) => {
         is_published: data.isPublished ?? false,
         company_id: data.companyId || undefined,
         custom_questions: data.customQuestions || [],
+        schedule: data.schedule || undefined,
     };
 
     // Limpiar undefined values para no enviar campos vacíos
