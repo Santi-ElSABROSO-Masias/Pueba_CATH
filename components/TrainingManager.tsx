@@ -40,6 +40,26 @@ const PREDEFINED_SCHEDULES = [
   '18:00 - 22:00'
 ];
 
+const TITLE_COLORS: Record<string, string> = {
+  'Inducción Básica de Seguridad': '#22C55E', // verde
+  'Manejo Defensivo': '#F97316', // naranja
+  'Trabajos en Altura': '#EF4444', // rojo
+  'Espacios Confinados': '#8B5CF6', // morado
+  'Aislamiento y Bloqueo': '#3B82F6', // azul
+};
+
+const getTrainingColor = (t: Training) => {
+  // Try mapping explicitly by title first if color is default or empty
+  if (!t.color || t.color === '#0EA5E9' || t.color === '#2d6a4f') {
+    for (const [key, color] of Object.entries(TITLE_COLORS)) {
+      if (t.title.toLowerCase().includes(key.toLowerCase())) {
+         return color;
+      }
+    }
+  }
+  return t.color || '#0EA5E9';
+};
+
 export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, users, onCreateTraining, onUpdateTraining, onDeleteTraining, onSelectTraining, userRole, onScheduleGenerated }) => {
   const safeTrainings = Array.isArray(trainings) ? trainings : [];
 
@@ -502,10 +522,10 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
               key={t.id}
               className="group relative bg-white rounded-2xl border border-slate-200 shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 flex flex-col h-full overflow-hidden"
             >
-              {/* Accent Line (Lateral izquierda suave) */}
+              {/* Accent Line (Lateral izquierda completa) */}
               <div
-                className="absolute left-0 top-6 bottom-6 w-1 rounded-r-full opacity-80"
-                style={{ backgroundColor: t.color }}
+                className="absolute left-0 top-0 bottom-0 w-2 opacity-90"
+                style={{ backgroundColor: getTrainingColor(t) }}
               ></div>
 
               <div className="p-6 pl-7 flex flex-col h-full">
@@ -566,8 +586,8 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
                 </div>
 
                 {/* Footer Actions */}
-                <div className="mt-auto pt-2 flex items-center justify-between">
-                  <div className="flex items-center gap-1">
+                <div className="mt-auto pt-4 flex flex-col gap-3">
+                  <div className="flex items-center gap-1 flex-wrap">
                     {/* Share Button con Popover simple */}
                     {!isAdminContratista && (
                       <div className="relative">
@@ -654,12 +674,14 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
                     )}
                   </div>
 
+                  {/* Fila Independiente: Botón de Participantes */}
                   <button
                     onClick={() => onSelectTraining(t.id)}
-                    className="text-catalina-green text-xs font-medium hover:text-catalina-forest-green hover:bg-catalina-green/5 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                    className="w-full justify-center bg-slate-50 text-catalina-green text-[13px] font-bold hover:bg-catalina-green hover:text-white py-2.5 rounded-xl transition-all flex items-center gap-2 border border-slate-100 shadow-sm"
                   >
-                    Participantes
-                    <i className="fas fa-arrow-right text-[10px]"></i>
+                    <i className="fas fa-users text-xs"></i>
+                    Ver Participantes
+                    <i className="fas fa-arrow-right text-[10px] ml-auto"></i>
                   </button>
                 </div>
               </div>
