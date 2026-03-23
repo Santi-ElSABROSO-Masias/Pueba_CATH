@@ -41,23 +41,29 @@ const PREDEFINED_SCHEDULES = [
 ];
 
 const TITLE_COLORS: Record<string, string> = {
-  'Inducción Básica de Seguridad': '#22C55E', // verde
-  'Manejo Defensivo': '#F97316', // naranja
-  'Trabajos en Altura': '#EF4444', // rojo
-  'Espacios Confinados': '#8B5CF6', // morado
-  'Aislamiento y Bloqueo': '#3B82F6', // azul
+  'induccion': '#22C55E', // verde
+  'defensivo': '#F97316', // naranja
+  'altura': '#EF4444', // rojo
+  'confinad': '#8B5CF6', // morado
+  'aislamiento': '#3B82F6', // azul
+  'bloqueo': '#3B82F6', // azul
 };
 
 const getTrainingColor = (t: Training) => {
+  if (!t.title) return t.color || '#0EA5E9';
+  
   // Try mapping explicitly by title first if color is default or empty
-  if (!t.color || t.color === '#0EA5E9' || t.color === '#2d6a4f') {
+  if (!t.color || t.color === '#0EA5E9' || t.color === '#2d6a4f' || t.color === '') {
+    const normalize = (str: string) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const normalizedTitle = normalize(t.title);
+    
     for (const [key, color] of Object.entries(TITLE_COLORS)) {
-      if (t.title.toLowerCase().includes(key.toLowerCase())) {
+      if (normalizedTitle.includes(normalize(key))) {
          return color;
       }
     }
   }
-  return t.color || '#0EA5E9';
+  return t.color && t.color !== '' ? t.color : '#0EA5E9';
 };
 
 export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, users, onCreateTraining, onUpdateTraining, onDeleteTraining, onSelectTraining, userRole, onScheduleGenerated }) => {
@@ -524,7 +530,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
             >
               {/* Accent Line (Lateral izquierda completa) */}
               <div
-                className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl"
+                className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl z-10"
                 style={{ backgroundColor: getTrainingColor(t) }}
               ></div>
 
