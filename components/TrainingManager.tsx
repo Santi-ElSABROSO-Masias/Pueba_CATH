@@ -54,18 +54,24 @@ const getTrainingColor = (t: Training) => {
 
   if (!t.title) {
     finalColor = t.color || '#0EA5E9';
-  } else if (!t.color || t.color === '#0EA5E9' || t.color === '#2d6a4f' || t.color === '') {
-    const normalize = (str: string) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const normalizedTitle = normalize(t.title);
-    
-    for (const [key, color] of Object.entries(TITLE_COLORS)) {
-      if (normalizedTitle.includes(normalize(key))) {
-         finalColor = color;
-         break;
+  } else {
+    // Lista de colores fallback o default de la BDD que deben ser sobreescritos por el título
+    const defaultColors = ['#0ea5e9', '#2d6a4f', '#64748b', ''];
+    const dbColor = t.color ? t.color.trim().toLowerCase() : '';
+
+    if (!dbColor || defaultColors.includes(dbColor)) {
+      const normalize = (str: string) => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const normalizedTitle = normalize(t.title);
+      
+      for (const [key, color] of Object.entries(TITLE_COLORS)) {
+        if (normalizedTitle.includes(normalize(key))) {
+           finalColor = color;
+           break;
+        }
       }
+    } else {
+      finalColor = t.color!;
     }
-  } else if (t.color && t.color !== '') {
-    finalColor = t.color;
   }
 
   console.log(`[getTrainingColor Temp] Título: "${t.title}" | DB Color: "${t.color}" | Asignado: "${finalColor}"`);
