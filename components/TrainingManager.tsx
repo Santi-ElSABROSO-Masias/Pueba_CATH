@@ -524,7 +524,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
             >
               {/* Accent Line (Lateral izquierda completa) */}
               <div
-                className="absolute left-0 top-0 bottom-0 w-2 opacity-90"
+                className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl"
                 style={{ backgroundColor: getTrainingColor(t) }}
               ></div>
 
