@@ -587,7 +587,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
                   </div>
                   <div className="flex items-center gap-2 text-[13px] text-slate-600">
                     <i className="fas fa-users text-slate-400 w-4"></i>
-                    <span>{t.maxCapacity} cupos</span>
+                    <span>{t.registeredCount || 0}/{t.maxCapacity} cupos</span>
                   </div>
                   {t.duration && (
                     <div className="flex items-center gap-2 text-[13px] text-slate-600">

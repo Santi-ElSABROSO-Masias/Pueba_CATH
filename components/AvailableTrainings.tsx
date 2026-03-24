@@ -138,7 +138,7 @@ export const AvailableTrainings: React.FC<AvailableTrainingsProps> = ({ training
                  </div>
                  <div className="flex items-center gap-2 text-sm text-catalina-grey">
                                          <i className="fas fa-users text-catalina-green w-4"></i>
-                    <span>{t.maxCapacity} cupos</span>
+                    <span>Disponibles: {Math.max(0, t.maxCapacity - (t.registeredCount || 0))} de {t.maxCapacity}</span>
                  </div>
                  {t.duration && (
                                       <div className="flex items-center gap-2 text-sm text-catalina-grey">
@@ -155,13 +155,24 @@ export const AvailableTrainings: React.FC<AvailableTrainingsProps> = ({ training
               </div>
 
               <div className="mt-auto pt-2">
-                <button 
-                  onClick={() => onSelectTraining(t.id)}
-                                    className="w-full bg-catalina-green text-white text-sm font-bold py-2.5 rounded-xl hover:bg-catalina-forest-green shadow-lg shadow-catalina-green/20 transition-all flex items-center justify-center gap-2"
-                >
-                  <i className="fas fa-user-plus"></i>
-                  Inscribir Personal
-                </button>
+                {(() => {
+                  const availableSpots = Math.max(0, t.maxCapacity - (t.registeredCount || 0));
+                  const isFull = availableSpots <= 0;
+                  return (
+                    <button 
+                      onClick={() => !isFull && onSelectTraining(t.id)}
+                      disabled={isFull}
+                      className={`w-full text-white text-sm font-bold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 ${
+                        isFull 
+                          ? 'bg-gray-400 cursor-not-allowed opacity-80' 
+                          : 'bg-catalina-green hover:bg-catalina-forest-green shadow-lg shadow-catalina-green/20'
+                      }`}
+                    >
+                      <i className={isFull ? "fas fa-lock" : "fas fa-user-plus"}></i>
+                      {isFull ? 'Cupos agotados' : 'Inscribir Personal'}
+                    </button>
+                  );
+                })()}
               </div>
             </div>
           </div>

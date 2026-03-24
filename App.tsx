@@ -372,6 +372,12 @@ const AppContent: React.FC = () => {
 
       const training = trainings.find(t => t.id === trainingId);
       if (training) {
+        setTrainings(prev => prev.map(t => 
+          t.id === trainingId 
+            ? { ...t, registeredCount: (t.registeredCount || 0) + 1 } 
+            : t
+        ));
+
         const regNotif = createRegistrationConfirmedNotification(training, userData.name || '', userData.email || '');
         setNotifications(prev => [...prev, regNotif]);
       }
