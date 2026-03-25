@@ -74,7 +74,6 @@ const getTrainingColor = (t: Training) => {
     }
   }
 
-  console.log(`[getTrainingColor Temp] Título: "${t.title}" | DB Color: "${t.color}" | Asignado: "${finalColor}"`);
   return finalColor;
 };
 
@@ -106,6 +105,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
     meetingLink: ''
   });
   const [tempQuestion, setTempQuestion] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const isSuperSuperAdmin = userRole === 'super_super_admin';
   const isAdminContratista = userRole === 'admin_contratista';
@@ -126,6 +126,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
       group: 'Grupo 1',
       meetingLink: ''
     });
+    setErrors({});
     setEditingId(null);
   };
 
@@ -158,17 +159,30 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
   };
 
   const handleSave = async () => {
+    const newErrors: Record<string, string> = {};
+
+    // Validar Duración
+    if (!formData.duration || !formData.duration.trim()) {
+      newErrors.duration = 'El campo Duración es requerido';
+    }
+
     // Validaciones de fecha
     if (formData.registration_deadline) {
       // Se añade T00:00:00 para forzar parser en Zona Horaria Local al igual que datetime-local
       if (new Date(formData.registration_deadline) >= new Date(formData.date + 'T00:00:00')) {
-        alert("La fecha límite debe ser anterior a la fecha del curso");
-        return;
+        newErrors.date = "La fecha límite debe ser anterior a la fecha del curso";
       }
     } else {
-      alert("La fecha límite de inscripción es obligatoria");
+      newErrors.deadline = "La fecha límite de inscripción es obligatoria";
+    }
+
+    // Si hay errores, mostrarlos y no continuar
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+
+    setErrors({});
 
     try {
       if (editingId === 'new') {
@@ -461,10 +475,16 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
                   <input
                     type="text"
                     placeholder="Ej. 4 horas"
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm outline-none"
+                    className={`w-full px-4 py-2.5 rounded-lg border text-sm outline-none ${errors.duration ? 'border-red-500' : 'border-slate-200'}`}
                     value={formData.duration}
-                    onChange={e => setFormData({ ...formData, duration: e.target.value })}
+                    onChange={e => {
+                      setFormData({ ...formData, duration: e.target.value });
+                      if (errors.duration && e.target.value.trim()) {
+                        setErrors(prev => { const newErrs = { ...prev }; delete newErrs.duration; return newErrs; });
+                      }
+                    }}
                   />
+                  {errors.duration && <p className="text-xs text-red-500 mt-1">{errors.duration}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Horario</label>
@@ -532,7 +552,7 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
             </button>
             <button
               onClick={handleSave}
-              disabled={!formData.title || !formData.date}
+              disabled={!formData.title || !formData.date || !formData.duration}
               className="bg-catalina-green text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-catalina-forest-green disabled:opacity-50 transition-all shadow-sm"
             >
               Guardar Cambios
