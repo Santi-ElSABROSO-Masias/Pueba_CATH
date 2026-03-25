@@ -195,7 +195,7 @@ export interface SystemUser {
 
 // --- NOTIFICACIONES ---
 
-export type NotificationType = 'reminder_7d' | 'deadline_warning' | 'registration_closed' | 'consolidation_ready' | 'course_opened' | 'registration_confirmed';
+export type NotificationType = 'reminder_7d' | 'deadline_warning' | 'registration_closed' | 'consolidation_ready' | 'course_opened' | 'registration_confirmed' | 'new_training_published' | 'critical_capacity_alert' | 'duplicated_worker_alert';
 export type NotificationStatus = 'pending' | 'sent' | 'failed';
 
 export interface Notification {
@@ -209,6 +209,7 @@ export interface Notification {
   status: NotificationStatus;
   errorMessage?: string;
   contentPreview?: string; // Para mostrar en el panel qué se enviará
+  read?: boolean; // Para ocultar del contador de alertas de campana
 }
 
 // Evaluation Module Types

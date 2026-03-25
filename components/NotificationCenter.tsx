@@ -5,9 +5,10 @@ import { getEmailTemplate } from '../utils/notificationLogic';
 
 interface NotificationCenterProps {
   notifications: Notification[];
+  onMarkAsRead?: (id: string) => void;
 }
 
-export const NotificationCenter: React.FC<NotificationCenterProps> = ({ notifications }) => {
+export const NotificationCenter: React.FC<NotificationCenterProps> = ({ notifications, onMarkAsRead }) => {
   const [filter, setFilter] = useState<NotificationStatus | 'ALL'>('ALL');
   const [selectedNotif, setSelectedNotif] = useState<Notification | null>(null);
 
@@ -34,6 +35,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ notifica
       case 'consolidation_ready': return { label: 'Consolidado Final', icon: 'fa-file-excel', color: 'text-catalina-forest-green' };
       case 'course_opened': return { label: 'Apertura de Curso', icon: 'fa-bullhorn', color: 'text-blue-500' };
       case 'registration_confirmed': return { label: 'Registro Confirmado', icon: 'fa-user-check', color: 'text-emerald-500' };
+      case 'new_training_published': return { label: 'Nueva Capacitación', icon: 'fa-book', color: 'text-emerald-500' };
+      case 'critical_capacity_alert': return { label: 'Cupos Críticos', icon: 'fa-exclamation-triangle', color: 'text-orange-500' };
+      case 'duplicated_worker_alert': return { label: 'Alerta Duplicidad', icon: 'fa-user', color: 'text-yellow-500' };
     }
   };
 
@@ -88,11 +92,18 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ notifica
                   return (
                     <tr
                       key={n.id}
-                      onClick={() => setSelectedNotif(n)}
-                      className={`hover:bg-catalina-dusty-green/10 cursor-pointer transition-colors ${selectedNotif?.id === n.id ? 'bg-catalina-dusty-green/20' : ''}`}
+                      onClick={() => {
+                        setSelectedNotif(n);
+                        if (!n.read && onMarkAsRead) {
+                          onMarkAsRead(n.id);
+                        }
+                      }}
+                      className={`hover:bg-catalina-dusty-green/10 cursor-pointer transition-colors ${selectedNotif?.id === n.id ? 'bg-catalina-dusty-green/20' : ''} ${!n.read ? 'font-black' : ''}`}
                     >
                       <td className="px-6 py-4">
-                        <div className="font-bold text-catalina-forest-green text-sm">{n.trainingTitle}</div>
+                        <div className={`text-sm ${!n.read ? 'text-catalina-highlight-orange font-black' : 'text-catalina-forest-green font-bold'}`}>
+                          {n.trainingTitle}
+                        </div>
                         <div className={`text-xs flex items-center gap-1.5 mt-1 font-medium ${typeInfo.color}`}>
                           <i className={`fas ${typeInfo.icon}`}></i> {typeInfo.label}
                         </div>
@@ -158,11 +169,17 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ notifica
                   <div
                     className="bg-catalina-grey/10 p-3 rounded border border-catalina-grey/20 text-sm text-catalina-grey"
                     dangerouslySetInnerHTML={{
-                      __html: getEmailTemplate(selectedNotif.type, {
-                        title: selectedNotif.trainingTitle,
-                        date: '2025-10-15',
-                        maxCapacity: 30
-                      } as any)
+                      __html: getEmailTemplate(
+                        selectedNotif.type, 
+                        {
+                          title: selectedNotif.trainingTitle,
+                          date: '2025-10-15',
+                          maxCapacity: 30,
+                          registeredCount: 28 
+                        } as any, 
+                        'Supervisor', 
+                        selectedNotif.contentPreview // Usaremos contentPreview como data inyectable temporal si es necesario
+                      )
                     }}
                   />
                 </div>

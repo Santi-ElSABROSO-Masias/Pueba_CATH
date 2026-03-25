@@ -43,3 +43,24 @@ export const enviarCredencialesPorEmail = async (email: string, nombre: string, 
         // Si hay error en el correo no detenemos la petición HTTP del usuario, solo lo logeamos
     }
 };
+
+export const enviarNotificacionGeneral = async (email: string, subject: string, htmlHtml: string) => {
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASS) {
+        console.warn(`[MAILER] Faltan variables GMAIL_USER o GMAIL_APP_PASS en .env. No se envía alerta a ${email}`);
+        return;
+    }
+
+    try {
+        const mailOptions = {
+            from: `"Campus CATH Notificaciones" <${process.env.GMAIL_USER}>`,
+            to: email,
+            subject: subject,
+            html: htmlHtml
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+        console.log(`[MAILER] Alerta enviada exitosamente a ${email} (MessageId: ${info.messageId})`);
+    } catch (error) {
+        console.error(`[MAILER] Error enviando alerta a ${email}:`, error);
+    }
+};

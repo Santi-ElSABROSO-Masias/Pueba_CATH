@@ -476,6 +476,7 @@ const AppContent: React.FC = () => {
       onTabChange={setActiveTab}
       user={currentUser}
       onLogout={handleLogout}
+      unreadCount={notifications.filter(n => (n.status === 'pending' || !n.read)).length}
     >
       <div className="animate-fadeIn">
         {activeTab === 'trainings' && (
@@ -530,7 +531,10 @@ const AppContent: React.FC = () => {
           />
         )}
         {activeTab === 'notifications' && (
-          <NotificationCenter notifications={notifications} />
+          <NotificationCenter 
+            notifications={notifications} 
+            onMarkAsRead={(id) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))}
+          />
         )}
 
         {/* Nueva Pestaña solo accesible si es super_super_admin */}

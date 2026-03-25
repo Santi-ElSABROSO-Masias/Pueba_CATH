@@ -9,9 +9,10 @@ interface LayoutProps {
   onTabChange: (tab: 'trainings' | 'dashboard' | 'public' | 'calendar' | 'notifications' | 'users' | 'evaluaciones' | 'public_exam' | 'induccion_temporal' | 'licencias_manejo' | 'acreditacion_vehicular' | 'alto_riesgo') => void;
   user: SystemUser | null;
   onLogout: () => void;
+  unreadCount?: number;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, user, onLogout }) => {
+export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, user, onLogout, unreadCount = 0 }) => {
   const { can, isAdminContratista, isSuperAdmin, isSuperSuperAdmin } = useAuth();
 
   const isCapacitacionesActive = activeTab === 'calendar' || activeTab === 'trainings' || activeTab === 'dashboard' || activeTab === 'evaluaciones';
@@ -263,7 +264,11 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange
             >
               <i className="fas fa-bell w-5 shrink-0"></i>
               <span className="font-medium text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">Notificaciones</span>
-              <span className="ml-auto bg-catalina-highlight-orange text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">AUTO</span>
+              {(unreadCount > 0) ? (
+                <span className="ml-auto bg-catalina-highlight-orange text-white text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 animate-pulse">{unreadCount}</span>
+              ) : (
+                <span className="ml-auto bg-catalina-grey/40 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-md shrink-0">AUTO</span>
+              )}
             </button>
           </li>
 
