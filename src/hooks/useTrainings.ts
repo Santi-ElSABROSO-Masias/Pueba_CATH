@@ -74,6 +74,17 @@ export const mapToBackend = (data: any) => {
     // Construir fecha pura para registration_deadline (ya viene de datetime-local limitando a yyyy-MM-ddThh:mm)
     const deadline = data.registration_deadline ? String(data.registration_deadline).slice(0, 16) : undefined;
 
+    // Validar que meeting_link sea URL válida
+    let meetingLink: string | undefined;
+    if (data.meetingLink && data.meetingLink.trim()) {
+      try {
+        new URL(data.meetingLink.trim());
+        meetingLink = data.meetingLink.trim();
+      } catch {
+        meetingLink = undefined;
+      }
+    }
+
     const result: any = {
         title: data.title,
         description: data.description || '',
@@ -85,7 +96,7 @@ export const mapToBackend = (data: any) => {
         color: data.color,
         group_number: groupNumber,
         registration_deadline: deadline,
-        meeting_link: data.meetingLink || undefined,
+        meeting_link: meetingLink,
         status: 'active',
         is_active: true,
         is_published: data.isPublished ?? false,
