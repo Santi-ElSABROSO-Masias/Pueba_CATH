@@ -196,6 +196,17 @@ const AppContent: React.FC = () => {
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
+  const notificationsByRole = useMemo(() => {
+    if (!currentUser) return [];
+    const roleTypeMap: Record<string, Notification['type'][]> = {
+      super_super_admin: ['critical_capacity_alert'],
+      admin_contratista: ['new_training_published'],
+      super_admin: ['duplicated_worker_alert'],
+    };
+    const allowedTypes = roleTypeMap[currentUser.role] || [];
+    return notifications.filter(n => allowedTypes.includes(n.type));
+  }, [notifications, currentUser]);
+
   const examsRef = useRef(exams);
   const usersRef = useRef(users);
   const trainingsRef = useRef(trainings);
@@ -476,7 +487,7 @@ const AppContent: React.FC = () => {
       onTabChange={setActiveTab}
       user={currentUser}
       onLogout={handleLogout}
-      unreadCount={notifications.filter(n => (n.status === 'pending' || !n.read)).length}
+      unreadCount={notificationsByRole.filter(n => n.status === 'pending' || n.status === 'unread' || !n.read).length}
     >
       <div className="animate-fadeIn">
         {activeTab === 'trainings' && (
@@ -532,7 +543,7 @@ const AppContent: React.FC = () => {
         )}
         {activeTab === 'notifications' && (
           <NotificationCenter 
-            notifications={notifications} 
+            notifications={notificationsByRole} 
             onMarkAsRead={(id) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))}
           />
         )}

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Notification, NotificationType, NotificationStatus } from '../types';
 import { getEmailTemplate } from '../utils/notificationLogic';
+import { useAuth } from '../AuthContext';
 
 interface NotificationCenterProps {
   notifications: Notification[];
@@ -9,10 +10,19 @@ interface NotificationCenterProps {
 }
 
 export const NotificationCenter: React.FC<NotificationCenterProps> = ({ notifications, onMarkAsRead }) => {
+  const { user } = useAuth();
   const [filter, setFilter] = useState<NotificationStatus | 'ALL'>('ALL');
   const [selectedNotif, setSelectedNotif] = useState<Notification | null>(null);
 
-  const filtered = notifications.filter(n => filter === 'ALL' || n.status === filter);
+  const roleTypeMap: Record<string, NotificationType[]> = {
+    super_super_admin: ['critical_capacity_alert'], // Gerencia SSO
+    admin_contratista: ['new_training_published'],
+    super_admin: ['duplicated_worker_alert'], // Capacitador
+  };
+
+  const allowedTypes = user ? roleTypeMap[user.role] || [] : [];
+  const roleFiltered = notifications.filter(n => allowedTypes.includes(n.type));
+  const filtered = roleFiltered.filter(n => filter === 'ALL' || n.status === filter);
 
   // Ordenar por fecha programada
   const sorted = [...filtered].sort((a, b) =>
@@ -35,9 +45,9 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ notifica
       case 'consolidation_ready': return { label: 'Consolidado Final', icon: 'fa-file-excel', color: 'text-catalina-forest-green' };
       case 'course_opened': return { label: 'Apertura de Curso', icon: 'fa-bullhorn', color: 'text-blue-500' };
       case 'registration_confirmed': return { label: 'Registro Confirmado', icon: 'fa-user-check', color: 'text-emerald-500' };
-      case 'new_training_published': return { label: 'Nueva Capacitación', icon: 'fa-book', color: 'text-emerald-500' };
-      case 'critical_capacity_alert': return { label: 'Cupos Críticos', icon: 'fa-exclamation-triangle', color: 'text-orange-500' };
-      case 'duplicated_worker_alert': return { label: 'Alerta Duplicidad', icon: 'fa-user', color: 'text-yellow-500' };
+      case 'new_training_published': return { label: 'Nueva Capacitación', icon: '📚', color: 'text-emerald-500' };
+      case 'critical_capacity_alert': return { label: 'Cupos Críticos', icon: '⚠️', color: 'text-orange-500' };
+      case 'duplicated_worker_alert': return { label: 'Alerta Duplicidad', icon: '👤', color: 'text-yellow-500' };
     }
   };
 
@@ -93,7 +103,8 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ notifica
                     <tr
                       key={n.id}
                       onClick={() => {
-                        setSelectedNotif(n);
+                        const nextNotif = n.read ? n : { ...n, read: true };
+                        setSelectedNotif(nextNotif);
                         if (!n.read && onMarkAsRead) {
                           onMarkAsRead(n.id);
                         }
@@ -105,7 +116,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ notifica
                           {n.trainingTitle}
                         </div>
                         <div className={`text-xs flex items-center gap-1.5 mt-1 font-medium ${typeInfo.color}`}>
-                          <i className={`fas ${typeInfo.icon}`}></i> {typeInfo.label}
+                          <span>{typeInfo.icon}</span> {typeInfo.label}
                         </div>
                       </td>
                       <td className="px-6 py-4">

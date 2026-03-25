@@ -3,10 +3,11 @@ import { EventUser } from '../types';
 
 interface ParticipantsLinksModalProps {
   participants: EventUser[];
+  duplicateDnis?: Set<string>;
   onClose: () => void;
 }
 
-export const ParticipantsLinksModal: React.FC<ParticipantsLinksModalProps> = ({ participants, onClose }) => {
+export const ParticipantsLinksModal: React.FC<ParticipantsLinksModalProps> = ({ participants, duplicateDnis, onClose }) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const copyValidationLink = async (participant: EventUser) => {
@@ -41,7 +42,16 @@ export const ParticipantsLinksModal: React.FC<ParticipantsLinksModalProps> = ({ 
             <tbody className="divide-y divide-slate-100">
               {participants.map(p => (
                 <tr key={p.id}>
-                  <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-800">{p.name}</td>
+                  <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-800">
+                    <div className="flex flex-col gap-1">
+                      <span>{p.name}</span>
+                      {duplicateDnis?.has(p.dni) && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 bg-amber-100 px-2 py-1 rounded-full w-fit">
+                          <span>👤</span> Ya cursó esta capacitación
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-slate-500 font-mono text-sm">{p.dni}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-slate-500">{p.email}</td>
                   <td className="px-6 py-4 whitespace-nowrap">

@@ -80,6 +80,7 @@ const getTrainingColor = (t: Training) => {
 
 export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, users, onCreateTraining, onUpdateTraining, onDeleteTraining, onSelectTraining, userRole, onScheduleGenerated }) => {
   const safeTrainings = Array.isArray(trainings) ? trainings : [];
+  const allUsers = users || [];
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -271,6 +272,21 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
       {participantsForModal.length > 0 && (
         <ParticipantsLinksModal
           participants={participantsForModal}
+          duplicateDnis={new Set(
+            participantsForModal
+              .filter((participant) => {
+                const currentTraining = safeTrainings.find(t => t.id === participant.trainingId);
+                if (!currentTraining) return false;
+
+                // Consideramos "histórico" si existe el mismo DNI en cursos previos del mismo tipo.
+                return allUsers.some(other => {
+                  if (other.id === participant.id || other.dni !== participant.dni) return false;
+                  const otherTraining = safeTrainings.find(t => t.id === other.trainingId);
+                  return !!otherTraining && otherTraining.title === currentTraining.title;
+                });
+              })
+              .map(p => p.dni)
+          )}
           onClose={() => setParticipantsForModal([])}
         />
       )}

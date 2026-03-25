@@ -78,36 +78,28 @@ export const getEmailTemplate = (type: NotificationType, training: Training, sup
       return `
         <div style="${commonStyles}">
           <h3 style="color: #10b981;">📚 Nueva capacitación disponible: ${training.title}</h3>
-          <p>Hola ${supervisorName},</p>
-          <p>Se ha publicado un nuevo curso en el sistema.</p>
-          <ul>
-            <li>Fecha: <strong>${training.date}</strong></li>
-            <li>Cupos máximos ofertados: ${training.maxCapacity}</li>
-          </ul>
-          <p>Ingresa a la plataforma para inscribir a tus trabajadores lo antes posible.</p>
+          <p>Fecha: <strong>${training.date}</strong>, Cupos: <strong>${training.maxCapacity}</strong>.</p>
+          <p>Ingresa a la plataforma para inscribir a tus trabajadores.</p>
         </div>
       `;
 
     case 'critical_capacity_alert':
       return `
         <div style="${commonStyles}">
-          <h3 style="color: #ea580c;">⚠️ Alerta de cupos: La capacitación "${training.title}" tiene menos de 5 cupos disponibles</h3>
-          <p>Hola Gerencia,</p>
-          <p>La recepción de inscripciones para el curso "${training.title}" está por llegar a su límite máximo.</p>
-          <p>Actualmente quedan únicamente <strong>${Math.max(0, training.maxCapacity - (training.registeredCount || 0))} cupos</strong> disponibles.</p>
+          <h3 style="color: #ea580c;">⚠️ Alerta de cupos críticos</h3>
+          <p>Alerta: La capacitación <strong>${training.title}</strong> tiene menos de 5 cupos.</p>
+          <p>Quedan <strong>${Math.max(0, training.maxCapacity - (training.registeredCount || 0))}</strong> cupos disponibles.</p>
         </div>
       `;
 
     case 'duplicated_worker_alert':
-      const extr = extraData ? extraData.split('|') : ['[Nombre]', '[DNI]'];
-      const nomb = extr[0] || '[Nombre]';
-      const doc = extr[1] || '[DNI]';
+      const extr = extraData ? extraData.split('|') : ['[nombre]', '[dni]'];
+      const nomb = extr[0] || '[nombre]';
+      const doc = extr[1] || '[dni]';
       return `
         <div style="${commonStyles}">
           <h3 style="color: #eab308;">👤 Alerta: Trabajador Repetido</h3>
-          <p>Se ha detectado una anomalía durante una inscripción a su clase.</p>
-          <p>El trabajador <strong>${nomb}</strong> - DNI <strong>${doc}</strong> está intentando volver a cursar la capacitación "${training.title}" que ya tomó anteriormente.</p>
-          <p>Recomendamos verificar en el sistema este comportamiento.</p>
+          <p>El trabajador <strong>${nomb}</strong> - DNI <strong>${doc}</strong> ya cursó esta capacitación anteriormente.</p>
         </div>
       `;
 
