@@ -173,11 +173,12 @@ export const useTrainings = () => {
         try {
             const backendData = mapToBackend(updateData);
             const response = await apiClient.put(`/trainings/${id}`, backendData);
-            if (response.data.success) {
-                const mapped = mapTraining(response.data.data);
-                setTrainings(prev => prev.map(t => t.id === id ? mapped : t));
-                return mapped;
-            }
+            // Axios garantiza que si llegamos aquí fue 2xx, así que response.data es válido
+            // Maneja ambos casos: { success: true, data: {...} } o { id, name, ... }
+            const trainingData = response.data.data || response.data;
+            const mapped = mapTraining(trainingData);
+            setTrainings(prev => prev.map(t => t.id === id ? mapped : t));
+            return mapped;
         } catch (err: any) {
             throw new Error(err.response?.data?.message || 'Error al actualizar la capacitación');
         }
