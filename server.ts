@@ -1,5 +1,6 @@
 import 'dotenv/config'; // <-- Inyectamos dotenv tan pronto como sea posible
 import express from 'express';
+import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
@@ -13,6 +14,14 @@ import induccionRouter from './src/routes/induccionRoutes.js';
 async function startServer() {
   const app = express();
   const port = 3000;
+
+  // Configuración CORS
+  const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:3000';
+  app.use(cors({
+    origin: corsOrigin,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  }));
 
   app.use(express.json());
 

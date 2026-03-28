@@ -1,10 +1,17 @@
 import axios from 'axios';
 
-// @ts-ignore
-export const API_URL = import.meta.env.VITE_API_URL || 'https://plataforma-catalina-eventmanager-backend.c2awqr.easypanel.host/api';
+const API_URL = import.meta.env.VITE_API_URL;
+const CAMPUS_API_URL = import.meta.env.VITE_CAMPUS_API_URL;
 
-// @ts-ignore
-export const CAMPUS_API_URL = import.meta.env.VITE_CAMPUS_API_URL || 'https://plataforma-catalina-campus-cath-backend.c2awqr.easypanel.host/api';
+if (!API_URL) {
+  throw new Error('❌ VITE_API_URL no está definida en tiempo de ejecución.');
+}
+
+if (!CAMPUS_API_URL) {
+  throw new Error('❌ VITE_CAMPUS_API_URL no está definida en tiempo de ejecución.');
+}
+
+export { API_URL, CAMPUS_API_URL };
 
 // Cliente principal (eventmanager-backend)
 export const apiClient = axios.create({
