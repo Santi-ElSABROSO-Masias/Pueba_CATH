@@ -1,15 +1,20 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL;
-const CAMPUS_API_URL = import.meta.env.VITE_CAMPUS_API_URL;
+// Asegurar trailing slash: Axios elimina el path del baseURL (ej: /api)
+// cuando las rutas empiezan con "/". Con trailing slash lo trata correctamente.
+const rawApiUrl = import.meta.env.VITE_API_URL;
+const rawCampusApiUrl = import.meta.env.VITE_CAMPUS_API_URL;
 
-if (!API_URL) {
+if (!rawApiUrl) {
   throw new Error('❌ VITE_API_URL no está definida en tiempo de ejecución.');
 }
 
-if (!CAMPUS_API_URL) {
+if (!rawCampusApiUrl) {
   throw new Error('❌ VITE_CAMPUS_API_URL no está definida en tiempo de ejecución.');
 }
+
+const API_URL = rawApiUrl.endsWith('/') ? rawApiUrl : `${rawApiUrl}/`;
+const CAMPUS_API_URL = rawCampusApiUrl.endsWith('/') ? rawCampusApiUrl : `${rawCampusApiUrl}/`;
 
 export { API_URL, CAMPUS_API_URL };
 
