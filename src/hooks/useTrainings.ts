@@ -26,7 +26,7 @@ export const mapTraining = (raw: any): Training => {
     color: raw.color || '#0EA5E9',
     duration: raw.duration_hours ? `${raw.duration_hours} horas` : (raw.duration || ''),
     schedule: raw.schedule || '',
-    group: raw.group_number || raw.group || '',
+    group: raw.group_number != null ? `Grupo ${raw.group_number}` : (raw.group ? String(raw.group) : ''),
     companyId: raw.company_id ?? raw.companyId ?? null,
     registration_deadline: raw.registration_deadline ? String(raw.registration_deadline).slice(0, 16) : '',
     deadline_extended_at: raw.deadline_extended_at ? String(raw.deadline_extended_at).slice(0, 16) : undefined,
@@ -57,14 +57,14 @@ export const mapToBackend = (data: any) => {
     // Parsear duration a número de horas
     let durationHours: number | undefined;
     if (data.duration) {
-        const match = data.duration.match(/(\d+)/);
+        const match = String(data.duration).match(/(\d+)/);
         if (match) durationHours = parseInt(match[1]);
     }
 
     // Parsear group a número
     let groupNumber: number | undefined;
-    if (data.group) {
-        const match = data.group.match(/(\d+)/);
+    if (data.group != null && data.group !== '') {
+        const match = String(data.group).match(/(\d+)/);
         if (match) groupNumber = parseInt(match[1]);
     }
 
