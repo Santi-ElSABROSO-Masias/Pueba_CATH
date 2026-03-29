@@ -101,8 +101,8 @@ export const mapToBackend = (data: any) => {
         is_active: true,
         is_published: data.isPublished ?? false,
         company_id: data.companyId || undefined,
-        custom_questions: data.customQuestions || [],
-        schedule: data.schedule || undefined,
+        // NOTA: custom_questions y schedule no existen en el schema de Prisma
+        // para el modelo Training — omitirlos evita el error 400
     };
 
     // Limpiar undefined values para no enviar campos vacíos
