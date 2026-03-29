@@ -1,0 +1,13 @@
+// Módulo Capacitaciones - Exportaciones centralizadas
+export { DeadlineCountdown } from './components/DeadlineCountdown';
+export { PublicLinkModal } from './components/PublicLinkModal';
+export { DuplicateTrainingModal } from './components/DuplicateTrainingModal';
+export { ParticipantsLinksModal } from './components/ParticipantsLinksModal';
+export { EditTrainingModal } from './components/EditTrainingModal';
+export { ExtendDeadlineModal } from './components/ExtendDeadlineModal';
+export { CalendarView } from './components/CalendarView';
+export { AvailableTrainings } from './components/AvailableTrainings';
+export { MonthlyScheduleManager } from './components/MonthlyScheduleManager';
+export { ExcelUploader } from './components/ExcelUploader';
+export { IndividualWorkerForm } from './components/IndividualWorkerForm';
+export { TrainingManager } from './components/TrainingManager';
