@@ -1,17 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { apiClient } from '../../../api/client';
-import { EventUser, UserStatus } from '../../../../types';
+import { EventUser } from '../../../../types';
 
 type UserWithTraining = EventUser & { training_name: string };
+
+type FormErrors = {
+  dni_photo?: string;
+  selfie_photo?: string;
+  general?: string;
+};
 
 export function IdentityValidationPage() {
   const [token, setToken] = useState<string | null>(null);
   const [user, setUser] = useState<UserWithTraining | null>(null);
   const [loading, setLoading] = useState(true);
-  const [dniPhoto, setDniPhoto] = useState<File | null>(null);
+  
+  const [dniPhotoFile, setDniPhotoFile] = useState<File | null>(null);
   const [selfiePhoto, setSelfiePhoto] = useState<File | null>(null);
+  const [dniPhotoPreview, setDniPhotoPreview] = useState<string | null>(null);
+
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<FormErrors>({});
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
@@ -21,7 +30,7 @@ export function IdentityValidationPage() {
 
     async function loadUserDataByToken() {
       if (!tokenFromUrl) {
-        setError("Link inválido o expirado");
+        setErrors({ general: "Link inválido o expirado" });
         setLoading(false);
         return;
       }
@@ -30,10 +39,10 @@ export function IdentityValidationPage() {
         if (response.data.success) {
           setUser(response.data.data.user);
         } else {
-          setError("Link inválido o expirado");
+          setErrors({ general: "Link inválido o expirado" });
         }
       } catch (err: any) {
-        setError(err.response?.data?.message || "Error al cargar tus datos.");
+        setErrors({ general: err.response?.data?.message || "Error al cargar tus datos." });
       } finally {
         setLoading(false);
       }
@@ -42,10 +51,50 @@ export function IdentityValidationPage() {
     loadUserDataByToken();
   }, []);
 
+  const handleDniPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+          setErrors(prev => ({ ...prev, dni_photo: 'Solo se permiten imágenes JPG, PNG o WEBP' }));
+          e.target.value = '';
+          setDniPhotoPreview(null);
+          setDniPhotoFile(null);
+          return;
+      }
+
+      if (file.size < 100 * 1024) {
+          setErrors(prev => ({ ...prev, dni_photo: 'La imagen es muy pequeña. Sube una foto clara de tu DNI (mín. 100KB)' }));
+          e.target.value = '';
+          setDniPhotoPreview(null);
+          setDniPhotoFile(null);
+          return;
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+          setErrors(prev => ({ ...prev, dni_photo: 'La imagen es muy grande. Máximo 10MB' }));
+          e.target.value = '';
+          setDniPhotoPreview(null);
+          setDniPhotoFile(null);
+          return;
+      }
+
+      setErrors(prev => ({ ...prev, dni_photo: '' }));
+      setDniPhotoFile(file);
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+          setDniPhotoPreview(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+  };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setErrors({});
 
-    if (!dniPhoto || !selfiePhoto || !user) {
+    if (!dniPhotoFile || !selfiePhoto || !user) {
       alert("Debes subir ambas fotos");
       return;
     }
@@ -54,118 +103,98 @@ export function IdentityValidationPage() {
 
     try {
       const formData = new FormData();
-      formData.append('dniPhoto', dniPhoto);
+      formData.append('dniPhoto', dniPhotoFile);
       formData.append('selfiePhoto', selfiePhoto);
 
       const response = await apiClient.post(`/validation/${token}/upload-dni`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+        headers: { 'Content-Type': 'multipart/form-data' }
       });
 
       if (response.data.success) {
         setSuccess("¡Validación y documentación enviada exitosamente! Tu solicitud será revisada.");
       }
-    } catch (error: any) {
-      alert("Error al validar: " + (error.response?.data?.message || error.message));
+    } catch (err: any) {
+        const errorData = err.response?.data;
+        if (errorData?.field === 'dni_photo') {
+            setErrors(prev => ({ ...prev, dni_photo: errorData.message }));
+        } else {
+            setErrors(prev => ({...prev, general: errorData?.message || 'Error al enviar la validación' }));
+        }
     } finally {
       setSubmitting(false);
     }
   }
 
-  if (loading) {
-    return <div className="text-center p-10">Cargando...</div>;
-  }
-
-  if (error) {
-    return <div className="text-center p-10 text-red-600">{error}</div>;
-  }
-
-  if (success) {
-    return <div className="text-center p-10 text-emerald-600">{success}</div>;
-  }
-
-  if (!user) {
-    return <div className="text-center p-10">No se encontraron datos.</div>;
-  }
+  if (loading) return <div className="text-center p-10">Cargando...</div>;
+  if (errors.general) return <div className="text-center p-10 text-red-600">{errors.general}</div>;
+  if (success) return <div className="text-center p-10 text-emerald-600">{success}</div>;
+  if (!user) return <div className="text-center p-10">No se encontraron datos.</div>;
 
   return (
-    <div className="validation-page font-sans bg-slate-50 min-h-screen py-12">
-      <style>{`
-        .validation-page { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
-        .header { text-align: center; margin-bottom: 40px; }
-        .header h1 { font-size: 2rem; font-weight: bold; color: #1F2937; margin-bottom: 8px; }
-        .header p { color: #4B5563; }
-        .user-info-readonly { background: #F3F4F6; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #E5E7EB; }
-        .user-info-readonly h3 { margin-top: 0; margin-bottom: 12px; color: #374151; font-weight: 600; }
-        .user-info-readonly p { margin: 8px 0; color: #6B7280; }
-        .photo-section { margin-bottom: 30px; padding: 20px; border: 2px dashed #D1D5DB; border-radius: 8px; background: white; }
-        .photo-section h3 { margin-top: 0; color: #1F2937; font-weight: bold; }
-        .photo-section p { color: #6B7280; font-size: 0.9rem; margin-bottom: 1rem;}
-        .photo-section input[type="file"] { display: block; margin-top: 12px; padding: 12px; border: 1px solid #D1D5DB; border-radius: 6px; width: 100%; font-size: 0.9rem; }
-        .preview { margin-top: 16px; text-align: center; }
-        .preview img { max-width: 200px; max-height: 200px; border-radius: 8px; border: 2px solid #10B981; margin: 0 auto; }
-        .preview p { color: #10B981; font-weight: 600; margin-top: 8px; }
-        .submit-btn { width: 100%; padding: 16px; background: #3B82F6; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
-        .submit-btn:hover:not(:disabled) { background: #2563EB; }
-        .submit-btn:disabled { background: #9CA3AF; cursor: not-allowed; }
-      `}</style>
-      <div className="header">
-        <h1>Validación de Identidad</h1>
-        <p>Capacitación: <strong>{user.training_name}</strong></p>
-      </div>
-
-      <form onSubmit={handleSubmit}>
-        <div className="user-info-readonly">
-          <h3>Tus datos registrados:</h3>
-          <p><strong>Nombre:</strong> {user.name}</p>
-          <p><strong>DNI:</strong> {user.dni}</p>
-          <p><strong>Email:</strong> {user.email}</p>
-        </div>
-
-        <div className="photo-section">
-          <h3>1. Foto de tu DNI</h3>
-          <p>Toma una foto clara del frente de tu Documento Nacional de Identidad.</p>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setDniPhoto(e.target.files ? e.target.files[0] : null)}
-            required
-          />
-          {dniPhoto && (
-            <div className="preview">
-              <img src={URL.createObjectURL(dniPhoto)} alt="Preview DNI" />
-              <p>✅ DNI cargado</p>
+    <div className="font-sans bg-slate-50 min-h-screen py-12">
+        <div className="max-w-2xl mx-auto p-6 bg-white rounded-xl shadow-lg border border-slate-200">
+            <div className="text-center mb-8">
+                <h1 className="text-3xl font-bold text-slate-800">Validación de Identidad</h1>
+                <p className="text-slate-500">Capacitación: <strong>{user.training_name}</strong></p>
             </div>
-          )}
-        </div>
 
-        <div className="photo-section">
-          <h3>2. Selfie (foto de tu rostro)</h3>
-          <p>Tómate una foto clara de tu rostro para verificar tu identidad.</p>
-          <input
-            type="file"
-            accept="image/*"
-            capture="user"
-            onChange={(e) => setSelfiePhoto(e.target.files ? e.target.files[0] : null)}
-            required
-          />
-          {selfiePhoto && (
-            <div className="preview">
-              <img src={URL.createObjectURL(selfiePhoto)} alt="Preview Selfie" />
-              <p>✅ Selfie capturada</p>
-            </div>
-          )}
-        </div>
+            <form onSubmit={handleSubmit} className="space-y-8">
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                    <h3 className="font-semibold text-slate-800 mb-2">Tus datos registrados:</h3>
+                    <p className="text-sm text-slate-600"><strong>Nombre:</strong> {user.name}</p>
+                    <p className="text-sm text-slate-600"><strong>DNI:</strong> {user.dni}</p>
+                    <p className="text-sm text-slate-600"><strong>Email:</strong> {user.email}</p>
+                </div>
 
-        <button
-          type="submit"
-          disabled={!dniPhoto || !selfiePhoto || submitting}
-          className="submit-btn"
-        >
-          {submitting ? "Validando..." : "Enviar Validación"}
-        </button>
-      </form>
+                <div className="space-y-2">
+                    <label className="text-lg font-semibold text-slate-800">1. Foto de tu DNI</label>
+                    <p className="text-sm text-slate-500">
+                        ⚠️ Por favor sube una foto legible de tu DNI (frente o ambas caras). Formatos: JPG, PNG, WEBP. Mínimo 100KB, máximo 10MB.
+                    </p>
+                    <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handleDniPhotoChange}
+                        className={`w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border rounded-lg p-2 ${errors.dni_photo ? 'border-red-500' : 'border-slate-300'}`}
+                    />
+                    {errors.dni_photo && <p className="text-red-500 text-xs mt-1">{errors.dni_photo}</p>}
+                    {dniPhotoPreview && (
+                        <div className="mt-4 text-center">
+                            <p className="text-sm text-slate-600 mb-2">Vista previa:</p>
+                            <img src={dniPhotoPreview} alt="Preview DNI" className="max-w-xs max-h-48 rounded border border-slate-200 object-contain inline-block"/>
+                            <p className="text-xs text-green-600 mt-1">✅ Imagen cargada correctamente</p>
+                        </div>
+                    )}
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-lg font-semibold text-slate-800">2. Selfie (foto de tu rostro)</label>
+                    <p className="text-sm text-slate-500">Tómate una foto clara de tu rostro para verificar tu identidad.</p>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        capture="user"
+                        onChange={(e) => setSelfiePhoto(e.target.files ? e.target.files[0] : null)}
+                        required
+                        className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border rounded-lg p-2"
+                    />
+                    {selfiePhoto && (
+                        <div className="mt-4 text-center">
+                             <img src={URL.createObjectURL(selfiePhoto)} alt="Preview Selfie" className="max-w-xs max-h-48 rounded border border-slate-200 object-contain inline-block"/>
+                            <p className="text-xs text-green-600 mt-1">✅ Selfie capturada</p>
+                        </div>
+                    )}
+                </div>
+
+                <button
+                    type="submit"
+                    disabled={!dniPhotoFile || !selfiePhoto || submitting}
+                    className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:bg-slate-400 disabled:cursor-not-allowed transition-colors"
+                >
+                    {submitting ? "Validando..." : "Enviar Validación"}
+                </button>
+            </form>
+        </div>
     </div>
   );
 }
