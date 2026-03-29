@@ -138,7 +138,9 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
       title: training.title,
       description: training.description,
       date: training.date,
-      registration_deadline: training.registration_deadline || '',
+      registration_deadline: training.registration_deadline
+        ? String(training.registration_deadline).slice(0, 16)
+        : '',
       maxCapacity: training.maxCapacity,
       isPublished: training.isPublished,
       customQuestions: [...training.customQuestions],
@@ -170,10 +172,8 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
     if (formData.registration_deadline) {
       // Se añade T00:00:00 para forzar parser en Zona Horaria Local al igual que datetime-local
       if (new Date(formData.registration_deadline) >= new Date(formData.date + 'T00:00:00')) {
-        newErrors.date = "La fecha límite debe ser anterior a la fecha del curso";
+        newErrors.deadline = "La fecha límite debe ser anterior a la fecha del curso";
       }
-    } else {
-      newErrors.deadline = "La fecha límite de inscripción es obligatoria";
     }
 
     // Si hay errores, mostrarlos y no continuar
@@ -440,11 +440,17 @@ export const TrainingManager: React.FC<TrainingManagerProps> = ({ trainings, use
                   <label className="block text-sm font-medium text-slate-700 mb-1">Fecha Límite Inscripción</label>
                   <input
                     type="datetime-local"
-                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 text-sm outline-none"
+                    className={`w-full px-4 py-2.5 rounded-lg border text-sm outline-none ${errors.deadline ? 'border-red-500' : 'border-slate-200'}`}
                     value={formData.registration_deadline}
-                    onChange={e => setFormData({ ...formData, registration_deadline: e.target.value })}
+                    onChange={e => {
+                      setFormData({ ...formData, registration_deadline: e.target.value });
+                      if (errors.deadline) setErrors(prev => { const n = { ...prev }; delete n.deadline; return n; });
+                    }}
                   />
-                  <p className="text-[10px] text-slate-400 mt-1">Cierre automático de registros</p>
+                  {errors.deadline
+                    ? <p className="text-xs text-red-500 mt-1">{errors.deadline}</p>
+                    : <p className="text-[10px] text-slate-400 mt-1">Cierre automático de registros</p>
+                  }
                 </div>
               </div>
 
