@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Exam, ExamResult, UserRole } from '../../../../types';
 import { useExamStats } from '../../../../utils/useExamStats';
-import { DonutChart } from '../../../../components/DonutChart';
+import { DonutChart } from '../../shared/components/DonutChart';
 
 interface ExamAnalyticsProps {
   exam: Exam;

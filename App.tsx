@@ -1,18 +1,18 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Layout } from './components/Layout';
-import { AdminDashboard } from './components/AdminDashboard';
-import { TrainingManager } from './components/TrainingManager';
-import { AvailableTrainings } from './components/AvailableTrainings';
-import { PublicRegistration } from './components/PublicRegistration';
-import { CalendarView } from './components/CalendarView';
-import { NotificationCenter } from './components/NotificationCenter';
-import { UserManagement } from './components/UserManagement'; // Nuevo Import
+import { Layout } from './src/modules/shared/components/Layout';
+import { AdminDashboard } from './src/modules/shared/components/AdminDashboard';
+import { TrainingManager } from './src/modules/capacitaciones/components/TrainingManager';
+import { AvailableTrainings } from './src/modules/capacitaciones/components/AvailableTrainings';
+import { PublicRegistration } from './src/modules/shared/components/PublicRegistration';
+import { CalendarView } from './src/modules/capacitaciones/components/CalendarView';
+import { NotificationCenter } from './src/modules/notificaciones/components/NotificationCenter';
+import { UserManagement } from './src/modules/shared/components/UserManagement'; // Nuevo Import
 import { PublicExam } from './components/PublicExam';
-import { EvaluacionesModule } from './components/EvaluacionesModule';
-import { IdentityValidationPage } from './components/IdentityValidationPage';
-import { Auth } from './components/Auth';
+import { EvaluacionesModule } from './src/modules/evaluaciones/components/EvaluacionesModule';
+import { IdentityValidationPage } from './src/modules/usuarios/components/IdentityValidationPage';
+import { Auth } from './src/modules/shared/components/Auth';
 import { InduccionDashboard } from './src/modules/induccion-temporal/components/InduccionDashboard';
 import { LicenciasManejo } from './src/modules/autorizaciones/components/LicenciasManejo';
 import { AcreditacionVehicular } from './src/modules/autorizaciones/components/AcreditacionVehicular';
